@@ -1,9 +1,5 @@
 ---
 title: Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain
-format:
-  html:
-    output-dir: docs
-    output-file: index.html
 execute:
   freeze: auto
   echo: false

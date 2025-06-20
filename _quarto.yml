@@ -1,0 +1,9 @@
+project:
+  type: website
+  output-dir: docs
+
+format:
+  html:
+    theme: default
+    toc: true
+    toc-depth: 3

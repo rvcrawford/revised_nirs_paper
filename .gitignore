@@ -19,3 +19,5 @@ nirs_revisions_formatted.docx
 # System files
 .DS_Store
 Thumbs.db
+
+/.quarto/

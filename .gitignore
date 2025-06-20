@@ -6,11 +6,14 @@
 _targets/
 renv/library/
 
-# Generated output files
-*.html
+# Generated output files (but keep docs/)
 *_files/
 pastable_figures/
 nirs_revisions_formatted.docx
+nirs_revisions.html
+
+# Keep docs folder for GitHub Pages
+!docs/
 
 # System files
 .DS_Store

@@ -1,0 +1,17 @@
+# R files to ignore
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+_targets/
+renv/library/
+
+# Generated output files
+*.html
+*_files/
+pastable_figures/
+nirs_revisions_formatted.docx
+
+# System files
+.DS_Store
+Thumbs.db

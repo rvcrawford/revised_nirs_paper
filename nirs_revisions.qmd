@@ -211,6 +211,39 @@ fig_validation_performance
 
 The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.
 
+### Final model development and summary
+[Your existing content about the 1000 iterations]
+
+### Addressing Location-Based Class Imbalance REWRITE 
+
+The analysis revealed that samples from Geneva had 61% higher prediction errors than Ithaca samples, with Geneva representing only 28% of the dataset compared to Ithaca's 50%. To address this class imbalance, models were retrained using location-based sample weighting.
+
+```{r}
+#| label: tbl-location-distribution
+#| tbl-cap: "Sample distribution and class weights by location"
+
+tar_read(balanced_data)$location_summary %>%
+  kable(col.names = c("Location", "Sample Count", "Class Weight"))
+
+```
+
+Three locations with sufficient sample sizes (Ithaca: 76, Geneva: 41, Freeville: 24) were retained for weighted modeling, while locations with fewer than 10 samples (Chazy: 5, Willsboro: 3) were reserved for external validation.
+
+```{r}
+#| label: fig-weighting-comparison
+#| fig-cap: "Performance comparison between standard and location-weighted models"
+
+tar_read(fig_weighting_comparison)
+```
+
+```{r}
+#| label: tbl-weighting-results
+#| tbl-cap: "Model performance metrics: Standard vs Location-weighted approaches"
+
+tar_read(table_weighting_comparison)
+```
+
+
 ### Algorithm Comparison #REWRITE
 
 To evaluate the robustness of NIRS predictions and validate the choice of modeling approach, three machine learning algorithms were compared: partial least squares regression (PLS), support vector machines with radial basis function kernel (SVM), and random forest (RF). All algorithms were evaluated using identical train/test splits and the optimal preprocessing method (SNV-SG) to ensure fair comparison across approaches.

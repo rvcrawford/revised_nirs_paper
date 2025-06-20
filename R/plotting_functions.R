@@ -506,3 +506,37 @@ create_algorithm_importance_plot <- function(combined_importance) {
   
   return(p)
 }
+create_weighting_comparison_plot <- function(weighting_analysis) {
+  # This would create box plots comparing the two approaches
+  # Implementation depends on your existing plotting style
+  
+  comparison_data <- rbind(
+    weighting_analysis$weighted$metrics %>% mutate(approach = "Weighted"),
+    weighting_analysis$unweighted$metrics %>% mutate(approach = "Unweighted")
+  )
+  
+ggplot(comparison_data, aes(x = approach, y = rmse, fill = approach)) +
+  geom_boxplot() +
+  labs(
+    title = "RMSE Comparison: Weighted vs Unweighted Models",
+    y = "RMSE",
+    x = "Approach"
+  ) +
+  theme_minimal() +
+  scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72"))
+}
+
+#' Create location performance plot  
+create_location_performance_plot <- function(location_analysis) {
+  location_analysis$location_metrics %>%
+    ggplot(aes(x = location, y = mean_rmse, fill = location)) +
+    geom_col() +
+    geom_text(aes(label = paste0("n=", count)), vjust = -0.5) +
+    labs(
+      title = "Location-Specific RMSE Performance (Weighted Models)",
+      y = "Mean RMSE",
+      x = "Location"
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none")
+}

@@ -213,3 +213,48 @@ analyze_prediction_errors <- function(final_model_results, full_data) {
     raw_predictions = predictions_data  # This is what the plotting function needs
   )
 }
+
+analyze_location_performance <- function(weighted_results, balanced_data) {
+  location_metrics <- weighted_results$predictions %>%
+    group_by(location) %>%
+    summarise(
+      n_predictions = n(),
+      mean_rmse = sqrt(mean((actual - predicted)^2)),
+      mean_rsq = cor(actual, predicted)^2,
+      median_absolute_error = median(abs(actual - predicted)),
+      bias = mean(predicted - actual),
+      .groups = 'drop'
+    ) %>%
+    left_join(balanced_data$location_summary, by = "location")
+  
+  overall_metrics <- weighted_results$metrics %>%
+    summarise(
+      overall_rmse = mean(rmse, na.rm = TRUE),
+      overall_rsq = mean(rsq, na.rm = TRUE),
+      n_excellent = sum(rpd > 3, na.rm = TRUE),
+      percent_excellent = round(100 * sum(rpd > 3, na.rm = TRUE) / n(), 1)
+    )
+  
+  list(
+    location_metrics = location_metrics,
+    overall_metrics = overall_metrics,
+    raw_predictions = weighted_results$predictions
+  )
+}
+
+#' Create weighting comparison table
+create_weighting_comparison_table <- function(weighting_analysis) {
+  weighting_analysis$summary_comparison %>%
+    select(approach, mean_rmse, mean_rsq, mean_rpd, percent_excellent) %>%
+    mutate(
+      mean_rmse = round(mean_rmse, 3),
+      mean_rsq = round(mean_rsq, 3), 
+      mean_rpd = round(mean_rpd, 2)
+    ) %>%
+    kableExtra::kable(
+      col.names = c("Approach", "RMSE", "R²", "RPD", "% Excellent"),
+      caption = "Performance comparison: Weighted vs Unweighted models"
+    ) %>%
+    kableExtra::kable_styling()
+}
+

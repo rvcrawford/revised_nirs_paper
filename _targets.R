@@ -9,7 +9,7 @@ source("R/analysis_functions.R")
 source("R/plotting_functions.R")
 source("R/spectral_analysis_functions.R")  # NEW
 source("R/multi_algorithm_functions.R")  # ADD THIS to your source() statements at top
-
+source("R/location_weighting_functions.R")
 
 # Set target options
 # 
@@ -91,6 +91,54 @@ list(
       best_preprocessing_method, 
       n_iterations = 1000
     )
+  ),
+  tar_target(
+    balanced_data,
+    prepare_location_balanced_data(full_data)
+  ),
+  
+  tar_target(
+    weighting_comparison,
+    compare_weighted_unweighted(
+      balanced_data, 
+      full_data, 
+      best_preprocessing_method, 
+      n_iterations = 1000
+    )
+  ),
+  
+  tar_target(
+    weighting_analysis,
+    analyze_weighting_comparison(weighting_comparison)
+  ),
+  
+  tar_target(
+    weighted_model_results,
+    run_weighted_modeling_ultrafast(
+      balanced_data,
+      best_preprocessing_method, 
+      n_iterations = 1000
+    )
+  ),
+  
+  tar_target(
+    location_performance_analysis,
+    analyze_location_performance(weighted_model_results, balanced_data)
+  ),
+  
+  tar_target(
+    table_weighting_comparison,
+    create_weighting_comparison_table(weighting_analysis)
+  ),
+  
+  tar_target(
+    fig_weighting_comparison,
+    create_weighting_comparison_plot(weighting_analysis)
+  ),
+  
+  tar_target(
+    fig_location_performance,
+    create_location_performance_plot(location_performance_analysis)
   ),
   
   tar_target(

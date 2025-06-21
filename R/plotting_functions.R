@@ -506,37 +506,171 @@ create_algorithm_importance_plot <- function(combined_importance) {
   
   return(p)
 }
-create_weighting_comparison_plot <- function(weighting_analysis) {
-  # This would create box plots comparing the two approaches
-  # Implementation depends on your existing plotting style
-  
-  comparison_data <- rbind(
-    weighting_analysis$weighted$metrics %>% mutate(approach = "Weighted"),
-    weighting_analysis$unweighted$metrics %>% mutate(approach = "Unweighted")
-  )
-  
-ggplot(comparison_data, aes(x = approach, y = rmse, fill = approach)) +
-  geom_boxplot() +
-  labs(
-    title = "RMSE Comparison: Weighted vs Unweighted Models",
-    y = "RMSE",
-    x = "Approach"
-  ) +
-  theme_minimal() +
-  scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72"))
-}
 
-#' Create location performance plot  
-create_location_performance_plot <- function(location_analysis) {
-  location_analysis$location_metrics %>%
-    ggplot(aes(x = location, y = mean_rmse, fill = location)) +
-    geom_col() +
-    geom_text(aes(label = paste0("n=", count)), vjust = -0.5) +
+create_weighting_comparison_plot <- function(weighting_comparison) {
+  # Access the raw metrics data from the original comparison, not the analysis
+  
+  # Check if the data structure exists
+  if (is.null(weighting_comparison$weighted) || is.null(weighting_comparison$unweighted)) {
+    stop("weighting_comparison must have 'weighted' and 'unweighted' components")
+  }
+  
+  if (is.null(weighting_comparison$weighted$metrics) || is.null(weighting_comparison$unweighted$metrics)) {
+    stop("weighting_comparison components must have 'metrics' data")
+  }
+  
+  # Create comparison data from the original comparison results
+  weighted_data <- weighting_comparison$weighted$metrics %>%
+    mutate(approach = "Weighted")
+  
+  unweighted_data <- weighting_comparison$unweighted$metrics %>%
+    mutate(approach = "Unweighted")
+  
+  # FIX: Standardize column names before combining
+  if ("ncomp" %in% names(weighted_data)) {
+    weighted_data <- weighted_data %>% rename(n_components = ncomp)
+  }
+  if ("n_components" %in% names(unweighted_data) && !"ncomp" %in% names(unweighted_data)) {
+    # Column names are already correct for unweighted
+  }
+  
+  # Select only the common columns we need for plotting
+  common_cols <- c("iteration", "rmse", "rsq", "rpd", "rpiq", "approach")
+  
+  weighted_data_clean <- weighted_data %>% select(all_of(common_cols))
+  unweighted_data_clean <- unweighted_data %>% select(all_of(common_cols))
+  
+  comparison_data <- rbind(weighted_data_clean, unweighted_data_clean)
+  
+  # Create the plot
+  ggplot(comparison_data, aes(x = approach, y = rmse, fill = approach)) +
+    geom_boxplot(alpha = 0.7) +
+    geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
     labs(
-      title = "Location-Specific RMSE Performance (Weighted Models)",
-      y = "Mean RMSE",
-      x = "Location"
+      title = "RMSE Comparison: Weighted vs Unweighted Models",
+      subtitle = paste("Based on", nrow(weighted_data_clean), "iterations each"),
+      y = "RMSE",
+      x = "Approach"
     ) +
     theme_minimal() +
+    scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72")) +
+    theme(legend.position = "none") +
+    stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "white")
+}
+
+#' Alternative version that works with weighting_analysis if needed
+create_weighting_comparison_plot_alt <- function(weighting_analysis) {
+  # This version uses the summary statistics from weighting_analysis
+  
+  if (is.null(weighting_analysis$summary_comparison)) {
+    stop("weighting_analysis must have 'summary_comparison' component")
+  }
+  
+  summary_data <- weighting_analysis$summary_comparison
+  
+  # Create a simple bar plot comparing means
+  ggplot(summary_data, aes(x = approach, y = mean_rmse, fill = approach)) +
+    geom_col(alpha = 0.8) +
+    geom_text(aes(label = round(mean_rmse, 2)), vjust = -0.5) +
+    labs(
+      title = "Mean RMSE Comparison: Weighted vs Unweighted Models",
+      y = "Mean RMSE",
+      x = "Approach"
+    ) +
+    theme_minimal() +
+    scale_fill_manual(values = c("weighted" = "#2E86AB", "unweighted" = "#A23B72")) +
+    theme(legend.position = "none") +
+    ylim(0, max(summary_data$mean_rmse) * 1.1)
+}
+
+#' Create comprehensive comparison plot with multiple metrics
+create_comprehensive_weighting_plot <- function(weighting_comparison) {
+  
+  # Prepare data with standardized column names
+  weighted_data <- weighting_comparison$weighted$metrics %>%
+    mutate(approach = "Weighted")
+  
+  unweighted_data <- weighting_comparison$unweighted$metrics %>%
+    mutate(approach = "Unweighted")
+  
+  # FIX: Standardize column names before combining
+  if ("ncomp" %in% names(weighted_data)) {
+    weighted_data <- weighted_data %>% rename(n_components = ncomp)
+  }
+  
+  # Select only the common columns we need for plotting
+  common_cols <- c("iteration", "rmse", "rsq", "rpd", "rpiq", "approach")
+  
+  weighted_data_clean <- weighted_data %>% select(all_of(common_cols))
+  unweighted_data_clean <- unweighted_data %>% select(all_of(common_cols))
+  
+  comparison_data <- rbind(weighted_data_clean, unweighted_data_clean)
+  
+  # Create plots for multiple metrics
+  library(gridExtra)
+  
+  # RMSE plot
+  p1 <- ggplot(comparison_data, aes(x = approach, y = rmse, fill = approach)) +
+    geom_boxplot(alpha = 0.7) +
+    labs(title = "RMSE", y = "RMSE", x = "") +
+    theme_minimal() +
+    scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72")) +
     theme(legend.position = "none")
+  
+  # R² plot
+  p2 <- ggplot(comparison_data, aes(x = approach, y = rsq, fill = approach)) +
+    geom_boxplot(alpha = 0.7) +
+    labs(title = "R²", y = "R²", x = "") +
+    theme_minimal() +
+    scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72")) +
+    theme(legend.position = "none")
+  
+  # RPD plot
+  p3 <- ggplot(comparison_data, aes(x = approach, y = rpd, fill = approach)) +
+    geom_boxplot(alpha = 0.7) +
+    labs(title = "RPD", y = "RPD", x = "") +
+    theme_minimal() +
+    scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72")) +
+    theme(legend.position = "none")
+  
+  # RPIQ plot
+  p4 <- ggplot(comparison_data, aes(x = approach, y = rpiq, fill = approach)) +
+    geom_boxplot(alpha = 0.7) +
+    labs(title = "RPIQ", y = "RPIQ", x = "") +
+    theme_minimal() +
+    scale_fill_manual(values = c("Weighted" = "#2E86AB", "Unweighted" = "#A23B72")) +
+    theme(legend.position = "none")
+  
+  # Combine plots
+  grid.arrange(p1, p2, p3, p4, ncol = 2, 
+               top = "Performance Comparison: Weighted vs Unweighted Models")
+}
+
+#' Debug function to check data structure
+debug_weighting_data <- function(weighting_comparison, weighting_analysis) {
+  cat("=== DEBUGGING WEIGHTING DATA STRUCTURE ===\n")
+  
+  cat("weighting_comparison structure:\n")
+  cat("Names:", names(weighting_comparison), "\n")
+  
+  if ("weighted" %in% names(weighting_comparison)) {
+    cat("weighted names:", names(weighting_comparison$weighted), "\n")
+    if ("metrics" %in% names(weighting_comparison$weighted)) {
+      cat("weighted$metrics dimensions:", dim(weighting_comparison$weighted$metrics), "\n")
+      cat("weighted$metrics columns:", names(weighting_comparison$weighted$metrics), "\n")
+    }
+  }
+  
+  if ("unweighted" %in% names(weighting_comparison)) {
+    cat("unweighted names:", names(weighting_comparison$unweighted), "\n")
+    if ("metrics" %in% names(weighting_comparison$unweighted)) {
+      cat("unweighted$metrics dimensions:", dim(weighting_comparison$unweighted$metrics), "\n")
+      cat("unweighted$metrics columns:", names(weighting_comparison$unweighted$metrics), "\n")
+    }
+  }
+  
+  cat("\nweighting_analysis structure:\n")
+  cat("Names:", names(weighting_analysis), "\n")
+  
+  return("Debug complete")
 }

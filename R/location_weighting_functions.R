@@ -361,9 +361,15 @@ compare_weighted_unweighted <- function(balanced_data, full_data, best_method, n
 }
 
 #' Analyze weighted vs unweighted results
+#' Fixed analyze_weighting_comparison function
 analyze_weighting_comparison <- function(comparison_results) {
   weighted_metrics <- comparison_results$weighted$metrics
   unweighted_metrics <- comparison_results$unweighted$metrics
+  
+  # FIX: Handle column name differences
+  if ("ncomp" %in% names(weighted_metrics)) {
+    weighted_metrics <- weighted_metrics %>% rename(n_components = ncomp)
+  }
   
   # Calculate summary statistics
   weighted_summary <- weighted_metrics %>%

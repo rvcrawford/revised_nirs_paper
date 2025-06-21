@@ -125,7 +125,10 @@ list(
     location_performance_analysis,
     analyze_location_performance(weighted_model_results, balanced_data)
   ),
-  
+  tar_target(
+    debug_weights,
+    debug_weighting_data(weighting_comparison, weighting_analysis)
+  ),
   tar_target(
     table_weighting_comparison,
     create_weighting_comparison_table(weighting_analysis)
@@ -133,7 +136,7 @@ list(
   
   tar_target(
     fig_weighting_comparison,
-    create_weighting_comparison_plot(weighting_analysis)
+    create_comprehensive_weighting_plot(weighting_analysis)
   ),
   
   tar_target(

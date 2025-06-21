@@ -243,18 +243,33 @@ analyze_location_performance <- function(weighted_results, balanced_data) {
 }
 
 #' Create weighting comparison table
+#' Create weighting comparison table (FIXED FOR DATA.TABLE)
+#' Create weighting comparison table (SAFE VERSION)
 create_weighting_comparison_table <- function(weighting_analysis) {
-  weighting_analysis$summary_comparison %>%
-    select(approach, mean_rmse, mean_rsq, mean_rpd, percent_excellent) %>%
-    mutate(
-      mean_rmse = round(mean_rmse, 3),
-      mean_rsq = round(mean_rsq, 3), 
-      mean_rpd = round(mean_rpd, 2)
-    ) %>%
-    kableExtra::kable(
-      col.names = c("Approach", "RMSE", "R²", "RPD", "% Excellent"),
-      caption = "Performance comparison: Weighted vs Unweighted models"
-    ) %>%
-    kableExtra::kable_styling()
+  
+  # Extract data
+  data <- weighting_analysis$summary_comparison
+  df <- as.data.frame(data)
+  
+  # Safe rounding function that checks if numeric first
+  safe_round <- function(x, digits = 3) {
+    if (is.numeric(x)) {
+      return(round(x, digits))
+    } else {
+      return(as.numeric(x))  # Try to convert
+    }
+  }
+  
+  # Create table with safe rounding
+  table_data <- data.frame(
+    Approach = as.character(df$approach),
+    RMSE = safe_round(df$mean_rmse, 3),
+    R_squared = safe_round(df$mean_rsq, 3),
+    RPD = safe_round(df$mean_rpd, 2),
+    Percent_Excellent = as.numeric(df$percent_excellent)
+  )
+  
+  knitr::kable(table_data,
+               col.names = c("Approach", "RMSE", "R²", "RPD", "% Excellent"),
+               caption = "Performance comparison: Weighted vs Unweighted models")
 }
-

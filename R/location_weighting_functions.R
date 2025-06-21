@@ -362,43 +362,90 @@ compare_weighted_unweighted <- function(balanced_data, full_data, best_method, n
 
 #' Analyze weighted vs unweighted results
 #' Fixed analyze_weighting_comparison function
+#' Analyze weighted vs unweighted results (FIXED VERSION)
+#' Analyze weighted vs unweighted results (ROBUST DATA.TABLE VERSION)
 analyze_weighting_comparison <- function(comparison_results) {
-  weighted_metrics <- comparison_results$weighted$metrics
-  unweighted_metrics <- comparison_results$unweighted$metrics
+  cat("=== ANALYZING WEIGHTING COMPARISON ===\n")
   
-  # FIX: Handle column name differences
+  # Load required libraries
+  library(data.table)
+  library(dplyr)
+  
+  # Extract metrics and ensure they're data.tables
+  weighted_metrics <- as.data.table(comparison_results$weighted$metrics)
+  unweighted_metrics <- as.data.table(comparison_results$unweighted$metrics)
+  
+  cat("Weighted metrics columns:", names(weighted_metrics), "\n")
+  cat("Unweighted metrics columns:", names(unweighted_metrics), "\n")
+  cat("Weighted dimensions:", dim(weighted_metrics), "\n")
+  cat("Unweighted dimensions:", dim(unweighted_metrics), "\n")
+  
+  # FIX: Handle column name differences using data.table syntax
   if ("ncomp" %in% names(weighted_metrics)) {
-    weighted_metrics <- weighted_metrics %>% rename(n_components = ncomp)
+    setnames(weighted_metrics, "ncomp", "n_components")
+    cat("Renamed ncomp to n_components in weighted data\n")
   }
   
-  # Calculate summary statistics
-  weighted_summary <- weighted_metrics %>%
-    summarise(
-      approach = "weighted",
-      mean_rmse = mean(rmse, na.rm = TRUE),
-      mean_rsq = mean(rsq, na.rm = TRUE),
-      mean_rpd = mean(rpd, na.rm = TRUE),
-      median_rmse = median(rmse, na.rm = TRUE),
-      sd_rmse = sd(rmse, na.rm = TRUE),
-      q75_rmse = quantile(rmse, 0.75, na.rm = TRUE),
-      n_excellent = sum(rpd > 3, na.rm = TRUE),
-      percent_excellent = round(100 * sum(rpd > 3, na.rm = TRUE) / n(), 1)
-    )
+  # Verify required columns exist
+  required_cols <- c("iteration", "rmse", "rsq", "rpd", "rpiq")
+  missing_weighted <- setdiff(required_cols, names(weighted_metrics))
+  missing_unweighted <- setdiff(required_cols, names(unweighted_metrics))
   
-  unweighted_summary <- unweighted_metrics %>%
-    summarise(
-      approach = "unweighted", 
-      mean_rmse = mean(rmse, na.rm = TRUE),
-      mean_rsq = mean(rsq, na.rm = TRUE),
-      mean_rpd = mean(rpd, na.rm = TRUE),
-      median_rmse = median(rmse, na.rm = TRUE),
-      sd_rmse = sd(rmse, na.rm = TRUE),
-      q75_rmse = quantile(rmse, 0.75, na.rm = TRUE),
-      n_excellent = sum(rpd > 3, na.rm = TRUE),
-      percent_excellent = round(100 * sum(rpd > 3, na.rm = TRUE) / n(), 1)
-    )
+  if (length(missing_weighted) > 0) {
+    stop("Missing columns in weighted_metrics: ", paste(missing_weighted, collapse = ", "))
+  }
+  if (length(missing_unweighted) > 0) {
+    stop("Missing columns in unweighted_metrics: ", paste(missing_unweighted, collapse = ", "))
+  }
+  
+  cat("All required columns present\n")
+  
+  # Calculate summary statistics using data.table syntax
+  cat("Calculating weighted summary...\n")
+  weighted_summary <- weighted_metrics[, .(
+    approach = "weighted",
+    mean_rmse = mean(rmse, na.rm = TRUE),
+    mean_rsq = mean(rsq, na.rm = TRUE),
+    mean_rpd = mean(rpd, na.rm = TRUE),
+    median_rmse = median(rmse, na.rm = TRUE),
+    sd_rmse = sd(rmse, na.rm = TRUE),
+    q75_rmse = quantile(rmse, 0.75, na.rm = TRUE),
+    n_excellent = sum(rpd > 3, na.rm = TRUE),
+    percent_excellent = round(100 * sum(rpd > 3, na.rm = TRUE) / .N, 1)
+  )]
+  
+  cat("Calculating unweighted summary...\n")
+  unweighted_summary <- unweighted_metrics[, .(
+    approach = "unweighted",
+    mean_rmse = mean(rmse, na.rm = TRUE),
+    mean_rsq = mean(rsq, na.rm = TRUE),
+    mean_rpd = mean(rpd, na.rm = TRUE),
+    median_rmse = median(rmse, na.rm = TRUE),
+    sd_rmse = sd(rmse, na.rm = TRUE),
+    q75_rmse = quantile(rmse, 0.75, na.rm = TRUE),
+    n_excellent = sum(rpd > 3, na.rm = TRUE),
+    percent_excellent = round(100 * sum(rpd > 3, na.rm = TRUE) / .N, 1)
+  )]
+  
+  cat("Weighted summary:\n")
+  print(weighted_summary)
+  cat("Unweighted summary:\n") 
+  print(unweighted_summary)
+  
+  # Combine summaries using data.table rbind
+  cat("Combining summaries...\n")
+  summary_comparison <- rbind(weighted_summary, unweighted_summary)
+  
+  if (nrow(summary_comparison) == 0) {
+    stop("Failed to create summary_comparison - rbind resulted in 0 rows")
+  }
+  
+  cat("Summary comparison created with", nrow(summary_comparison), "rows\n")
+  cat("Summary comparison columns:", names(summary_comparison), "\n")
+  print(summary_comparison)
   
   # Calculate location-specific performance for weighted approach
+  cat("Calculating location performance...\n")
   location_performance <- comparison_results$weighted$predictions %>%
     group_by(location) %>%
     summarise(
@@ -409,13 +456,25 @@ analyze_weighting_comparison <- function(comparison_results) {
       .groups = 'drop'
     )
   
-  list(
-    summary_comparison = rbind(weighted_summary, unweighted_summary),
+  # Calculate improvements
+  rmse_improvement <- weighted_summary$mean_rmse - unweighted_summary$mean_rmse
+  rsq_improvement <- weighted_summary$mean_rsq - unweighted_summary$mean_rsq
+  rpd_improvement <- weighted_summary$mean_rpd - unweighted_summary$mean_rpd
+  
+  cat("RMSE improvement:", rmse_improvement, "\n")
+  cat("R² improvement:", rsq_improvement, "\n")
+  cat("RPD improvement:", rpd_improvement, "\n")
+  
+  result <- list(
+    summary_comparison = summary_comparison,
     location_performance = location_performance,
     improvement = list(
-      rmse_improvement = weighted_summary$mean_rmse - unweighted_summary$mean_rmse,
-      rsq_improvement = weighted_summary$mean_rsq - unweighted_summary$mean_rsq,
-      rpd_improvement = weighted_summary$mean_rpd - unweighted_summary$mean_rpd
+      rmse_improvement = rmse_improvement,
+      rsq_improvement = rsq_improvement,
+      rpd_improvement = rpd_improvement
     )
   )
+  
+  cat("Analysis complete - returning result\n")
+  return(result)
 }

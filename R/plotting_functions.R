@@ -507,48 +507,47 @@ create_algorithm_importance_plot <- function(combined_importance) {
   return(p)
 }
 
+#' Create weighting comparison plot (FIXED VERSION - no all_of)
+#' Create weighting comparison plot (DEBUG VERSION)
+#' Create weighting comparison plot (DATA.TABLE COMPATIBLE)
 create_weighting_comparison_plot <- function(weighting_comparison) {
-  # Access the raw metrics data from the original comparison, not the analysis
   
-  # Check if the data structure exists
-  if (is.null(weighting_comparison$weighted) || is.null(weighting_comparison$unweighted)) {
-    stop("weighting_comparison must have 'weighted' and 'unweighted' components")
-  }
+  # Extract data
+  weighted_metrics <- weighting_comparison$weighted$metrics
+  unweighted_metrics <- weighting_comparison$unweighted$metrics
   
-  if (is.null(weighting_comparison$weighted$metrics) || is.null(weighting_comparison$unweighted$metrics)) {
-    stop("weighting_comparison components must have 'metrics' data")
-  }
+  # Convert to data.table if not already (and load data.table)
+  library(data.table)
+  weighted_data <- as.data.table(weighted_metrics)
+  unweighted_data <- as.data.table(unweighted_metrics)
   
-  # Create comparison data from the original comparison results
-  weighted_data <- weighting_comparison$weighted$metrics %>%
-    mutate(approach = "Weighted")
+  # Add approach column
+  weighted_data[, approach := "Weighted"]
+  unweighted_data[, approach := "Unweighted"]
   
-  unweighted_data <- weighting_comparison$unweighted$metrics %>%
-    mutate(approach = "Unweighted")
-  
-  # FIX: Standardize column names before combining
+  # Handle column name mismatch using data.table syntax
   if ("ncomp" %in% names(weighted_data)) {
-    weighted_data <- weighted_data %>% rename(n_components = ncomp)
-  }
-  if ("n_components" %in% names(unweighted_data) && !"ncomp" %in% names(unweighted_data)) {
-    # Column names are already correct for unweighted
+    setnames(weighted_data, "ncomp", "n_components")
   }
   
-  # Select only the common columns we need for plotting
-  common_cols <- c("iteration", "rmse", "rsq", "rpd", "rpiq", "approach")
+  # Define columns to keep
+  keep_cols <- c("iteration", "rmse", "rsq", "rpd", "rpiq", "approach")
   
-  weighted_data_clean <- weighted_data %>% select(all_of(common_cols))
-  unweighted_data_clean <- unweighted_data %>% select(all_of(common_cols))
+  # Select columns using data.table syntax with .. prefix
+  weighted_clean <- weighted_data[, ..keep_cols]
+  unweighted_clean <- unweighted_data[, ..keep_cols]
   
-  comparison_data <- rbind(weighted_data_clean, unweighted_data_clean)
+  # Combine using data.table rbind
+  comparison_data <- rbind(weighted_clean, unweighted_clean)
   
   # Create the plot
+  library(ggplot2)
   ggplot(comparison_data, aes(x = approach, y = rmse, fill = approach)) +
     geom_boxplot(alpha = 0.7) +
     geom_jitter(width = 0.2, alpha = 0.3, size = 0.5) +
     labs(
       title = "RMSE Comparison: Weighted vs Unweighted Models",
-      subtitle = paste("Based on", nrow(weighted_data_clean), "iterations each"),
+      subtitle = paste("Based on", nrow(weighted_clean), "iterations each"),
       y = "RMSE",
       x = "Approach"
     ) +
@@ -558,6 +557,30 @@ create_weighting_comparison_plot <- function(weighting_comparison) {
     stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "white")
 }
 
+#' Create location performance plot  
+create_location_performance_plot <- function(location_analysis) {
+  
+  # Check if the data exists
+  if (is.null(location_analysis$location_metrics)) {
+    stop("location_analysis must have location_metrics component")
+  }
+  
+  location_data <- as.data.frame(location_analysis$location_metrics)
+  
+  # Create the plot
+  library(ggplot2)
+  ggplot(location_data, aes(x = location, y = mean_rmse, fill = location)) +
+    geom_col(alpha = 0.8) +
+    geom_text(aes(label = paste0("n=", count)), vjust = -0.5) +
+    labs(
+      title = "Location-Specific RMSE Performance (Weighted Models)",
+      y = "Mean RMSE",
+      x = "Location"
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    scale_fill_manual(values = c("ithaca" = "#1f77b4", "geneva" = "#ff7f0e", "freeville" = "#2ca02c"))
+}
 #' Alternative version that works with weighting_analysis if needed
 create_weighting_comparison_plot_alt <- function(weighting_analysis) {
   # This version uses the summary statistics from weighting_analysis
@@ -584,6 +607,7 @@ create_weighting_comparison_plot_alt <- function(weighting_analysis) {
 }
 
 #' Create comprehensive comparison plot with multiple metrics
+#' Create comprehensive comparison plot with multiple metrics (FIXED VERSION)
 create_comprehensive_weighting_plot <- function(weighting_comparison) {
   
   # Prepare data with standardized column names
@@ -598,11 +622,12 @@ create_comprehensive_weighting_plot <- function(weighting_comparison) {
     weighted_data <- weighted_data %>% rename(n_components = ncomp)
   }
   
-  # Select only the common columns we need for plotting
-  common_cols <- c("iteration", "rmse", "rsq", "rpd", "rpiq", "approach")
+  # Select only the common columns we need for plotting (OLD DPLYR SYNTAX)
+  weighted_data_clean <- weighted_data %>% 
+    select(iteration, rmse, rsq, rpd, rpiq, approach)
   
-  weighted_data_clean <- weighted_data %>% select(all_of(common_cols))
-  unweighted_data_clean <- unweighted_data %>% select(all_of(common_cols))
+  unweighted_data_clean <- unweighted_data %>% 
+    select(iteration, rmse, rsq, rpd, rpiq, approach)
   
   comparison_data <- rbind(weighted_data_clean, unweighted_data_clean)
   
@@ -645,7 +670,6 @@ create_comprehensive_weighting_plot <- function(weighting_comparison) {
   grid.arrange(p1, p2, p3, p4, ncol = 2, 
                top = "Performance Comparison: Weighted vs Unweighted Models")
 }
-
 #' Debug function to check data structure
 debug_weighting_data <- function(weighting_comparison, weighting_analysis) {
   cat("=== DEBUGGING WEIGHTING DATA STRUCTURE ===\n")

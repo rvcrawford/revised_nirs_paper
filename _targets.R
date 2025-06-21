@@ -131,12 +131,12 @@ list(
   ),
   tar_target(
     table_weighting_comparison,
-    create_weighting_comparison_table(weighting_analysis)
+    create_weighting_comparison_table(weighting_comparison)
   ),
   
   tar_target(
     fig_weighting_comparison,
-    create_comprehensive_weighting_plot(weighting_analysis)
+    create_weighting_comparison_plot(weighting_comparison)  # Use weighting_comparison, NOT weighting_analysis
   ),
   
   tar_target(

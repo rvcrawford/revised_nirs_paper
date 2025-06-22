@@ -34,6 +34,7 @@ map_location_codes <- function(loc_code) {
 }
 
 #' Filter data to main locations and add class weights
+#' Filter data to main locations and add class weights (FIXED)
 prepare_location_balanced_data <- function(data) {
   cat("=== LOCATION-BALANCED DATA PREPARATION ===\n")
   
@@ -62,35 +63,41 @@ prepare_location_balanced_data <- function(data) {
   main_counts <- table(main_data$clean_loc)
   print(main_counts)
   
-  # Calculate class weights (inverse frequency approach)
-  total_main <- nrow(main_data)
-  n_classes <- length(main_locations)
+  # FIXED: Calculate class weights using simple ratio method
+  # Use ithaca as baseline (weight = 1.0)
+  ithaca_count <- sum(main_data$clean_loc == "ithaca")
   
   weights_list <- list()
   for (loc in main_locations) {
-    count <- sum(main_data$loc == loc)
-    weight <- total_main / (n_classes * count)
-    weights_list[[loc]] <- weight
-    cat("Location", loc, ":", count, "samples, weight =", round(weight, 3), "\n")
+    count <- sum(main_data$clean_loc == loc)
+    if (count > 0) {
+      weight <- ithaca_count / count  # Simple ratio: larger weights for smaller classes
+      weights_list[[loc]] <- weight
+      cat("Location", loc, ":", count, "samples, weight =", round(weight, 3), "\n")
+    } else {
+      cat("WARNING: Location", loc, "has 0 samples after filtering\n")
+    }
   }
   
-  # Add weight column to main data
-  main_data[, sample_weight := weights_list[[loc]], by = loc]
+  # Add weight column to main data using data.table syntax
+  main_data[, sample_weight := weights_list[[clean_loc]], by = clean_loc]
+  
+  # Create clean location summary
+  location_summary <- data.frame(
+    location = names(main_counts),
+    count = as.numeric(main_counts),
+    weight = sapply(names(main_counts), function(x) weights_list[[x]]),
+    stringsAsFactors = FALSE
+  )
   
   # Return structured results
   list(
     main_data = main_data,
     tiny_data = tiny_data,
     weights = weights_list,
-    location_summary = data.frame(
-      location = names(main_counts),
-      count = as.numeric(main_counts),
-      weight = sapply(names(main_counts), function(x) weights_list[[x]]),
-      stringsAsFactors = FALSE
-    )
+    location_summary = location_summary
   )
 }
-
 #' Stratified train/test split for locations
 split_spectra_stratified <- function(y, locations = NULL, p = 0.75) {
   if (is.null(locations)) {

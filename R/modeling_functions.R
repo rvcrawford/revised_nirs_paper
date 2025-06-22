@@ -396,12 +396,24 @@ run_single_method_modeling <- function(data, best_method, n_iterations = 1000) {
         rpiq = rpiq_val
       )
       
-      predictions_list[[i]] <- data.table(
+      # First, extract location info for test samples
+      if ("loc" %in% names(data)) {
+        locations <- data$loc
+      } else if ("clean_loc" %in% names(data)) {  
+        locations <- data$clean_loc
+      } else {
+        locations <- rep("unknown", nrow(data))  # fallback
+      }
+      
+      locations_test <- locations[-inTrain]  # test set locations
+      
+      predictions_list[[i]] <- data.frame(
         iteration = i,
-        sample_id = 1:length(y_test),
-        ith_in_data_set = test_sample_ids,
+        sample_id = test_sample_ids,
+        ith_in_data_set = test_sample_ids[1:length(y_test)], 
         actual = y_test,
-        predicted = predictions
+        predicted = predictions,
+        location = locations_test  # ADD THIS LINE
       )
       
       successful_iterations <- successful_iterations + 1

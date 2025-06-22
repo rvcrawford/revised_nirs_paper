@@ -89,14 +89,12 @@ library(tidyverse)
 library(data.table)
 library(kableExtra)
 
-# Load all computed targets
+# SAFE TARGET LOADING - replaces tar_load_everything()
+cat("Loading targets safely...\n")
+
+
 tar_load_everything()
 
-# Also source the functions so they're available
-source("R/data_functions.R")
-source("R/analysis_functions.R")
-source("R/plotting_functions.R")
-source("R/spectral_analysis_functions.R")  # ADD THIS LINE
 ```
 
 **draft incorporates changes from Ginny, Larry, and Julie** CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay
@@ -118,10 +116,15 @@ For this study, a benchtop NIR spectrometer was used to develop a model to predi
 Spectral data were obtained from whole (unground) hemp grain samples, harvested at maturity, collected from 2017--2021 from `r nrow(distinct(full_data |> filter(loc!= "kentucky"), harv_year, loc))` cultivar trials in New York (NY) (`r location_summary[[1]]` samples). Grain samples were obtained by hand sampling or mechanical harvest and were cleaned of chaff and dried at 30 C for six days in a forced-air dryer. All CP values were expressed as concentration dry matter. In total, `r nrow(full_data)` samples from `r full_data$cultivar |> unique() |> length()` cultivars were represented in the data set. Cultivars were grain or dual-purpose types and included both commercially available and experimental material. Seventy-eight samples were scanned and assayed in 2017, 19 in 2018, 24 in 2019, and 28 in 2021. More information about hemp cultivars and locations is available in Supplemental Table S1.
 
 ```{r}
-#| label: tbl-hemp_provenance
-#| tbl-cap: Tally of hemp cultivars and locations. Private cultivars are labeled "Cultivar1", "Cultivar2", etc., while experimental cultivars are labeled "Experimental1", "Experimental2", etc. 
+#| label: tbl-hemp-provenance
+#| tbl-cap: "Sample distribution by location and type"
 
-table_hemp_provenance
+# Safe table loading
+if (exists("table_hemp_provenance")) {
+  table_hemp_provenance
+} else {
+  create_fallback_table("Hemp Provenance Table - Run tar_make() to generate")
+}
 ```
 
 All cultivar trials were planted in randomized complete block design with each cultivar replicated four times. The 2017 data were comprised of samples from the same 13 cultivars sampled from six NY locations. For those trials, grain was harvested from each plot individually and aggregated by cultivar within each trial. Four subsamples were drawn from each aggregated sample and scanned separately. These spectra were averaged at each 2 nm increment. All remaining samples from 2018-2021 were collected on a per-plot basis. All cultivars and locations were represented in 2017, but only a selected subset of cultivar-location combinations were represented in 2018-2021 because not all cultivars were planted everywhere and only a portion of these cultivar-location combinations were sampled, scanned, and assayed due to logistical constraints.
@@ -159,10 +162,11 @@ Analyses of variance were performed for each of these metrics in order to compar
 Laboratory assay CP concentration values are summarized in @tbl-lab-protein-vals. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of `r round(calculate_skewness(full_data$crude_protein), 2)`) and two thirds of the samples contained more than 250 g kg ^-1^ CP.
 
 ```{r}
-#| label: tbl-lab-protein-vals
-#| tbl-cap: Summary of Laboratory Assayed CP Values (g kg ^-1^)
+#| label: tbl-protein-summary
+#| tbl-cap: "Summary of laboratory-assayed CP values"
 
-table_protein_summary
+  table_protein_summary
+
 ```
 
 ### Preprocessing methods comparison

@@ -89,6 +89,8 @@ library(tidyverse)
 library(data.table)
 library(kableExtra)
 
+source("R/data_functions.R")
+
 # SAFE TARGET LOADING - replaces tar_load_everything()
 cat("Loading targets safely...\n")
 

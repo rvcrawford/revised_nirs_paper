@@ -121,6 +121,8 @@ list(
   # Simple Geneva analysis that avoids the column selection issue
   # Replace your geneva_performance_analysis target with this:
   
+  # REPLACE the geneva_performance_analysis target in your _targets.R with this fixed version:
+  
   tar_target(
     geneva_performance_analysis,
     {
@@ -165,104 +167,124 @@ list(
           rmse_pct_improvement = 100 * (unweighted_rmse - weighted_rmse) / unweighted_rmse,
           bias_improvement = abs(unweighted_bias) - abs(weighted_bias),
           rsq_improvement = weighted_rsq - unweighted_rsq
-        ) %>%
-        left_join(bd$location_summary, by = "location")
+        )
+      
+      # SAFELY join with balanced data info
+      tryCatch({
+        location_comparison <- location_comparison %>%
+          left_join(bd$location_summary, by = "location")
+      }, error = function(e) {
+        cat("Warning: Could not join with location summary:", e$message, "\n")
+      })
       
       cat("Location comparison results:\n")
-      print(location_comparison %>% 
-              select(location, weight, weighted_rmse, unweighted_rmse, 
-                     rmse_improvement, rmse_pct_improvement))
+      # FIXED: Only print columns that exist
+      print(location_comparison)
       
-      # Geneva-specific analysis
+      # Focus on Geneva
       geneva_results <- location_comparison %>% filter(location == "geneva")
       
-      cat("\n=== GENEVA RESULTS ===\n")
-      cat("Weight:", round(geneva_results$weight, 2), "x\n")
-      cat("Weighted RMSE:", round(geneva_results$weighted_rmse, 3), "\n")
-      cat("Unweighted RMSE:", round(geneva_results$unweighted_rmse, 3), "\n")
-      cat("RMSE improvement:", round(geneva_results$rmse_improvement, 3), "\n")
-      cat("% improvement:", round(geneva_results$rmse_pct_improvement, 1), "%\n")
-      cat("R² improvement:", round(geneva_results$rsq_improvement, 4), "\n")
+      if (nrow(geneva_results) == 0) {
+        cat("ERROR: No Geneva results found!\n")
+        return(list(
+          location_comparison = location_comparison,
+          geneva_results = NULL,
+          geneva_significance = NULL,
+          conclusion = "no_geneva_data"
+        ))
+      }
       
-      # Statistical test for Geneva
-      geneva_weighted_errors <- wc_fixed$weighted$predictions %>% 
-        filter(location == "geneva") %>%
-        mutate(abs_error = abs(actual - predicted)) %>%
-        pull(abs_error)
+      cat("\n=== GENEVA SPECIFIC RESULTS ===\n")
+      cat("Geneva improvement:", round(geneva_results$rmse_improvement, 3), "\n")
+      cat("Geneva % improvement:", round(geneva_results$rmse_pct_improvement, 1), "%\n")
       
-      geneva_unweighted_errors <- wc_fixed$unweighted$predictions %>% 
-        filter(location == "geneva") %>%
-        mutate(abs_error = abs(actual - predicted)) %>%
-        pull(abs_error)
-      
-      cat("\nGeneva sample sizes:\n")
-      cat("Weighted:", length(geneva_weighted_errors), "\n")
-      cat("Unweighted:", length(geneva_unweighted_errors), "\n")
-      
+      # Statistical test if sufficient data
       geneva_significance <- NULL
+      conclusion <- "no_test"
       
-      if (length(geneva_weighted_errors) > 10 && length(geneva_unweighted_errors) > 10) {
-        tryCatch({
-          wilcox_test <- wilcox.test(geneva_weighted_errors, 
-                                     geneva_unweighted_errors,
-                                     alternative = "less")
+      tryCatch({
+        if (nrow(geneva_results) > 0 && geneva_results$rmse_improvement > 0) {
+          # Get Geneva predictions for statistical test
+          geneva_weighted_preds <- wc_fixed$weighted$predictions %>%
+            filter(location == "geneva")
+          geneva_unweighted_preds <- wc_fixed$unweighted$predictions %>%
+            filter(location == "geneva")
           
-          # Effect size
-          mean_diff <- mean(geneva_unweighted_errors) - mean(geneva_weighted_errors)
-          pooled_sd <- sqrt((var(geneva_weighted_errors) + var(geneva_unweighted_errors)) / 2)
-          cohens_d <- mean_diff / pooled_sd
-          
-          cat("\nStatistical test results:\n")
-          cat("p-value:", round(wilcox_test$p.value, 4), "\n")
-          cat("Cohen's d:", round(cohens_d, 3), "\n")
-          cat("Significant (p < 0.05):", wilcox_test$p.value < 0.05, "\n")
-          cat("Meaningful effect (|d| > 0.2):", abs(cohens_d) > 0.2, "\n")
-          
-          geneva_significance <- list(
-            p_value = wilcox_test$p.value,
-            cohens_d = cohens_d,
-            significant = wilcox_test$p.value < 0.05,
-            meaningful = abs(cohens_d) > 0.2
-          )
-          
-          # Final conclusion
-          cat("\n=== GENEVA CONCLUSION ===\n")
-          if (geneva_significance$significant && geneva_significance$meaningful) {
-            cat("🎯 WEIGHTING SIGNIFICANTLY HELPS GENEVA!\n")
-            cat("✓ Statistically significant AND meaningful effect size\n")
-            conclusion <- "significant_improvement"
-          } else if (geneva_results$rmse_improvement > 0.05) {
-            cat("⚠️ WEIGHTING HELPS GENEVA BUT NOT SIGNIFICANTLY\n")
-            cat("✓ Shows improvement but needs larger effect\n")
-            conclusion <- "modest_improvement"
+          if (nrow(geneva_weighted_preds) > 10 && nrow(geneva_unweighted_preds) > 10) {
+            # Statistical test
+            wilcox_test <- wilcox.test(
+              abs(geneva_weighted_preds$actual - geneva_weighted_preds$predicted),
+              abs(geneva_unweighted_preds$actual - geneva_unweighted_preds$predicted),
+              paired = FALSE
+            )
+            
+            # Effect size calculation
+            pooled_sd <- sqrt(
+              (var(abs(geneva_weighted_preds$actual - geneva_weighted_preds$predicted)) + 
+                 var(abs(geneva_unweighted_preds$actual - geneva_unweighted_preds$predicted))) / 2
+            )
+            
+            mean_diff <- mean(abs(geneva_unweighted_preds$actual - geneva_unweighted_preds$predicted)) -
+              mean(abs(geneva_weighted_preds$actual - geneva_weighted_preds$predicted))
+            
+            cohens_d <- mean_diff / pooled_sd
+            
+            cat("Statistical test p-value:", round(wilcox_test$p.value, 4), "\n")
+            cat("Effect size (Cohen's d):", round(cohens_d, 3), "\n")
+            cat("Significant (p < 0.05):", wilcox_test$p.value < 0.05, "\n")
+            cat("Meaningful effect (|d| > 0.2):", abs(cohens_d) > 0.2, "\n")
+            
+            geneva_significance <- list(
+              p_value = wilcox_test$p.value,
+              cohens_d = cohens_d,
+              significant = wilcox_test$p.value < 0.05,
+              meaningful = abs(cohens_d) > 0.2
+            )
+            
+            # Final conclusion
+            cat("\n=== GENEVA CONCLUSION ===\n")
+            if (geneva_significance$significant && geneva_significance$meaningful) {
+              cat("🎯 WEIGHTING SIGNIFICANTLY HELPS GENEVA!\n")
+              cat("✓ Statistically significant AND meaningful effect size\n")
+              conclusion <- "significant_improvement"
+            } else if (geneva_results$rmse_improvement > 0.05) {
+              cat("⚠️ WEIGHTING HELPS GENEVA BUT NOT SIGNIFICANTLY\n")
+              cat("✓ Shows improvement but needs larger effect\n")
+              conclusion <- "modest_improvement"
+            } else {
+              cat("❌ WEIGHTING DOES NOT MEANINGFULLY HELP GENEVA\n")
+              conclusion <- "no_improvement"
+            }
+            
           } else {
-            cat("❌ WEIGHTING DOES NOT MEANINGFULLY HELP GENEVA\n")
-            conclusion <- "no_improvement"
+            cat("Insufficient data for statistical test\n")
+            conclusion <- "insufficient_data"
           }
           
-        }, error = function(e) {
-          cat("Error in statistical test:", e$message, "\n")
-          conclusion <- "test_failed"
-        })
-      } else {
-        cat("Insufficient data for statistical test\n")
-        conclusion <- "insufficient_data"
-      }
+        } else {
+          cat("Geneva does not show improvement\n")
+          conclusion <- "no_improvement"
+        }
+        
+      }, error = function(e) {
+        cat("Error in statistical test:", e$message, "\n")
+        conclusion <- "test_failed"
+      })
       
       return(list(
         location_comparison = location_comparison,
         geneva_results = geneva_results,
         geneva_significance = geneva_significance,
-        conclusion = if(exists("conclusion")) conclusion else "unknown"
+        conclusion = conclusion
       ))
     }
   ),
   
-  tar_target(
-    # Create Geneva-focused plot
-    fig_geneva_improvement,
-    create_geneva_improvement_plot(geneva_performance_analysis)
-  ),
+  # tar_target(
+  #   # Create Geneva-focused plot
+  #   fig_geneva_improvement,
+  #   create_geneva_improvement_plot(geneva_performance_analysis)
+  # ),
   
   tar_target(
     # Generate interpretation text
@@ -271,30 +293,26 @@ list(
   ),
   
   tar_target(
-    # Summary table of location-specific results
-    table_location_specific_results,
-    {
-      library(knitr)
-      library(dplyr)
-      
-      location_data <- geneva_performance_analysis$location_comparison %>%
-        select(location, weight, rmse_unweighted, rmse_weighted, 
-               rmse_improvement, rmse_pct_improvement) %>%
-        mutate(
-          significant = case_when(
-            location == "geneva" & !is.null(geneva_performance_analysis$geneva_significance) ~ 
-              ifelse(geneva_performance_analysis$geneva_significance$significant, "*", ""),
-            TRUE ~ ""
-          )
-        )
-      
-      kable(location_data,
-            col.names = c("Location", "Weight", "Unweighted RMSE", "Weighted RMSE", 
-                          "Improvement", "% Improvement", "Significant"),
-            digits = 3,
-            caption = "Location-specific RMSE performance comparison (* p < 0.05)")
-    }
-  ),
+    # REPLACE the table_location_specific_results target in your _targets.R with this fixed version:
+      table_location_specific_results,
+        {
+          library(knitr)
+          library(dplyr)
+          
+          # Get the data
+          location_data <- geneva_performance_analysis$location_comparison
+          
+          # Create a basic table with whatever columns exist
+          if ("location" %in% names(location_data)) {
+            kable(location_data, 
+                  digits = 3, 
+                  caption = "Location-specific RMSE performance comparison")
+          } else {
+            kable(data.frame(Error = "No location data available"),
+                  caption = "Error: Location data not found")
+          }
+        }
+     ),
   
   # Optional: Compare with current weighting_comparison for validation
   tar_target(

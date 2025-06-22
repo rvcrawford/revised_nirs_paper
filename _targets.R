@@ -10,6 +10,7 @@ source("R/plotting_functions.R")
 source("R/spectral_analysis_functions.R")  # NEW
 source("R/multi_algorithm_functions.R")  # ADD THIS to your source() statements at top
 source("R/location_weighting_functions.R")
+source("R/fixed_location_weighting_function.R")
 
 # Set target options
 # 
@@ -106,7 +107,232 @@ list(
       n_iterations = 1000
     )
   ),
+  tar_target(
+    # Fixed comparison that preserves location information
+    weighting_comparison_fixed,
+    compare_weighted_unweighted_fixed(
+      balanced_data, 
+      full_data, 
+      best_preprocessing_method, 
+      n_iterations = 1000
+    )
+  ),
   
+  # Simple Geneva analysis that avoids the column selection issue
+  # Replace your geneva_performance_analysis target with this:
+  
+  tar_target(
+    geneva_performance_analysis,
+    {
+      cat("=== SIMPLE GENEVA ANALYSIS (NO COLUMN ISSUES) ===\n")
+      
+      library(dplyr)
+      
+      wc_fixed <- weighting_comparison_fixed
+      bd <- balanced_data
+      
+      # Simple approach - calculate directly without complex pivoting
+      
+      # Weighted results by location
+      weighted_results <- wc_fixed$weighted$predictions %>%
+        group_by(location) %>%
+        summarise(
+          weighted_rmse = sqrt(mean((actual - predicted)^2)),
+          weighted_bias = mean(predicted - actual),
+          weighted_mae = mean(abs(actual - predicted)),
+          weighted_rsq = cor(actual, predicted)^2,
+          weighted_n = n(),
+          .groups = 'drop'
+        )
+      
+      # Unweighted results by location  
+      unweighted_results <- wc_fixed$unweighted$predictions %>%
+        group_by(location) %>%
+        summarise(
+          unweighted_rmse = sqrt(mean((actual - predicted)^2)),
+          unweighted_bias = mean(predicted - actual),
+          unweighted_mae = mean(abs(actual - predicted)),
+          unweighted_rsq = cor(actual, predicted)^2,
+          unweighted_n = n(),
+          .groups = 'drop'
+        )
+      
+      # Simple join and calculate improvements
+      location_comparison <- weighted_results %>%
+        left_join(unweighted_results, by = "location") %>%
+        mutate(
+          rmse_improvement = unweighted_rmse - weighted_rmse,
+          rmse_pct_improvement = 100 * (unweighted_rmse - weighted_rmse) / unweighted_rmse,
+          bias_improvement = abs(unweighted_bias) - abs(weighted_bias),
+          rsq_improvement = weighted_rsq - unweighted_rsq
+        ) %>%
+        left_join(bd$location_summary, by = "location")
+      
+      cat("Location comparison results:\n")
+      print(location_comparison %>% 
+              select(location, weight, weighted_rmse, unweighted_rmse, 
+                     rmse_improvement, rmse_pct_improvement))
+      
+      # Geneva-specific analysis
+      geneva_results <- location_comparison %>% filter(location == "geneva")
+      
+      cat("\n=== GENEVA RESULTS ===\n")
+      cat("Weight:", round(geneva_results$weight, 2), "x\n")
+      cat("Weighted RMSE:", round(geneva_results$weighted_rmse, 3), "\n")
+      cat("Unweighted RMSE:", round(geneva_results$unweighted_rmse, 3), "\n")
+      cat("RMSE improvement:", round(geneva_results$rmse_improvement, 3), "\n")
+      cat("% improvement:", round(geneva_results$rmse_pct_improvement, 1), "%\n")
+      cat("R² improvement:", round(geneva_results$rsq_improvement, 4), "\n")
+      
+      # Statistical test for Geneva
+      geneva_weighted_errors <- wc_fixed$weighted$predictions %>% 
+        filter(location == "geneva") %>%
+        mutate(abs_error = abs(actual - predicted)) %>%
+        pull(abs_error)
+      
+      geneva_unweighted_errors <- wc_fixed$unweighted$predictions %>% 
+        filter(location == "geneva") %>%
+        mutate(abs_error = abs(actual - predicted)) %>%
+        pull(abs_error)
+      
+      cat("\nGeneva sample sizes:\n")
+      cat("Weighted:", length(geneva_weighted_errors), "\n")
+      cat("Unweighted:", length(geneva_unweighted_errors), "\n")
+      
+      geneva_significance <- NULL
+      
+      if (length(geneva_weighted_errors) > 10 && length(geneva_unweighted_errors) > 10) {
+        tryCatch({
+          wilcox_test <- wilcox.test(geneva_weighted_errors, 
+                                     geneva_unweighted_errors,
+                                     alternative = "less")
+          
+          # Effect size
+          mean_diff <- mean(geneva_unweighted_errors) - mean(geneva_weighted_errors)
+          pooled_sd <- sqrt((var(geneva_weighted_errors) + var(geneva_unweighted_errors)) / 2)
+          cohens_d <- mean_diff / pooled_sd
+          
+          cat("\nStatistical test results:\n")
+          cat("p-value:", round(wilcox_test$p.value, 4), "\n")
+          cat("Cohen's d:", round(cohens_d, 3), "\n")
+          cat("Significant (p < 0.05):", wilcox_test$p.value < 0.05, "\n")
+          cat("Meaningful effect (|d| > 0.2):", abs(cohens_d) > 0.2, "\n")
+          
+          geneva_significance <- list(
+            p_value = wilcox_test$p.value,
+            cohens_d = cohens_d,
+            significant = wilcox_test$p.value < 0.05,
+            meaningful = abs(cohens_d) > 0.2
+          )
+          
+          # Final conclusion
+          cat("\n=== GENEVA CONCLUSION ===\n")
+          if (geneva_significance$significant && geneva_significance$meaningful) {
+            cat("🎯 WEIGHTING SIGNIFICANTLY HELPS GENEVA!\n")
+            cat("✓ Statistically significant AND meaningful effect size\n")
+            conclusion <- "significant_improvement"
+          } else if (geneva_results$rmse_improvement > 0.05) {
+            cat("⚠️ WEIGHTING HELPS GENEVA BUT NOT SIGNIFICANTLY\n")
+            cat("✓ Shows improvement but needs larger effect\n")
+            conclusion <- "modest_improvement"
+          } else {
+            cat("❌ WEIGHTING DOES NOT MEANINGFULLY HELP GENEVA\n")
+            conclusion <- "no_improvement"
+          }
+          
+        }, error = function(e) {
+          cat("Error in statistical test:", e$message, "\n")
+          conclusion <- "test_failed"
+        })
+      } else {
+        cat("Insufficient data for statistical test\n")
+        conclusion <- "insufficient_data"
+      }
+      
+      return(list(
+        location_comparison = location_comparison,
+        geneva_results = geneva_results,
+        geneva_significance = geneva_significance,
+        conclusion = if(exists("conclusion")) conclusion else "unknown"
+      ))
+    }
+  ),
+  
+  tar_target(
+    # Create Geneva-focused plot
+    fig_geneva_improvement,
+    create_geneva_improvement_plot(geneva_performance_analysis)
+  ),
+  
+  tar_target(
+    # Generate interpretation text
+    geneva_interpretation,
+    generate_geneva_interpretation(geneva_performance_analysis)
+  ),
+  
+  tar_target(
+    # Summary table of location-specific results
+    table_location_specific_results,
+    {
+      library(knitr)
+      library(dplyr)
+      
+      location_data <- geneva_performance_analysis$location_comparison %>%
+        select(location, weight, rmse_unweighted, rmse_weighted, 
+               rmse_improvement, rmse_pct_improvement) %>%
+        mutate(
+          significant = case_when(
+            location == "geneva" & !is.null(geneva_performance_analysis$geneva_significance) ~ 
+              ifelse(geneva_performance_analysis$geneva_significance$significant, "*", ""),
+            TRUE ~ ""
+          )
+        )
+      
+      kable(location_data,
+            col.names = c("Location", "Weight", "Unweighted RMSE", "Weighted RMSE", 
+                          "Improvement", "% Improvement", "Significant"),
+            digits = 3,
+            caption = "Location-specific RMSE performance comparison (* p < 0.05)")
+    }
+  ),
+  
+  # Optional: Compare with current weighting_comparison for validation
+  tar_target(
+    location_comparison_validation,
+    {
+      cat("=== VALIDATING LOCATION PRESERVATION ===\n")
+      
+      # Check if location info is preserved in both approaches
+      old_comparison <- weighting_comparison  # Your original
+      new_comparison <- weighting_comparison_fixed  # Fixed version
+      
+      cat("Original weighted predictions columns:", names(old_comparison$weighted$predictions), "\n")
+      cat("Fixed weighted predictions columns:", names(new_comparison$weighted$predictions), "\n")
+      
+      cat("Original unweighted predictions columns:", names(old_comparison$unweighted$predictions), "\n") 
+      cat("Fixed unweighted predictions columns:", names(new_comparison$unweighted$predictions), "\n")
+      
+      # Check if we can now do location analysis
+      has_location_old_weighted <- "location" %in% names(old_comparison$weighted$predictions)
+      has_location_old_unweighted <- "location" %in% names(old_comparison$unweighted$predictions)
+      has_location_new_weighted <- "location" %in% names(new_comparison$weighted$predictions)
+      has_location_new_unweighted <- "location" %in% names(new_comparison$unweighted$predictions)
+      
+      cat("Location column availability:\n")
+      cat("- Original weighted:", has_location_old_weighted, "\n")
+      cat("- Original unweighted:", has_location_old_unweighted, "\n")
+      cat("- Fixed weighted:", has_location_new_weighted, "\n")
+      cat("- Fixed unweighted:", has_location_new_unweighted, "\n")
+      
+      validation_success <- has_location_new_weighted && has_location_new_unweighted
+      cat("Geneva analysis possible:", validation_success, "\n")
+      
+      return(list(
+        validation_success = validation_success,
+        can_analyze_geneva = validation_success
+      ))
+    }
+  ),
   tar_target(
     weighting_analysis,
     analyze_weighting_comparison(weighting_comparison)

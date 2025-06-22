@@ -485,3 +485,162 @@ analyze_weighting_comparison <- function(comparison_results) {
   cat("Analysis complete - returning result\n")
   return(result)
 }
+
+# Append this to the end of your R/location_weighting_functions.R file
+
+#' CORRECTED: Compare weighted vs unweighted with forced differences
+compare_weighted_unweighted_corrected <- function(balanced_data, full_data, best_method, n_iterations = 1000) {
+  cat("=== CORRECTED WEIGHTED vs UNWEIGHTED COMPARISON ===\n")
+  
+  library(caret)
+  library(data.table)
+  
+  # 1. Run weighted analysis (use existing function)
+  cat("Running WEIGHTED analysis...\n")
+  weighted_results <- run_weighted_modeling(balanced_data, best_method, n_iterations)
+  
+  # 2. Create TRULY unweighted data for comparison
+  cat("Preparing UNWEIGHTED data...\n")
+  
+  # Start with the same balanced data but FORCE no weights
+  unweighted_data <- copy(balanced_data$main_data)
+  
+  # CRITICAL: Remove ALL weight-related columns
+  weight_cols <- c("sample_weight", "weight")
+  for (col in weight_cols) {
+    if (col %in% names(unweighted_data)) {
+      unweighted_data[, (col) := NULL]
+    }
+  }
+  
+  # Add location column for predictions
+  if (!"loc" %in% names(unweighted_data)) {
+    unweighted_data[, loc := clean_loc]
+  }
+  
+  cat("Unweighted data prepared - columns:", names(unweighted_data), "\n")
+  cat("No weight columns present:", !any(c("sample_weight", "weight") %in% names(unweighted_data)), "\n")
+  
+  # 3. Run MANUAL unweighted analysis to ensure no weights
+  cat("Running MANUAL UNWEIGHTED analysis...\n")
+  
+  # Extract components manually
+  spectral_cols <- grep("^x[0-9]+$", names(unweighted_data), value = TRUE)
+  spectra_matrix <- as.matrix(unweighted_data[, ..spectral_cols])
+  y <- unweighted_data$crude_protein
+  locations <- unweighted_data$loc
+  
+  cat("Manual unweighted setup:\n")
+  cat("- Spectral dimensions:", dim(spectra_matrix), "\n")
+  cat("- Response length:", length(y), "\n")
+  cat("- Locations:", unique(locations), "\n")
+  
+  # Storage for unweighted results
+  unweighted_results_list <- list()
+  unweighted_predictions_list <- list()
+  
+  for (i in 1:n_iterations) {
+    if (i %% 100 == 0) cat("Unweighted iteration", i, "\n")
+    
+    tryCatch({
+      # Use same random seed as weighted for fair comparison
+      set.seed(i)
+      inTrain <- split_spectra_stratified(y, locations)
+      
+      y_train <- y[inTrain]
+      y_test <- y[-inTrain]
+      locations_train <- locations[inTrain]
+      locations_test <- locations[-inTrain]
+      
+      # Apply preprocessing (same as weighted)
+      spectra_processed <- my_preprocess(
+        spectra_matrix[inTrain, ], 
+        spectra_matrix[-inTrain, ]
+      )
+      
+      # Extract method data
+      method_train_name <- paste0(best_method, "_train")
+      method_test_name <- paste0(best_method, "_test")
+      
+      train_spectral <- spectra_processed[[1]][[method_train_name]]
+      test_spectral <- spectra_processed[[2]][[method_test_name]]
+      
+      # Create training dataframe - CRITICAL: NO WEIGHTS
+      train_df <- data.frame(y_train = y_train, train_spectral)
+      
+      # Fit PLS model WITHOUT weights - FORCE this to be different
+      model <- train(
+        y_train ~ .,
+        data = train_df,
+        method = "pls",
+        tuneLength = 20,
+        # CRITICAL: NO weights parameter at all
+        trControl = trainControl(method = "cv", number = 10)
+      )
+      
+      # Make predictions
+      predictions <- predict(model, newdata = as.data.frame(test_spectral))
+      
+      # Calculate metrics
+      rmse_val <- sqrt(mean((y_test - predictions)^2))
+      rsq_val <- cor(y_test, predictions)^2
+      rpd_val <- sd(y_test) / rmse_val
+      rpiq_val <- IQR(y_test) / rmse_val
+      
+      # Store results
+      unweighted_results_list[[i]] <- data.frame(
+        iteration = i,
+        rmse = rmse_val,
+        rsq = rsq_val,
+        rpd = rpd_val,
+        rpiq = rpiq_val,
+        n_components = model$bestTune$ncomp
+      )
+      
+      # Store predictions WITH location info
+      unweighted_predictions_list[[i]] <- data.frame(
+        iteration = i,
+        actual = y_test,
+        predicted = predictions,
+        location = locations_test,
+        sample_id = (1:length(y_test))
+      )
+      
+    }, error = function(e) {
+      cat("Error in unweighted iteration", i, ":", e$message, "\n")
+    })
+  }
+  
+  # Combine unweighted results
+  unweighted_metrics <- do.call(rbind, unweighted_results_list)
+  unweighted_predictions <- do.call(rbind, unweighted_predictions_list)
+  
+  unweighted_results <- list(
+    metrics = unweighted_metrics,
+    predictions = unweighted_predictions
+  )
+  
+  # 4. Verify they're actually different
+  cat("\n=== VERIFICATION ===\n")
+  cat("Weighted predictions (first 5):", head(weighted_results$predictions$predicted, 5), "\n")
+  cat("Unweighted predictions (first 5):", head(unweighted_results$predictions$predicted, 5), "\n")
+  
+  identical_check <- identical(
+    head(weighted_results$predictions$predicted, 100),
+    head(unweighted_results$predictions$predicted, 100)
+  )
+  cat("Are first 100 predictions identical?", identical_check, "\n")
+  
+  if (identical_check) {
+    stop("ERROR: Predictions are still identical! Bug not fixed.")
+  } else {
+    cat("SUCCESS: Predictions are different!\n")
+  }
+  
+  # Return comparison
+  list(
+    weighted = weighted_results,
+    unweighted = unweighted_results,
+    balanced_data_info = balanced_data$location_summary
+  )
+}

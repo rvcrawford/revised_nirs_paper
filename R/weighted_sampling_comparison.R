@@ -67,6 +67,9 @@ run_multiple_comparisons <- function(data, full_data, n_iterations = 1000) {
 }
 
 # Function to summarize multiple comparison results
+# CORRECTED VERSION - Replace the broken function with this one
+# Put this in R/weighted_sampling_comparison.R
+
 summarize_multiple_comparisons <- function(results) {
   library(dplyr)
   
@@ -100,7 +103,7 @@ summarize_multiple_comparisons <- function(results) {
       pct_rsq_better = round(100 * mean(rsq_improvement > 0, na.rm = TRUE), 1),
       pct_rpd_better = round(100 * mean(rpd_improvement > 0, na.rm = TRUE), 1),
       
-      # Confidence intervals (95%)
+      # Confidence intervals (95%) - FIXED THE TRUNCATED LINE HERE
       rmse_improvement_ci_lower = round(quantile(rmse_improvement, 0.025, na.rm = TRUE), 3),
       rmse_improvement_ci_upper = round(quantile(rmse_improvement, 0.975, na.rm = TRUE), 3),
       rsq_improvement_ci_lower = round(quantile(rsq_improvement, 0.025, na.rm = TRUE), 3),
@@ -146,9 +149,7 @@ summarize_multiple_comparisons <- function(results) {
     full_metrics = metrics,
     full_predictions = results$predictions
   ))
-  
-}  
-
+}
 # FIXED VERSION - Make sure you run this to replace the old function
 # FIXED VERSION - Copy and paste this to replace the broken function
 # FIXED VERSION - Make sure you run this to replace the old function

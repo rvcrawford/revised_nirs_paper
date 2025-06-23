@@ -100,6 +100,50 @@ list(
     prepare_location_balanced_data(full_data)
   ),
   
+  # Add this temporary target to your _targets.R for debugging
+  tar_target(
+    debug_weighted_sampling,
+    {
+      cat("=== DEBUGGING WEIGHTED SAMPLING PIPELINE ===\n")
+      
+      # Check if weighted_sampling_comparison target exists and has correct structure
+      wsc <- tar_read(weighted_sampling_comparison)
+      
+      cat("weighted_sampling_comparison structure:\n")
+      cat("- Class:", class(wsc), "\n")
+      cat("- Names:", names(wsc), "\n")
+      
+      if("metrics" %in% names(wsc)) {
+        cat("- Metrics dimensions:", dim(wsc$metrics), "\n")
+        cat("- Metrics columns:", names(wsc$metrics), "\n")
+        cat("- First few rows of metrics:\n")
+        print(head(wsc$metrics, 3))
+      } else {
+        cat("- ERROR: No 'metrics' component found!\n")
+      }
+      
+      if("predictions" %in% names(wsc)) {
+        cat("- Predictions dimensions:", dim(wsc$predictions), "\n")
+        cat("- Predictions columns:", names(wsc$predictions), "\n")
+      } else {
+        cat("- ERROR: No 'predictions' component found!\n")
+      }
+      
+      # Test the summarize_multiple_comparisons function
+      tryCatch({
+        cat("\n=== TESTING SUMMARIZE FUNCTION ===\n")
+        test_result <- summarize_multiple_comparisons(wsc)
+        cat("- Function executed successfully!\n")
+        cat("- Result class:", class(test_result), "\n")
+        cat("- Result names:", names(test_result), "\n")
+      }, error = function(e) {
+        cat("- ERROR in summarize_multiple_comparisons:", e$message, "\n")
+      })
+      
+      return("Debug complete")
+    }
+  ),
+  
   # NEW: Weighted sampling comparison (MAIN NEW TARGET)
   tar_target(
     weighted_sampling_comparison,

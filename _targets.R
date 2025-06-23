@@ -11,6 +11,8 @@ source("R/spectral_analysis_functions.R")  # NEW
 source("R/multi_algorithm_functions.R")  # ADD THIS to your source() statements at top
 source("R/location_weighting_functions.R")
 source("R/fixed_location_weighting_function.R")
+source("R/weighted_sampling_functions.R")
+source("R/weighted_sampling_comparison.R")  # or wherever you put the main functions
 
 # Set target options
 # 
@@ -97,6 +99,47 @@ list(
     balanced_data,
     prepare_location_balanced_data(full_data)
   ),
+  
+  # NEW: Weighted sampling comparison (MAIN NEW TARGET)
+  tar_target(
+    weighted_sampling_comparison,
+    run_multiple_comparisons(
+      balanced_data$main_data, 
+      full_data, 
+      n_iterations = 10
+    )
+  ),
+  
+  # NEW: Analysis of weighted sampling results
+  tar_target(
+    weighted_sampling_analysis,
+    summarize_multiple_comparisons(weighted_sampling_comparison)
+  ),
+  
+  # NEW: Table for weighted sampling comparison
+  tar_target(
+    table_weighted_sampling_comparison,
+    create_weighted_sampling_table(weighted_sampling_analysis)
+  ),
+  
+  # NEW: Plot for weighted sampling comparison
+  tar_target(
+    fig_weighted_sampling_comparison,
+    create_weighted_sampling_plot(weighted_sampling_analysis)
+  ),
+  
+  # NEW: Robustness plot with confidence intervals
+  tar_target(
+    fig_weighted_sampling_robustness,
+    create_robustness_plot(weighted_sampling_analysis)
+  ),
+  
+  # NEW: Location-specific analysis
+  tar_target(
+    location_weighted_sampling_analysis,
+    analyze_location_specific_performance(weighted_sampling_comparison, balanced_data)
+  ),
+  
   
   tar_target(
     weighting_comparison,

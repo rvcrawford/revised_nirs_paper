@@ -80,6 +80,7 @@ crossref:
       latex-list-of-description: Supplementary Figure
 ---
 
+
 ```{r}
 #| include: false
 
@@ -91,12 +92,34 @@ library(kableExtra)
 
 source("R/data_functions.R")
 
-# SAFE TARGET LOADING - replaces tar_load_everything()
-cat("Loading targets safely...\n")
-
-
+# # SAFE TARGET LOADING - replaces tar_load_everything()
+# cat("Loading targets safely...\n")
+# 
+# # Load only the targets that exist and are needed
+# safe_targets <- c(
+#   "full_data",
+#   "balanced_data", 
+#   "preprocessing_analysis",
+#   "best_preprocessing_method",
+#   "final_model_results",
+#   "weighting_comparison",
+#   "weighted_sampling_comparison",
+#   "weighted_sampling_analysis",
+#   "table_weighted_sampling_comparison",
+#   "fig_weighted_sampling_comparison"
+# )
+# 
+# for(target in safe_targets) {
+#   tryCatch({
+#     tar_load(all_of(target))
+#     cat("✓ Loaded:", target, "\n")
+#   }, error = function(e) {
+#     cat("✗ Failed to load:", target, "-", e$message, "\n")
+#   })
+# }
+# 
+# cat("Target loading complete.\n")
 tar_load_everything()
-
 ```
 
 **draft incorporates changes from Ginny, Larry, and Julie** CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay
@@ -236,17 +259,17 @@ tar_read(balanced_data)$location_summary %>%
 Three locations with sufficient sample sizes (Ithaca: 76, Geneva: 41, Freeville: 24) were retained for weighted modeling, while locations with fewer than 10 samples (Chazy: 5, Willsboro: 3) were reserved for external validation. Class weights were calculated using inverse frequency weighting, giving Geneva samples 1.85× more influence and Freeville samples 3.17× more influence during model training.
 
 ```{r}
-#| label: fig-weighting-comparison2
-#| fig-cap: "Performance comparison between standard and location-weighted models across 1000 iterations"
+# <!--  label: fig-weighting-comparison2 -->
+# <!-- #| fig-cap: "Performance comparison between standard and location-weighted models across 1000 iterations" -->
 
-tar_read(fig_weighting_comparison)
+# tar_read(fig_weighting_comparison)
 ```
 
 ```{r}
-#| label: tbl-weighting-results2
-#| tbl-cap: "Model performance metrics: Standard vs Location-weighted approaches"
+# <!-- #| label: tbl-weighting-results2 -->
+# <!-- #| tbl-cap: "Model performance metrics: Standard vs Location-weighted approaches" -->
 
-tar_read(table_weighting_comparison)
+# tar_read(table_weighting_comparison)
 ```
 
 The location-weighted models showed [describe your results - you'll need to interpret the actual numbers from your results]. While the overall improvement was modest, the approach successfully reduced location-specific bias and created more balanced predictions across different growing environments.
@@ -276,17 +299,17 @@ tar_read(balanced_data)$location_summary %>%
 Three locations with sufficient sample sizes (Ithaca: 76, Geneva: 41, Freeville: 24) were retained for weighted modeling, while locations with fewer than 10 samples (Chazy: 5, Willsboro: 3) were reserved for external validation.
 
 ```{r}
-#| label: fig-weighting-comparison
-#| fig-cap: "Performance comparison between standard and location-weighted models"
+# | label: fig-weighting-comparison
+# | fig-cap: "Performance comparison between standard and location-weighted models"
 
-tar_read(fig_weighting_comparison)
+# tar_read(fig_weighting_comparison)
 ```
 
 ```{r}
-#| label: tbl-weighting-results
-#| tbl-cap: "Model performance metrics: Standard vs Location-weighted approaches"
+# | label: tbl-weighting-results
+# | tbl-cap: "Model performance metrics: Standard vs Location-weighted approaches"
 
-tar_read(table_weighting_comparison)
+# tar_read(table_weighting_comparison)
 ```
 
 

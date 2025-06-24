@@ -10,7 +10,6 @@ source("R/plotting_functions.R")
 source("R/spectral_analysis_functions.R")  # NEW
 source("R/multi_algorithm_functions.R")  # ADD THIS to your source() statements at top
 source("R/location_weighting_functions.R")
-# source("R/fixed_location_weighting_function.R")
 source("R/weighted_sampling_functions.R")
 source("R/weighted_sampling_comparison.R")  # or wherever you put the main functions
 
@@ -21,7 +20,8 @@ tar_option_set(
   packages = c(
     "tidyverse", "data.table", "caret", "prospectr", 
     "pls", "tidymodels", "nlme", "kableExtra", "skimr",
-    "emmeans", "multcomp", "broom", "lme4", "readr", "gridExtra"  # ADDED gridExtra
+    "emmeans", "multcomp", "broom", "lme4", "readr", "gridExtra",
+    "tidymodels", "plsmod"  # ← ADD THESE
   ),
   format = "rds"
 )
@@ -100,141 +100,54 @@ list(
     prepare_location_balanced_data(full_data)
   ),
   
+  tar_target(
+    balanced_main, balanced_data$main_data
+  ),
   
   # NEW: Weighted sampling comparison (MAIN NEW TARGET)
   tar_target(
-    weighted_sampling_comparison,
-    run_multiple_comparisons(
-      balanced_data$main_data, 
+    weighted_sampling_comparisons,
+    run_multiple_comparisons( 
+      balanced_main, 
       full_data, 
-      n_iterations = 10
+      n = 1000
     )
+  ),
+  tar_target(
+    weighted_sampling_results,
+      summarize_multiple_comparisons(weighted_sampling_comparisons)
   ),
   
   # NEW: Analysis of weighted sampling results
-  tar_target(
-    weighted_sampling_analysis,
-    summarize_multiple_comparisons(weighted_sampling_comparison)
-  ),
-  
-  # NEW: Table for weighted sampling comparison
   # tar_target(
-  #   table_weighted_sampling_comparison,
-  #   create_weighted_sampling_table(weighted_sampling_analysis)
+  #   weighted_sampling_analysis,
+  #   summarize_multiple_comparisons(weighted_sampling_comparison)
   # ),
-  
-  # # NEW: Plot for weighted sampling comparison
-  # tar_target(
-  #   fig_weighted_sampling_comparison,
-  #   create_weighted_sampling_plot(weighted_sampling_analysis)
-  # ),
-  
+
   # NEW: Robustness plot with confidence intervals
-  tar_target(
-    fig_weighted_sampling_robustness,
-    create_robustness_plot(weighted_sampling_analysis)
-  ),
+  # tar_target(
+  #   fig_weighted_sampling_robustness,
+  #   create_robustness_plot(weighted_sampling_analysis)
+  # ),
   
-  # # NEW: Location-specific analysis
   # tar_target(
-  #   location_weighted_sampling_analysis,
-  #   analyze_location_specific_performance(weighted_sampling_comparison, balanced_data)
-  # ),
-  # 
-  # 
-  # tar_target(
-  #   weighting_comparison,
-  #   compare_weighted_unweighted(
-  #     balanced_data, 
-  #     full_data, 
-  #     best_preprocessing_method, 
-  #     n_iterations = 1000
-  #   )
-  # ),
-  # tar_target(
-  #   # Fixed comparison that preserves location information
-  #   weighting_comparison_fixed,
-  #   compare_weighted_unweighted_fixed(
-  #     balanced_data, 
-  #     full_data, 
+  #   weighted_model_results,
+  #   run_weighted_modeling_ultrafast(
+  #     balanced_data,
   #     best_preprocessing_method, 
   #     n_iterations = 1000
   #   )
   # ),
   
-  # Simple Geneva analysis that avoids the column selection issue
-  # Replace your geneva_performance_analysis target with this:
-  
-  # REPLACE the geneva_performance_analysis target in your _targets.R with this fixed version:
-  
   # tar_target(
-  #   # Create Geneva-focused plot
-  #   fig_geneva_improvement,
-  #   create_geneva_improvement_plot(geneva_performance_analysis)
+  #   location_performance_analysis,
+  #   analyze_location_performance(weighted_model_results, balanced_data)
   # ),
-  
-  # tar_target(
-  #   # Generate interpretation text
-  #   geneva_interpretation,
-  #   generate_geneva_interpretation(geneva_performance_analysis)
-  # ),
-  
-  # tar_target(
-  #   # REPLACE the table_location_specific_results target in your _targets.R with this fixed version:
-  #     table_location_specific_results,
-  #       {
-  #         library(knitr)
-  #         library(dplyr)
-  #         
-  #         # Get the data
-  #         location_data <- geneva_performance_analysis$location_comparison
-  #         
-  #         # Create a basic table with whatever columns exist
-  #         if ("location" %in% names(location_data)) {
-  #           kable(location_data, 
-  #                 digits = 3, 
-  #                 caption = "Location-specific RMSE performance comparison")
-  #         } else {
-  #           kable(data.frame(Error = "No location data available"),
-  #                 caption = "Error: Location data not found")
-  #         }
-  #       }
-  #    ),
-  
 
   # tar_target(
-  #   weighting_analysis,
-  #   analyze_weighting_comparison(weighting_comparison)
+  #   fig_location_performance,
+  #   create_location_performance_plot(location_performance_analysis)
   # ),
-  
-  tar_target(
-    weighted_model_results,
-    run_weighted_modeling_ultrafast(
-      balanced_data,
-      best_preprocessing_method, 
-      n_iterations = 1000
-    )
-  ),
-  
-  tar_target(
-    location_performance_analysis,
-    analyze_location_performance(weighted_model_results, balanced_data)
-  ),
-
-  # tar_target(
-  #   table_weighting_comparison,
-  #   create_weighting_comparison_table(weighting_comparison)
-  # ),
-  
-  # tar_target(
-  #   fig_weighting_comparison,
-  #   create_weighting_comparison_plot(weighting_comparison)  # Use weighting_comparison, NOT weighting_analysis
-  # ),
-  # 
-  tar_target(
-    fig_location_performance,
-    create_location_performance_plot(location_performance_analysis)
-  ),
   
   tar_target(
     final_model_analysis,

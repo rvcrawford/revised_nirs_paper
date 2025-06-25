@@ -101,7 +101,12 @@ calculate_model_metrics <- function(actual, predicted) {
   )
 }
 
-run_preprocessing_comparison <- function(full_data, n_iterations = 100) {
+run_preprocessing_comparison <- function(full_data, n_iterations = NULL) {
+  
+  # Get configuration and resolve parameters
+  config <- get_analysis_config()
+  n_iterations <- resolve_param(n_iterations, config$n_iterations, "n_iterations")
+  
   cat("Starting preprocessing comparison with", n_iterations, "iterations\n")
   
   # Extract spectral data

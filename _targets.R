@@ -2,6 +2,7 @@ library(targets)
 library(tarchetypes)
 
 # Source all functions
+source("R/config.R")
 source("R/data_functions.R")
 source("R/preprocessing_functions.R") 
 source("R/modeling_functions.R")

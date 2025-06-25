@@ -82,17 +82,27 @@ crossref:
 
 
 ```{r}
+#| label: setup
 #| include: false
 
-# Load targets and required packages
 library(targets)
-library(tidyverse)
-library(data.table)
-library(kableExtra)
+library(knitr)
+library(ggplot2)
 
-source("R/data_functions.R")
+# STREAMLINED: Load results from simplified pipeline
+# (This is the ONLY change - using streamlined targets instead of complex ones)
+hemp_data <- tar_read(hemp_data)
+preprocessing_analysis <- tar_read(preprocessing_analysis) 
+best_method <- tar_read(best_method)
+final_model_analysis <- tar_read(final_model_analysis)
+error_analysis <- tar_read(error_analysis)
 
-tar_load_everything()
+# Load tables and figures (streamlined versions)
+table_sample_summary <- tar_read(table_sample_summary)
+table_preprocessing <- tar_read(table_preprocessing)
+fig_model_calibration <- tar_read(fig_model_calibration)
+fig_performance_boxplot <- tar_read(fig_performance_boxplot)
+fig_validation_errors <- tar_read(fig_validation_errors)
 ```
 
 **draft incorporates changes from Ginny, Larry, and Julie** CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay

@@ -83,9 +83,16 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#preprocessing-comparison-summary" id="toc-preprocessing-comparison-summary" class="nav-link active" data-scroll-target="#preprocessing-comparison-summary">Preprocessing Comparison Summary</a></li>
-  <li><a href="#final-model-performance" id="toc-final-model-performance" class="nav-link" data-scroll-target="#final-model-performance">Final Model Performance</a></li>
+  <li><a href="#hemp-nir-analysis---streamlined-pipeline-results" id="toc-hemp-nir-analysis---streamlined-pipeline-results" class="nav-link active" data-scroll-target="#hemp-nir-analysis---streamlined-pipeline-results">Hemp NIR Analysis - Streamlined Pipeline Results</a>
+  <ul class="collapse">
+  <li><a href="#data-overview" id="toc-data-overview" class="nav-link" data-scroll-target="#data-overview">Data Overview</a></li>
+  <li><a href="#preprocessing-method-selection" id="toc-preprocessing-method-selection" class="nav-link" data-scroll-target="#preprocessing-method-selection">Preprocessing Method Selection</a></li>
+  <li><a href="#model-performance" id="toc-model-performance" class="nav-link" data-scroll-target="#model-performance">Model Performance</a></li>
+  <li><a href="#data-tables" id="toc-data-tables" class="nav-link" data-scroll-target="#data-tables">Data Tables</a>
+  <ul class="collapse">
+  <li><a href="#sample-summary" id="toc-sample-summary" class="nav-link" data-scroll-target="#sample-summary">Sample Summary</a></li>
   <li><a href="#preprocessing-method-comparison" id="toc-preprocessing-method-comparison" class="nav-link" data-scroll-target="#preprocessing-method-comparison">Preprocessing Method Comparison</a></li>
+  </ul></li>
   <li><a href="#visualizations" id="toc-visualizations" class="nav-link" data-scroll-target="#visualizations">Visualizations</a>
   <ul class="collapse">
   <li><a href="#model-calibration" id="toc-model-calibration" class="nav-link" data-scroll-target="#model-calibration">Model Calibration</a></li>
@@ -93,6 +100,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#validation-analysis" id="toc-validation-analysis" class="nav-link" data-scroll-target="#validation-analysis">Validation Analysis</a></li>
   </ul></li>
   <li><a href="#summary-and-conclusions" id="toc-summary-and-conclusions" class="nav-link" data-scroll-target="#summary-and-conclusions">Summary and Conclusions</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -147,203 +155,186 @@ ul.task-list li input[type="checkbox"] {
 <pre><code>- Preprocessing analysis: Available </code></pre>
 </div>
 </div>
-<pre><code>
-# Hemp NIR Analysis - Streamlined Pipeline Results
-
-## Data Overview
-
-::: {.cell}
-::: {.cell-output .cell-output-stdout}
-</code></pre>
-<p><strong>Dataset Summary:</strong> - Total samples: ** 149 ** - Protein range: 208 - 308 g/kg - Protein mean: 261 g/kg - Locations: 11 ( Cnoll, Rnooa, Mg4e , … ) - Study period: 2017 - 2022 - Spectral variables: 700 wavelengths</p>
-<pre><code>
-
-:::
-:::
-
-## Preprocessing Method Selection
-
-**Optimal method identified:** **Savitzky-Golay smoothing**
-
-
-::: {.cell}
-::: {.cell-output .cell-output-stdout}
-</code></pre>
-<section id="preprocessing-comparison-summary" class="level3">
-<h3 class="anchored" data-anchor-id="preprocessing-comparison-summary">Preprocessing Comparison Summary</h3>
-<ul>
-<li><strong>Methods tested:</strong> 8</li>
-</ul>
-<pre><code>
-
-:::
-:::
-
-
-## Model Performance
-
-
-::: {.cell}
-::: {.cell-output .cell-output-stdout}
-</code></pre>
+<section id="hemp-nir-analysis---streamlined-pipeline-results" class="level1">
+<h1>Hemp NIR Analysis - Streamlined Pipeline Results</h1>
+<section id="data-overview" class="level2">
+<h2 class="anchored" data-anchor-id="data-overview">Data Overview</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>**Dataset Summary:**
+- Total samples: ** 149 **
+- Protein range:  208  -  308  g/kg
+- Protein mean:  261  g/kg
+- Locations:  11  ( Cnoll, Rnooa, Mg4e , ... )
+- Study period:  2017 - 2022 
+- Spectral variables:  700  wavelengths</code></pre>
+</div>
+</div>
 </section>
-<section id="final-model-performance" class="level3">
-<h3 class="anchored" data-anchor-id="final-model-performance">Final Model Performance</h3>
-<p><strong>Performance Metrics (mean ± SD):</strong></p>
-<table class="table">
+<section id="preprocessing-method-selection" class="level2">
+<h2 class="anchored" data-anchor-id="preprocessing-method-selection">Preprocessing Method Selection</h2>
+<p><strong>Optimal method identified:</strong> <strong>Savitzky-Golay smoothing</strong></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>### Preprocessing Comparison Summary
+
+- **Methods tested:**  8 </code></pre>
+</div>
+</div>
+</section>
+<section id="model-performance" class="level2">
+<h2 class="anchored" data-anchor-id="model-performance">Model Performance</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>### Final Model Performance
+
+**Performance Metrics (mean ± SD):**
+
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| RMSE |  13.97  ±  6.03  g/kg | Root Mean Square Error |
+| R² |  0.729  ±  0.198  |  72.9 % variance explained |
+| RPD |  2.04  ±  0.73  |  Good  for quantitative use |
+
+**Model Quality Distribution:**
+- Excellent models (RPD &gt; 2.5):  1 
+- Good models (RPD 2.0-2.5):  1 
+- Approximate models (RPD 1.5-2.0):  0 </code></pre>
+</div>
+</div>
+</section>
+<section id="data-tables" class="level2">
+<h2 class="anchored" data-anchor-id="data-tables">Data Tables</h2>
+<section id="sample-summary" class="level3">
+<h3 class="anchored" data-anchor-id="sample-summary">Sample Summary</h3>
+<div class="cell">
+<div id="tbl-sample-summary" class="cell quarto-float anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-sample-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Hemp grain sample summary
+</figcaption>
+<div aria-describedby="tbl-sample-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div>
+<table class="table table-striped table-hover do-not-create-environment cell table-sm small" data-quarto-postprocess="true">
+<caption>Sample characteristics by location</caption>
 <thead>
 <tr class="header">
-<th>Metric</th>
-<th>Value</th>
-<th>Interpretation</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Location</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Samples</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Mean CP (g/kg)</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">SD CP (g/kg)</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Min CP (g/kg)</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Max CP (g/kg)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>RMSE</td>
-<td>11.81 ± 0.74 g/kg</td>
-<td>Root Mean Square Error</td>
+<td style="text-align: left;">Cnoll</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">265.2</td>
+<td style="text-align: right;">21.5</td>
+<td style="text-align: right;">236</td>
+<td style="text-align: right;">301</td>
 </tr>
 <tr class="even">
-<td>R²</td>
-<td>0.778 ± 0.042</td>
-<td>77.8 % variance explained</td>
+<td style="text-align: left;">Rnooa</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">265.4</td>
+<td style="text-align: right;">18.1</td>
+<td style="text-align: right;">231</td>
+<td style="text-align: right;">291</td>
 </tr>
 <tr class="odd">
-<td>RPD</td>
-<td>2.1 ± 0.26</td>
-<td>Good for quantitative use</td>
+<td style="text-align: left;">Mg4e</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">263.7</td>
+<td style="text-align: right;">5.5</td>
+<td style="text-align: right;">254</td>
+<td style="text-align: right;">274</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mg4l</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">231.6</td>
+<td style="text-align: right;">22.0</td>
+<td style="text-align: right;">208</td>
+<td style="text-align: right;">286</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ithaca</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">261.1</td>
+<td style="text-align: right;">23.7</td>
+<td style="text-align: right;">224</td>
+<td style="text-align: right;">304</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Freeville</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">266.2</td>
+<td style="text-align: right;">25.4</td>
+<td style="text-align: right;">217</td>
+<td style="text-align: right;">296</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Chazy</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">248.8</td>
+<td style="text-align: right;">39.0</td>
+<td style="text-align: right;">216</td>
+<td style="text-align: right;">296</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Cn North</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">226.7</td>
+<td style="text-align: right;">9.3</td>
+<td style="text-align: right;">216</td>
+<td style="text-align: right;">233</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Mcg</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">259.8</td>
+<td style="text-align: right;">21.0</td>
+<td style="text-align: right;">227</td>
+<td style="text-align: right;">283</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Geneva</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">280.8</td>
+<td style="text-align: right;">18.1</td>
+<td style="text-align: right;">237</td>
+<td style="text-align: right;">308</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Willsboro</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">276.7</td>
+<td style="text-align: right;">23.0</td>
+<td style="text-align: right;">257</td>
+<td style="text-align: right;">302</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Total</td>
+<td style="text-align: right;">149</td>
+<td style="text-align: right;">261.0</td>
+<td style="text-align: right;">24.6</td>
+<td style="text-align: right;">208</td>
+<td style="text-align: right;">308</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Model Quality Distribution:</strong> - Excellent models (RPD &gt; 2.5): 0 - Good models (RPD 2.0-2.5): 1 - Approximate models (RPD 1.5-2.0): 2</p>
-<pre><code>
-
-:::
-:::
 
 
-## Data Tables
-
-### Sample Summary
-
-
-::: {#tbl-sample-summary .cell tbl-cap='Hemp grain sample summary'}
-::: {.cell-output-display}
-`````{=html}
-&lt;table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;"&gt;
-&lt;caption&gt;Sample characteristics by location&lt;/caption&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; Location &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Samples &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Mean CP (g/kg) &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; SD CP (g/kg) &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Min CP (g/kg) &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; Max CP (g/kg) &lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
-&lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Cnoll &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 13 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 265.2 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 21.5 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 236 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 301 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Rnooa &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 13 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 265.4 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 18.1 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 231 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 291 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Mg4e &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 13 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 263.7 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 5.5 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 254 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 274 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Mg4l &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 13 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 231.6 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 22.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 208 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 286 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Ithaca &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 41 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 261.1 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 23.7 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 224 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 304 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Freeville &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 24 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 266.2 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 25.4 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 217 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 296 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Chazy &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 5 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 248.8 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 39.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 216 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 296 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Cn North &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 226.7 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9.3 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 216 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 233 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Mcg &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 259.8 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 21.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 227 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 283 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Geneva &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 12 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 280.8 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 18.1 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 237 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 308 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Willsboro &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 276.7 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 23.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 257 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 302 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Total &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 149 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 261.0 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 24.6 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 208 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 308 &lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-</code></pre>
-<p>::: :::</p>
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
 </section>
 <section id="preprocessing-method-comparison" class="level3">
 <h3 class="anchored" data-anchor-id="preprocessing-method-comparison">Preprocessing Method Comparison</h3>
@@ -351,7 +342,7 @@ ul.task-list li input[type="checkbox"] {
 <div id="tbl-preprocessing" class="cell quarto-float anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-preprocessing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;1: Comparison of spectral preprocessing methods
+Table&nbsp;2: Comparison of spectral preprocessing methods
 </figcaption>
 <div aria-describedby="tbl-preprocessing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -435,6 +426,7 @@ Table&nbsp;1: Comparison of spectral preprocessing methods
 </div>
 </div>
 </section>
+</section>
 <section id="visualizations" class="level2">
 <h2 class="anchored" data-anchor-id="visualizations">Visualizations</h2>
 <section id="model-calibration" class="level3">
@@ -500,7 +492,7 @@ Figure&nbsp;3: Validation error analysis across protein concentration range
 
 🎯 **Optimal preprocessing identified:**  Savitzky-Golay smoothing  provides best prediction performance
 
-📈 **Prediction quality:** RPD =  2.1  indicates  good to excellent  prediction capability
+📈 **Prediction quality:** RPD =  2.04  indicates  good to excellent  prediction capability
 
 🔬 **NIR spectroscopy demonstrates strong potential** for non-destructive hemp grain protein assessment
 
@@ -530,10 +522,11 @@ Figure&nbsp;3: Validation error analysis across protein concentration range
 </div>
 <hr>
 <p><strong>Pipeline Status:</strong> ✅ Complete<br>
-<strong>Generated:</strong> 2025-06-25 14:28:10<br>
+<strong>Generated:</strong> 2025-06-25 15:08:51<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

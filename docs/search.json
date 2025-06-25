@@ -116,7 +116,7 @@
     "href": "hemp_nir_paper.html",
     "title": "Hemp NIR Analysis - Streamlined Results",
     "section": "",
-    "text": "Simple check:\n\n\n- Hemp data: 149 samples \n\n\n- Best method: Savitzky-Golay smoothing \n\n\n- Final analysis: Available \n\n\n- Preprocessing analysis: Available\nDataset Summary: - Total samples: ** 149 ** - Protein range: 208 - 308 g/kg - Protein mean: 261 g/kg - Locations: 11 ( Cnoll, Rnooa, Mg4e , … ) - Study period: 2017 - 2022 - Spectral variables: 700 wavelengths"
+    "text": "Simple check:\n\n\n- Hemp data: 149 samples \n\n\n- Best method: Savitzky-Golay smoothing \n\n\n- Final analysis: Available \n\n\n- Preprocessing analysis: Available"
   },
   {
     "objectID": "hemp_nir_paper.html#visualizations",
@@ -130,6 +130,34 @@
     "href": "hemp_nir_paper.html#summary-and-conclusions",
     "title": "Hemp NIR Analysis - Streamlined Results",
     "section": "Summary and Conclusions",
-    "text": "Summary and Conclusions\n\n\n### Research Outcomes\n\n\n✅ **Analysis Complete:** All pipeline components successfully executed\n\n🎯 **Optimal preprocessing identified:**  Savitzky-Golay smoothing  provides best prediction performance\n\n📈 **Prediction quality:** RPD =  2.1  indicates  good to excellent  prediction capability\n\n🔬 **NIR spectroscopy demonstrates strong potential** for non-destructive hemp grain protein assessment\n\n⚙️ **Preprocessing optimization proves critical** for achieving reliable predictions\n\n🔄 **Reproducible pipeline ensures** transparent and reliable research workflow\n\n\n### Technical Implementation\n\n\n- **Framework:** R targets pipeline for reproducible research\n\n\n- **Model type:** Partial Least Squares Regression (PLSR)\n\n\n- **Validation:** Cross-validation with multiple preprocessing approaches\n\n\n- **Iterations:** Multiple modeling iterations for robust performance assessment\n\n\n- **Sample size:**  149  hemp grain samples\n- **Spectral range:**  1100 - 2500  nm ( 700  variables)\n\n\n\nPipeline Status: ✅ Complete\nGenerated: 2025-06-25 14:28:10\nFramework: Targets-based reproducible workflow"
+    "text": "Summary and Conclusions\n\n\n### Research Outcomes\n\n\n✅ **Analysis Complete:** All pipeline components successfully executed\n\n🎯 **Optimal preprocessing identified:**  Savitzky-Golay smoothing  provides best prediction performance\n\n📈 **Prediction quality:** RPD =  2.04  indicates  good to excellent  prediction capability\n\n🔬 **NIR spectroscopy demonstrates strong potential** for non-destructive hemp grain protein assessment\n\n⚙️ **Preprocessing optimization proves critical** for achieving reliable predictions\n\n🔄 **Reproducible pipeline ensures** transparent and reliable research workflow\n\n\n### Technical Implementation\n\n\n- **Framework:** R targets pipeline for reproducible research\n\n\n- **Model type:** Partial Least Squares Regression (PLSR)\n\n\n- **Validation:** Cross-validation with multiple preprocessing approaches\n\n\n- **Iterations:** Multiple modeling iterations for robust performance assessment\n\n\n- **Sample size:**  149  hemp grain samples\n- **Spectral range:**  1100 - 2500  nm ( 700  variables)\n\n\n\nPipeline Status: ✅ Complete\nGenerated: 2025-06-25 15:08:51\nFramework: Targets-based reproducible workflow"
+  },
+  {
+    "objectID": "hemp_nir_paper.html#data-overview",
+    "href": "hemp_nir_paper.html#data-overview",
+    "title": "Hemp NIR Analysis - Streamlined Results",
+    "section": "Data Overview",
+    "text": "Data Overview\n\n\n**Dataset Summary:**\n- Total samples: ** 149 **\n- Protein range:  208  -  308  g/kg\n- Protein mean:  261  g/kg\n- Locations:  11  ( Cnoll, Rnooa, Mg4e , ... )\n- Study period:  2017 - 2022 \n- Spectral variables:  700  wavelengths"
+  },
+  {
+    "objectID": "hemp_nir_paper.html#preprocessing-method-selection",
+    "href": "hemp_nir_paper.html#preprocessing-method-selection",
+    "title": "Hemp NIR Analysis - Streamlined Results",
+    "section": "Preprocessing Method Selection",
+    "text": "Preprocessing Method Selection\nOptimal method identified: Savitzky-Golay smoothing\n\n\n### Preprocessing Comparison Summary\n\n- **Methods tested:**  8"
+  },
+  {
+    "objectID": "hemp_nir_paper.html#model-performance",
+    "href": "hemp_nir_paper.html#model-performance",
+    "title": "Hemp NIR Analysis - Streamlined Results",
+    "section": "Model Performance",
+    "text": "Model Performance\n\n\n### Final Model Performance\n\n**Performance Metrics (mean ± SD):**\n\n| Metric | Value | Interpretation |\n|--------|-------|----------------|\n| RMSE |  13.97  ±  6.03  g/kg | Root Mean Square Error |\n| R² |  0.729  ±  0.198  |  72.9 % variance explained |\n| RPD |  2.04  ±  0.73  |  Good  for quantitative use |\n\n**Model Quality Distribution:**\n- Excellent models (RPD &gt; 2.5):  1 \n- Good models (RPD 2.0-2.5):  1 \n- Approximate models (RPD 1.5-2.0):  0"
+  },
+  {
+    "objectID": "hemp_nir_paper.html#data-tables",
+    "href": "hemp_nir_paper.html#data-tables",
+    "title": "Hemp NIR Analysis - Streamlined Results",
+    "section": "Data Tables",
+    "text": "Data Tables\n\nSample Summary\n\n\n\n\nTable 1: Hemp grain sample summary\n\n\n\n\n\nSample characteristics by location\n\n\nLocation\nSamples\nMean CP (g/kg)\nSD CP (g/kg)\nMin CP (g/kg)\nMax CP (g/kg)\n\n\n\n\nCnoll\n13\n265.2\n21.5\n236\n301\n\n\nRnooa\n13\n265.4\n18.1\n231\n291\n\n\nMg4e\n13\n263.7\n5.5\n254\n274\n\n\nMg4l\n13\n231.6\n22.0\n208\n286\n\n\nIthaca\n41\n261.1\n23.7\n224\n304\n\n\nFreeville\n24\n266.2\n25.4\n217\n296\n\n\nChazy\n5\n248.8\n39.0\n216\n296\n\n\nCn North\n3\n226.7\n9.3\n216\n233\n\n\nMcg\n9\n259.8\n21.0\n227\n283\n\n\nGeneva\n12\n280.8\n18.1\n237\n308\n\n\nWillsboro\n3\n276.7\n23.0\n257\n302\n\n\nTotal\n149\n261.0\n24.6\n208\n308\n\n\n\n\n\n\n\n\n\n\n\n\n\nPreprocessing Method Comparison\n\n\n\n\nTable 2: Comparison of spectral preprocessing methods\n\n\n\n\n\nPreprocessing method comparison (mean ± SD)\n\n\nMethod\nRMSE (g/kg)\nR²\nRPD\nRPIQ\n\n\n\n\nRaw spectra\n11.8 ± 0.7\n0.778 ± 0.042\n2.1 ± 0.26\n3.37 ± 0.2\n\n\nFirst derivative\n11.1 ± 2.1\n0.794 ± 0.081\n2.27 ± 0.41\n3.68 ± 0.78\n\n\nSavitzky-Golay smoothing\n10.6 ± 1.6\n0.818 ± 0.055\n2.37 ± 0.43\n3.83 ± 0.58\n\n\nGap-segment derivative\n11.2 ± 2.5\n0.782 ± 0.097\n2.29 ± 0.66\n3.67 ± 0.85\n\n\nStandard normal variate (SNV)\n11.7 ± 3.1\n0.77 ± 0.12\n2.25 ± 0.81\n3.58 ± 1.02\n\n\nSNV + Savitzky-Golay\n10.7 ± 1.8\n0.808 ± 0.069\n2.35 ± 0.48\n3.78 ± 0.64\n\n\nSNV + detrending\n11.9 ± 3.2\n0.751 ± 0.128\n2.22 ± 0.84\n3.53 ± 1.08\n\n\nMultiplicative scatter correction\n11.9 ± 3.6\n0.752 ± 0.138\n2.27 ± 0.96\n3.6 ± 1.26"
   }
 ]

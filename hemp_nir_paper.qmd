@@ -12,7 +12,6 @@ execute:
 ---
 
 ```{r}
-```{r}
 #| label: setup
 #| eval: true
 
@@ -40,7 +39,7 @@ cat("- Best method:", best_method, "\n")
 cat("- Final analysis:", ifelse(is.null(final_model_analysis), "NULL", "Available"), "\n")
 cat("- Preprocessing analysis:", ifelse(is.null(preprocessing_analysis), "NULL", "Available"), "\n")
 ```
-```
+
 
 # Hemp NIR Analysis - Streamlined Pipeline Results
 

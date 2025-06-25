@@ -20,16 +20,26 @@ library(knitr)
 library(ggplot2)
 library(targets)
 
-# Just try to read targets directly - if it works, great; if not, show what we can
+# Load all required targets objects
 hemp_data <- tryCatch(tar_read(hemp_data), error = function(e) NULL)
 best_method <- tryCatch(tar_read(best_method), error = function(e) "Not available")
 final_model_analysis <- tryCatch(tar_read(final_model_analysis), error = function(e) NULL)
+preprocessing_analysis <- tryCatch(tar_read(preprocessing_analysis), error = function(e) NULL)
+
+# Also load the table and figure objects that are referenced later
+table_sample_summary <- tryCatch(tar_read(table_sample_summary), error = function(e) NULL)
+table_preprocessing <- tryCatch(tar_read(table_preprocessing), error = function(e) NULL)
+fig_model_calibration <- tryCatch(tar_read(fig_model_calibration), error = function(e) NULL)
+fig_performance_boxplot <- tryCatch(tar_read(fig_performance_boxplot), error = function(e) NULL)
+fig_validation_errors <- tryCatch(tar_read(fig_validation_errors), error = function(e) NULL)
 
 # Show what we got
 cat("Simple check:\n")
 cat("- Hemp data:", ifelse(is.null(hemp_data), "NULL", paste(nrow(hemp_data), "samples")), "\n")
 cat("- Best method:", best_method, "\n")
-cat("- Analysis:", ifelse(is.null(final_model_analysis), "NULL", "Available"), "\n")
+cat("- Final analysis:", ifelse(is.null(final_model_analysis), "NULL", "Available"), "\n")
+cat("- Preprocessing analysis:", ifelse(is.null(preprocessing_analysis), "NULL", "Available"), "\n")
+```
 ```
 
 # Hemp NIR Analysis - Streamlined Pipeline Results

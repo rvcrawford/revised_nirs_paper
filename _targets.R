@@ -107,7 +107,7 @@ list(
   tar_target(
     fig_validation_errors,
     create_validation_error_plot(error_analysis)
-  ),
+  )
   
   # =============================================================================
   # MANUSCRIPT GENERATION
@@ -117,38 +117,20 @@ list(
   # MANUSCRIPT GENERATION - WITH EXPLICIT DEPENDENCIES
   # =============================================================================
   
-  tar_target(
-    manuscript,
-    {
-      # Force dependencies by accessing the targets
-      cat("Manuscript using:\n")
-      cat("- Hemp data:", nrow(hemp_data), "samples\n")
-      cat("- Best method:", best_method, "\n")
-      cat("- Final analysis completed:", !is.null(final_model_analysis), "\n")
-      
-      # Create manuscripts directory
-      if (!dir.exists("manuscripts")) {
-        dir.create("manuscripts", recursive = TRUE)
-      }
-      
-      # Render manuscript
-      quarto::quarto_render("manuscript/hemp_nir_paper.qmd")
-      
-      # Move to manuscripts directory  
-      file.copy(
-        from = "manuscript/hemp_nir_paper.html",
-        to = "manuscripts/hemp_nir_paper.html",
-        overwrite = TRUE
-      )
-      
-      # Clean up original
-      if (file.exists("manuscript/hemp_nir_paper.html")) {
-        file.remove("manuscript/hemp_nir_paper.html")
-      }
-      
-      cat("✅ Manuscript created: manuscripts/hemp_nir_paper.html\n")
-      "manuscripts/hemp_nir_paper.html"
-    },
-    format = "file"
-  )
+  # =============================================================================
+  # MANUSCRIPT GENERATION - SIMPLE VERSION
+  # =============================================================================
+  
+  # tar_target(
+  #   manuscript,
+  #   {
+  #     cat("Rendering manuscript with data:\n")
+  #     cat("- Hemp data:", nrow(hemp_data), "samples\n")
+  #     cat("- Best method:", best_method, "\n")
+  #     
+  #     # Just render in place - no moving files around
+  #     quarto::quarto_render("./manuscript/hemp_nir_paper.qmd")
+  #   },
+  #   format = "file"
+  # )
 )

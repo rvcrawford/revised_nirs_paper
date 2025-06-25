@@ -12,6 +12,8 @@ source("R/multi_algorithm_functions.R")  # ADD THIS to your source() statements 
 source("R/location_weighting_functions.R")
 source("R/weighted_sampling_functions.R")
 source("R/weighted_sampling_comparison.R")  # or wherever you put the main functions
+source("R/identify_worst_predictions.R") 
+
 
 # Set target options
 # 
@@ -117,37 +119,13 @@ list(
     weighted_sampling_results,
       summarize_multiple_comparisons(weighted_sampling_comparisons)
   ),
-  
-  # NEW: Analysis of weighted sampling results
-  # tar_target(
-  #   weighted_sampling_analysis,
-  #   summarize_multiple_comparisons(weighted_sampling_comparison)
-  # ),
 
-  # NEW: Robustness plot with confidence intervals
-  # tar_target(
-  #   fig_weighted_sampling_robustness,
-  #   create_robustness_plot(weighted_sampling_analysis)
-  # ),
+  tar_target(worst_preds, 
+         identify_worst_predicted_samples(weighted_sampling_comparisons, n_worst = 15)),
   
-  # tar_target(
-  #   weighted_model_results,
-  #   run_weighted_modeling_ultrafast(
-  #     balanced_data,
-  #     best_preprocessing_method, 
-  #     n_iterations = 1000
-  #   )
-  # ),
+  tar_target(worst_preds_metadata, worst_preds$worst_samples |> 
+           left_join(full_data |> dplyr::select(1:8),  join_by("sample_id" =="ith_in_data_set" ))),
   
-  # tar_target(
-  #   location_performance_analysis,
-  #   analyze_location_performance(weighted_model_results, balanced_data)
-  # ),
-
-  # tar_target(
-  #   fig_location_performance,
-  #   create_location_performance_plot(location_performance_analysis)
-  # ),
   
   tar_target(
     final_model_analysis,

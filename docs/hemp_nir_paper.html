@@ -6,10 +6,15 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Your Name">
+<meta name="author" content="Ryan V. Crawford">
+<meta name="author" content="Jamie L. Crawford">
+<meta name="author" content="Julie L. Hansen">
+<meta name="author" content="Lawrence B. Smart">
+<meta name="author" content="Virginia M. Moore">
 <meta name="dcterms.date" content="2025-06-25">
+<meta name="keywords" content="Hemp, Grain, Spectroscopy">
 
-<title>Hemp NIR Analysis - Streamlined Results</title>
+<title>Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -22,7 +27,27 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -68,6 +93,35 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -83,23 +137,24 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#hemp-nir-analysis---streamlined-pipeline-results" id="toc-hemp-nir-analysis---streamlined-pipeline-results" class="nav-link active" data-scroll-target="#hemp-nir-analysis---streamlined-pipeline-results">Hemp NIR Analysis - Streamlined Pipeline Results</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">0.1</span> INTRODUCTION</a></li>
+  <li><a href="#hemp-nir-analysis---streamlined-pipeline-results" id="toc-hemp-nir-analysis---streamlined-pipeline-results" class="nav-link" data-scroll-target="#hemp-nir-analysis---streamlined-pipeline-results"><span class="header-section-number">1</span> Hemp NIR Analysis - Streamlined Pipeline Results</a>
   <ul class="collapse">
-  <li><a href="#data-overview" id="toc-data-overview" class="nav-link" data-scroll-target="#data-overview">Data Overview</a></li>
-  <li><a href="#preprocessing-method-selection" id="toc-preprocessing-method-selection" class="nav-link" data-scroll-target="#preprocessing-method-selection">Preprocessing Method Selection</a></li>
-  <li><a href="#model-performance" id="toc-model-performance" class="nav-link" data-scroll-target="#model-performance">Model Performance</a></li>
-  <li><a href="#data-tables" id="toc-data-tables" class="nav-link" data-scroll-target="#data-tables">Data Tables</a>
+  <li><a href="#data-overview" id="toc-data-overview" class="nav-link" data-scroll-target="#data-overview"><span class="header-section-number">1.1</span> Data Overview</a></li>
+  <li><a href="#preprocessing-method-selection" id="toc-preprocessing-method-selection" class="nav-link" data-scroll-target="#preprocessing-method-selection"><span class="header-section-number">1.2</span> Preprocessing Method Selection</a></li>
+  <li><a href="#model-performance" id="toc-model-performance" class="nav-link" data-scroll-target="#model-performance"><span class="header-section-number">1.3</span> Model Performance</a></li>
+  <li><a href="#data-tables" id="toc-data-tables" class="nav-link" data-scroll-target="#data-tables"><span class="header-section-number">1.4</span> Data Tables</a>
   <ul class="collapse">
-  <li><a href="#sample-summary" id="toc-sample-summary" class="nav-link" data-scroll-target="#sample-summary">Sample Summary</a></li>
-  <li><a href="#preprocessing-method-comparison" id="toc-preprocessing-method-comparison" class="nav-link" data-scroll-target="#preprocessing-method-comparison">Preprocessing Method Comparison</a></li>
+  <li><a href="#sample-summary" id="toc-sample-summary" class="nav-link" data-scroll-target="#sample-summary"><span class="header-section-number">1.4.1</span> Sample Summary</a></li>
+  <li><a href="#preprocessing-method-comparison" id="toc-preprocessing-method-comparison" class="nav-link" data-scroll-target="#preprocessing-method-comparison"><span class="header-section-number">1.4.2</span> Preprocessing Method Comparison</a></li>
   </ul></li>
-  <li><a href="#visualizations" id="toc-visualizations" class="nav-link" data-scroll-target="#visualizations">Visualizations</a>
+  <li><a href="#visualizations" id="toc-visualizations" class="nav-link" data-scroll-target="#visualizations"><span class="header-section-number">1.5</span> Visualizations</a>
   <ul class="collapse">
-  <li><a href="#model-calibration" id="toc-model-calibration" class="nav-link" data-scroll-target="#model-calibration">Model Calibration</a></li>
-  <li><a href="#performance-distribution" id="toc-performance-distribution" class="nav-link" data-scroll-target="#performance-distribution">Performance Distribution</a></li>
-  <li><a href="#validation-analysis" id="toc-validation-analysis" class="nav-link" data-scroll-target="#validation-analysis">Validation Analysis</a></li>
+  <li><a href="#model-calibration" id="toc-model-calibration" class="nav-link" data-scroll-target="#model-calibration"><span class="header-section-number">1.5.1</span> Model Calibration</a></li>
+  <li><a href="#performance-distribution" id="toc-performance-distribution" class="nav-link" data-scroll-target="#performance-distribution"><span class="header-section-number">1.5.2</span> Performance Distribution</a></li>
+  <li><a href="#validation-analysis" id="toc-validation-analysis" class="nav-link" data-scroll-target="#validation-analysis"><span class="header-section-number">1.5.3</span> Validation Analysis</a></li>
   </ul></li>
-  <li><a href="#summary-and-conclusions" id="toc-summary-and-conclusions" class="nav-link" data-scroll-target="#summary-and-conclusions">Summary and Conclusions</a></li>
+  <li><a href="#summary-and-conclusions" id="toc-summary-and-conclusions" class="nav-link" data-scroll-target="#summary-and-conclusions"><span class="header-section-number">1.6</span> Summary and Conclusions</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -107,34 +162,19 @@ ul.task-list li input[type="checkbox"] {
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Hemp NIR Analysis - Streamlined Results</h1>
+<header id="title-block-header">
+<h1 class="title display-7">Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain</h1>
+<p class="author">Ryan V. Crawford</p>
+<p class="author">Jamie L. Crawford</p>
+<p class="author">Julie L. Hansen</p>
+<p class="author">Lawrence B. Smart</p>
+<p class="author">Virginia M. Moore</p>
+
+<p class="date">2025-06-25</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>The protein concentration of hemp (<em>Cannabis sativa</em> L.) grain is of interest to researchers, producers, and consumers. This study was conducted to determine whether hemp grain can be non-destructively assayed for crude protein (CP) concentration using spectra obtained from near-infrared spectroscopy (NIRS) to build a prediction model for crude protein concentration using partial least squares regression (PLSR). One hundred and fourty-nine whole hemp grain samples were obtained from 18 cultivar trials in New York (NY) from 2017-2021. The samples’ NIRS spectra were collected and the samples were ground and assayed by combustion. Seven potential preprocessing methods, as well as untransformed spectra, were tested using 100 training and testing set splits of the data and the best method was selected. That method was applied to 1000 additional splits of the data set. Model fit was evaluated using RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ). Once a preprocessing method was selected, the optimal number of model components and prediction performance on the testing sets were examined. A preprocessing method consisting of the standard normal variate transformation following a Savitzky-Golay filter had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ, with RPD and RPIQ 2.1%, and 2.4% higher than a Savitzky-Golay filter by itself (significant at <span class="math inline">\(\alpha\)</span> &lt;0.05). All preprocessing methods outperformed untransformed spectra. Optimal final models typically consisted of 12 components. Seventy-four percent of the 1000 final models had, at minimum, the ability to distinguish between high and low values of CP concentration, with 49% of the models capable of approximating quantitative prodiction. The models tested to overestimate CP concentration by 0.5% in the lowest tertile of samples and underestimate CP concentration by 0.4% in the highest tertile of samples. The worst-predicted samples tended to come from Geneva, NY, possibly as a result of the models’ class imbalance (half of the samples were from Ithaca, NY while 28% were from Geneva). The research shows the promise that NIRS offers in the non-desctructive assay of CP concentration in hemp grain.</p>
 </div>
-
-
-
-<div class="quarto-title-meta">
-
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Your Name </p>
-          </div>
-  </div>
-    
-    <div>
-    <div class="quarto-title-meta-heading">Published</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date">June 25, 2025</p>
-    </div>
-  </div>
-  
-    
-  </div>
-  
-
-
 </header>
 
 
@@ -155,10 +195,18 @@ ul.task-list li input[type="checkbox"] {
 <pre><code>- Preprocessing analysis: Available </code></pre>
 </div>
 </div>
-<section id="hemp-nir-analysis---streamlined-pipeline-results" class="level1">
-<h1>Hemp NIR Analysis - Streamlined Pipeline Results</h1>
-<section id="data-overview" class="level2">
-<h2 class="anchored" data-anchor-id="data-overview">Data Overview</h2>
+<p>CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay</p>
+<section id="introduction" class="level2" data-number="0.1">
+<h2 data-number="0.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">0.1</span> INTRODUCTION</h2>
+<p>Hemp (<em>Cannabis sativa</em> L.) is an annual crop with potential uses as a source of food or feed, derived from the grain, and fiber (bast or hurd), derived from the stalk. Hemp cultivars are commonly grown for one or both purposes and a cultivar may be called a grain, fiber, or dual-purpose type. Because of its nutritional importance, the protein concentration of a grain crop is a prime consideration for researchers, producers, and consumers. Whole hemp grain typically contains approximately 200-300 g kg<sup>−1</sup> protein <span class="citation" data-cites="ely_industrial_2022 barta_proteomic_2024 callaway_hempseed_2004 liu2023">(<a href="#ref-barta_proteomic_2024" role="doc-biblioref">Bárta et al., 2024</a>; <a href="#ref-callaway_hempseed_2004" role="doc-biblioref">Callaway, 2004</a>; <a href="#ref-ely_industrial_2022" role="doc-biblioref">Ely &amp; Fike, 2022</a>; <a href="#ref-liu2023" role="doc-biblioref">Liu et al., 2023</a>)</span>. Crude protein is often used as a proxy for the direct measurement of protein concentration and consists of the multiplication of nitrogen concentration by a conversion factor, often 6.25 <span class="citation" data-cites="hayes_measuring_2020">(<a href="#ref-hayes_measuring_2020" role="doc-biblioref">Hayes, 2020</a>)</span>.</p>
+<p>Near-infrared (NIR) spectroscopy (NIRS) technology is rapid, non-destructive, and inexpensive. It consists of the measurement of NIR radiation reflected and absorbed from a sample (the spectra) and the relation of the spectra to primary analytical values, typically obtained using wet chemistry assays, for components such as moisture, protein, fat, or fiber <span class="citation" data-cites="roberts_near-infrared_2004">(<a href="#ref-roberts_near-infrared_2004" role="doc-biblioref">Roberts et al., 2004</a>)</span>. NIRS technology has been used since the 1970’s to assess forage CP concentration <span class="citation" data-cites="reeves_potential_2012 williams_application_1975">(<a href="#ref-reeves_potential_2012" role="doc-biblioref">Reeves, 2012</a>; <a href="#ref-williams_application_1975" role="doc-biblioref">Williams, 1975</a>)</span>. A NIRS calibration set often consists of samples from diverse genotypes of one species grown in many environments encompassing the range of expected values from the analyte or analytes <span class="citation" data-cites="chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>)</span>. Partial least squares regression (PLSR) is a typical method used in the agricultural and food sciences to relate spectra to analyte <span class="citation" data-cites="roberts_near-infrared_2004">(<a href="#ref-roberts_near-infrared_2004" role="doc-biblioref">Roberts et al., 2004</a>)</span>. Partial least squares regression calculates components that maximize covariance between predictor and response variables. Partial least squares regression uses some number of components, often selected via cross-validation, to fit the regression model and is commonly used in spectroscopy because it tends to work well with highly correlated, noisy spectral data <span class="citation" data-cites="wold_pls-regression_2001">(<a href="#ref-wold_pls-regression_2001" role="doc-biblioref">Wold et al., 2001</a>)</span>.</p>
+<p>A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed. In wheat and corn, grain protein content has been shown to be heritable <span class="citation" data-cites="giancaspro_genetic_2019 geyer_genetics_2022">(<a href="#ref-geyer_genetics_2022" role="doc-biblioref">Geyer et al., 2022</a>; <a href="#ref-giancaspro_genetic_2019" role="doc-biblioref">Giancaspro et al., 2019</a>)</span>. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.</p>
+<p>For this study, a benchtop NIR spectrometer was used to develop a model to predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR.</p>
+</section>
+<section id="hemp-nir-analysis---streamlined-pipeline-results" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Hemp NIR Analysis - Streamlined Pipeline Results</h1>
+<section id="data-overview" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="data-overview"><span class="header-section-number">1.1</span> Data Overview</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>**Dataset Summary:**
@@ -171,8 +219,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </section>
-<section id="preprocessing-method-selection" class="level2">
-<h2 class="anchored" data-anchor-id="preprocessing-method-selection">Preprocessing Method Selection</h2>
+<section id="preprocessing-method-selection" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="preprocessing-method-selection"><span class="header-section-number">1.2</span> Preprocessing Method Selection</h2>
 <p><strong>Optimal method identified:</strong> <strong>Savitzky-Golay smoothing</strong></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -182,8 +230,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </section>
-<section id="model-performance" class="level2">
-<h2 class="anchored" data-anchor-id="model-performance">Model Performance</h2>
+<section id="model-performance" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="model-performance"><span class="header-section-number">1.3</span> Model Performance</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>### Final Model Performance
@@ -203,10 +251,10 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </section>
-<section id="data-tables" class="level2">
-<h2 class="anchored" data-anchor-id="data-tables">Data Tables</h2>
-<section id="sample-summary" class="level3">
-<h3 class="anchored" data-anchor-id="sample-summary">Sample Summary</h3>
+<section id="data-tables" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="data-tables"><span class="header-section-number">1.4</span> Data Tables</h2>
+<section id="sample-summary" class="level3" data-number="1.4.1">
+<h3 data-number="1.4.1" class="anchored" data-anchor-id="sample-summary"><span class="header-section-number">1.4.1</span> Sample Summary</h3>
 <div class="cell">
 <div id="tbl-sample-summary" class="cell quarto-float anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -336,8 +384,8 @@ Table&nbsp;1: Hemp grain sample summary
 </div>
 </div>
 </section>
-<section id="preprocessing-method-comparison" class="level3">
-<h3 class="anchored" data-anchor-id="preprocessing-method-comparison">Preprocessing Method Comparison</h3>
+<section id="preprocessing-method-comparison" class="level3" data-number="1.4.2">
+<h3 data-number="1.4.2" class="anchored" data-anchor-id="preprocessing-method-comparison"><span class="header-section-number">1.4.2</span> Preprocessing Method Comparison</h3>
 <div class="cell">
 <div id="tbl-preprocessing" class="cell quarto-float anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -427,10 +475,10 @@ Table&nbsp;2: Comparison of spectral preprocessing methods
 </div>
 </section>
 </section>
-<section id="visualizations" class="level2">
-<h2 class="anchored" data-anchor-id="visualizations">Visualizations</h2>
-<section id="model-calibration" class="level3">
-<h3 class="anchored" data-anchor-id="model-calibration">Model Calibration</h3>
+<section id="visualizations" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="visualizations"><span class="header-section-number">1.5</span> Visualizations</h2>
+<section id="model-calibration" class="level3" data-number="1.5.1">
+<h3 data-number="1.5.1" class="anchored" data-anchor-id="model-calibration"><span class="header-section-number">1.5.1</span> Model Calibration</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-calibration" class="quarto-figure quarto-figure-center quarto-float anchored">
@@ -446,8 +494,8 @@ Figure&nbsp;1: Model calibration showing component optimization
 </div>
 </div>
 </section>
-<section id="performance-distribution" class="level3">
-<h3 class="anchored" data-anchor-id="performance-distribution">Performance Distribution</h3>
+<section id="performance-distribution" class="level3" data-number="1.5.2">
+<h3 data-number="1.5.2" class="anchored" data-anchor-id="performance-distribution"><span class="header-section-number">1.5.2</span> Performance Distribution</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-performance" class="quarto-figure quarto-figure-center quarto-float anchored">
@@ -463,9 +511,12 @@ Figure&nbsp;2: Distribution of model performance metrics across iterations
 </div>
 </div>
 </section>
-<section id="validation-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="validation-analysis">Validation Analysis</h3>
+<section id="validation-analysis" class="level3" data-number="1.5.3">
+<h3 data-number="1.5.3" class="anchored" data-anchor-id="validation-analysis"><span class="header-section-number">1.5.3</span> Validation Analysis</h3>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
 <div class="cell-output-display">
 <div id="fig-validation" class="quarto-figure quarto-figure-center quarto-float anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -481,8 +532,8 @@ Figure&nbsp;3: Validation error analysis across protein concentration range
 </div>
 </section>
 </section>
-<section id="summary-and-conclusions" class="level2">
-<h2 class="anchored" data-anchor-id="summary-and-conclusions">Summary and Conclusions</h2>
+<section id="summary-and-conclusions" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="summary-and-conclusions"><span class="header-section-number">1.6</span> Summary and Conclusions</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>### Research Outcomes</code></pre>
@@ -522,14 +573,52 @@ Figure&nbsp;3: Validation error analysis across protein concentration range
 </div>
 <hr>
 <p><strong>Pipeline Status:</strong> ✅ Complete<br>
-<strong>Generated:</strong> 2025-06-25 15:08:51<br>
+<strong>Generated:</strong> 2025-06-25 15:30:20<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 
+
 </section>
 </section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list">
+<div id="ref-barta_proteomic_2024" class="csl-entry" role="listitem">
+Bárta, J., Roudnický, P., Jarošová, M., Zdráhal, Z., Stupková, A., Bártová, V., Krejčová, Z., Kyselka, J., Filip, V., Říha, V., Lorenc, F., Bedrníček, J., &amp; Smetana, P. (2024). Proteomic <span>Profiles</span> of <span>Whole</span> <span>Seeds</span>, <span>Hulls</span>, and <span>Dehulled</span> <span>Seeds</span> of <span>Two</span> <span>Industrial</span> <span>Hemp</span> (<span>Cannabis</span> sativa <span>L</span>.) <span>Cultivars</span>. <em>Plants</em>, <em>13</em>(1), 111. <a href="https://doi.org/10.3390/plants13010111">https://doi.org/10.3390/plants13010111</a>
+</div>
+<div id="ref-callaway_hempseed_2004" class="csl-entry" role="listitem">
+Callaway, J. C. (2004). Hempseed as a nutritional resource: <span>An</span> overview. <em>Euphytica</em>, <em>140</em>(1), 65–72. <a href="https://doi.org/10.1007/s10681-004-4811-6">https://doi.org/10.1007/s10681-004-4811-6</a>
+</div>
+<div id="ref-chadalavada_nir_2022" class="csl-entry" role="listitem">
+Chadalavada, K., Anbazhagan, K., Ndour, A., Choudhary, S., Palmer, W., Flynn, J. R., Mallayee, S., Pothu, S., Prasad, K. V. S. V., Varijakshapanikar, P., Jones, C. S., &amp; Kholová, J. (2022). <span>NIR</span> <span>Instruments</span> and <span>Prediction</span> <span>Methods</span> for <span>Rapid</span> <span>Access</span> to <span>Grain</span> <span>Protein</span> <span>Content</span> in <span>Multiple</span> <span>Cereals</span>. <em>Sensors (Basel, Switzerland)</em>, <em>22</em>(10). <a href="https://doi.org/10.3390/s22103710">https://doi.org/10.3390/s22103710</a>
+</div>
+<div id="ref-ely_industrial_2022" class="csl-entry" role="listitem">
+Ely, K., &amp; Fike, J. (2022). Industrial <span>Hemp</span> and <span>Hemp</span> <span>Byproducts</span> as <span>Sustainable</span> <span>Feedstuffs</span> in <span>Livestock</span> <span>Diets</span>. In D. C. Agrawal, R. Kumar, &amp; M. Dhanasekaran (Eds.), <em>Cannabis/<span>Hemp</span> for <span>Sustainable</span> <span>Agriculture</span> and <span>Materials</span></em> (pp. 145–162). Springer. <a href="https://doi.org/10.1007/978-981-16-8778-5_6">https://doi.org/10.1007/978-981-16-8778-5_6</a>
+</div>
+<div id="ref-geyer_genetics_2022" class="csl-entry" role="listitem">
+Geyer, M., Mohler, V., &amp; Hartl, L. (2022). Genetics of the <span>Inverse</span> <span>Relationship</span> between <span>Grain</span> <span>Yield</span> and <span>Grain</span> <span>Protein</span> <span>Content</span> in <span>Common</span> <span>Wheat</span>. <em>Plants</em>, <em>11</em>(16), 2146. <a href="https://doi.org/10.3390/plants11162146">https://doi.org/10.3390/plants11162146</a>
+</div>
+<div id="ref-giancaspro_genetic_2019" class="csl-entry" role="listitem">
+Giancaspro, A., Giove, S. L., Blanco, A., &amp; Gadaleta, A. (2019). Genetic <span>Variation</span> for <span>Protein</span> <span>Content</span> and <span>Yield</span>-<span>Related</span> <span>Traits</span> in a <span>Durum</span> <span>Population</span> <span>Derived</span> <span>From</span> an <span>Inter</span>-<span>Specific</span> <span>Cross</span> <span>Between</span> <span>Hexaploid</span> and <span>Tetraploid</span> <span>Wheat</span> <span>Cultivars</span>. <em>Frontiers in Plant Science</em>, <em>10</em>. <a href="https://doi.org/10.3389/fpls.2019.01509">https://doi.org/10.3389/fpls.2019.01509</a>
+</div>
+<div id="ref-hayes_measuring_2020" class="csl-entry" role="listitem">
+Hayes, M. (2020). Measuring <span>Protein</span> <span>Content</span> in <span>Food</span>: <span>An</span> <span>Overview</span> of <span>Methods</span>. <em>Foods</em>, <em>9</em>(10), 1340. <a href="https://doi.org/10.3390/foods9101340">https://doi.org/10.3390/foods9101340</a>
+</div>
+<div id="ref-liu2023" class="csl-entry" role="listitem">
+Liu, M., Toth, J. A., Childs, M., Smart, L. B., &amp; Abbaspourrad, A. (2023). Composition and functional properties of hemp seed protein isolates from various hemp cultivars. <em>Journal of Food Science</em>, <em>88</em>(3), 942–951. <a href="https://doi.org/10.1111/1750-3841.16467">https://doi.org/10.1111/1750-3841.16467</a>
+</div>
+<div id="ref-reeves_potential_2012" class="csl-entry" role="listitem">
+Reeves, J. B. (2012). Potential of <span>Near</span>- and <span>Mid</span>-infrared <span>Spectroscopy</span> in <span>Biofuel</span> <span>Production</span>. <em>Communications in Soil Science and Plant Analysis</em>, <em>43</em>(1-2), 478–495. <a href="https://doi.org/10.1080/00103624.2012.641844">https://doi.org/10.1080/00103624.2012.641844</a>
+</div>
+<div id="ref-roberts_near-infrared_2004" class="csl-entry" role="listitem">
+Roberts, C. A., Workman, J., &amp; Reeves, J. B. (2004). <em>Near-infrared spectroscopy in agriculture</em>. American Society of Agronomy.
+</div>
+<div id="ref-williams_application_1975" class="csl-entry" role="listitem">
+Williams, P. C. (1975). Application of near infrared reflectance spectroscopy to analysis of cereal grains and oilseeds. <em>Cereal Chemistry</em>, <em>52</em>(4 p.561-576), 576–561.
+</div>
+<div id="ref-wold_pls-regression_2001" class="csl-entry" role="listitem">
+Wold, S., Sjöström, M., &amp; Eriksson, L. (2001). <span>PLS</span>-regression: A basic tool of chemometrics. <em>Chemometrics and Intelligent Laboratory Systems</em>, <em>58</em>(2), 109–130. <a href="https://doi.org/10.1016/S0169-7439(01)00155-1">https://doi.org/10.1016/S0169-7439(01)00155-1</a>
+</div>
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

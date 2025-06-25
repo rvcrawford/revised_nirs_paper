@@ -1,14 +1,83 @@
 ---
-title: "Hemp NIR Analysis - Streamlined Results"
-author: "Your Name"
-date: today
-format:
-  html:
-    theme: default
-    toc: true
+title: Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain
 execute:
+  freeze: auto
   echo: false
-  warning: false
+author:
+  - name: Ryan V. Crawford
+    orcid: 0009-0006-3052-3269
+    corresponding: true
+    email: rvc3@cornell.edu
+    affiliations:
+      - name: Cornell University
+        address: 126 Medicago Drive
+        city: Ithaca
+        state: NY
+        postal-code: 14853
+  - name: Jamie L. Crawford
+    orcid: 0009-0002-2523-3479
+    corresponding: false
+    affiliations:
+      - name: Cornell University
+        address: 126 Medicago Drive
+        city: Ithaca
+        state: NY
+        postal-code: 14853
+  - name: Julie L. Hansen
+    orcid: 0000-0001-7247-9186
+    corresponding: false
+    affiliations:
+      - name: Cornell University
+        address: 126 Medicago Drive
+        city: Ithaca
+        state: NY
+        postal-code: 14853
+  - name: Lawrence B. Smart
+    orcid: 0000-0002-7812-7736
+    corresponding: false
+    affiliations:
+      - name: Cornell AgriTech
+        address: 102 Hedrick Hall
+        city: Geneva
+        state: NY
+        postal-code: 14456
+  - name: Virginia M. Moore
+    orcid: 0000-0001-7888-3366
+    corresponding: false
+    affiliations:
+      - name: Cornell University
+        address: 162 Emerson Hall
+        city: Ithaca
+        state: NY
+        postal-code: 14853    
+title-block-style: none
+keywords:
+  - Hemp
+  - Grain
+  - Spectroscopy
+abstract: |
+      The protein concentration of hemp (*Cannabis sativa* L.) grain is of interest to researchers, producers, and consumers. This study was conducted to determine whether hemp grain can be non-destructively assayed for crude protein (CP) concentration using spectra obtained from near-infrared spectroscopy (NIRS) to build a prediction model for crude protein concentration using partial least squares regression (PLSR). One hundred and fourty-nine whole hemp grain samples were obtained from 18 cultivar trials in New York (NY) from 2017-2021. The samples' NIRS spectra were collected and the samples were ground and assayed by combustion. Seven potential preprocessing methods, as well as untransformed spectra, were tested using 100 training and testing set splits of the data and the best method was selected. That method was applied to 1000 additional splits of the data set. Model fit was evaluated using RMSE, R^2^, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ). Once a preprocessing method was selected, the optimal number of model components and prediction performance on the testing sets were examined. A preprocessing method consisting of the standard normal variate transformation following a Savitzky-Golay filter had the lowest RMSE and the highest R^2^, RPD and RPIQ, with RPD and RPIQ 2.1%, and 2.4% higher than a Savitzky-Golay filter by itself (significant at $\alpha$ \<0.05). All preprocessing methods outperformed untransformed spectra. Optimal final models typically consisted of 12 components. Seventy-four percent of the 1000 final models had, at minimum, the ability to distinguish between high and low values of CP concentration, with 49% of the models capable of approximating quantitative prodiction. The models tested to overestimate CP concentration by 0.5% in the lowest tertile of samples and underestimate CP concentration by 0.4% in the highest tertile of samples. The worst-predicted samples tended to come from Geneva, NY, possibly as a result of the models' class imbalance (half of the samples were from Ithaca, NY while 28% were from Geneva). The research shows the promise that NIRS offers in the non-desctructive assay of CP concentration in hemp grain.
+
+plain-language-summary: |
+  A model was developed to predict percent crude protein in hemp grain using near infrared spectroscopy.
+key-points:
+  - Models were developed to predict crude protein concentration in hemp grain using near infrared spectroscopy.
+  - Most models were able to distinguish between high and lower concentrations of crude protein. 
+  - Models could be further optimized by including more samples and rectifying class imbalances between environments.
+date: last-modified
+bibliography: 
+  - references.bib
+  - grateful-refs.bib
+csl: apa.csl
+number-sections: true
+crossref:
+  custom:
+    - kind: float
+      key: suppfig
+      latex-env: suppfig
+      reference-prefix: Figure S
+      space-before-numbering: false
+      latex-list-of-description: Supplementary Figure
 ---
 
 ```{r}
@@ -40,6 +109,17 @@ cat("- Final analysis:", ifelse(is.null(final_model_analysis), "NULL", "Availabl
 cat("- Preprocessing analysis:", ifelse(is.null(preprocessing_analysis), "NULL", "Available"), "\n")
 ```
 
+CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay
+
+## INTRODUCTION
+
+Hemp (*Cannabis sativa* L.) is an annual crop with potential uses as a source of food or feed, derived from the grain, and fiber (bast or hurd), derived from the stalk. Hemp cultivars are commonly grown for one or both purposes and a cultivar may be called a grain, fiber, or dual-purpose type. Because of its nutritional importance, the protein concentration of a grain crop is a prime consideration for researchers, producers, and consumers. Whole hemp grain typically contains approximately 200-300 g kg^−1^ protein [@ely_industrial_2022; @barta_proteomic_2024; @callaway_hempseed_2004; @liu2023]. Crude protein is often used as a proxy for the direct measurement of protein concentration and consists of the multiplication of nitrogen concentration by a conversion factor, often 6.25 [@hayes_measuring_2020].
+
+Near-infrared (NIR) spectroscopy (NIRS) technology is rapid, non-destructive, and inexpensive. It consists of the measurement of NIR radiation reflected and absorbed from a sample (the spectra) and the relation of the spectra to primary analytical values, typically obtained using wet chemistry assays, for components such as moisture, protein, fat, or fiber [@roberts_near-infrared_2004]. NIRS technology has been used since the 1970's to assess forage CP concentration [@reeves_potential_2012; @williams_application_1975]. A NIRS calibration set often consists of samples from diverse genotypes of one species grown in many environments encompassing the range of expected values from the analyte or analytes [@chadalavada_nir_2022]. Partial least squares regression (PLSR) is a typical method used in the agricultural and food sciences to relate spectra to analyte [@roberts_near-infrared_2004]. Partial least squares regression calculates components that maximize covariance between predictor and response variables. Partial least squares regression uses some number of components, often selected via cross-validation, to fit the regression model and is commonly used in spectroscopy because it tends to work well with highly correlated, noisy spectral data [@wold_pls-regression_2001].
+
+A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed. In wheat and corn, grain protein content has been shown to be heritable [@giancaspro_genetic_2019; @geyer_genetics_2022]. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.
+
+For this study, a benchtop NIR spectrometer was used to develop a model to predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR.
 
 # Hemp NIR Analysis - Streamlined Pipeline Results
 

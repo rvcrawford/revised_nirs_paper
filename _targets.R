@@ -107,11 +107,15 @@ list(
   tar_target(
     fig_validation_errors,
     create_validation_error_plot(error_analysis)
-  ),
+  )#,
   
-  # Generate manuscript
-  tar_quarto(
-    manuscript,
-    "manuscript/hemp_nir_paper.qmd"
-  )
+  # Generate manuscript (absolutely safe - comment out for now)
+  # tar_target(
+  #   manuscript,
+  #   {
+  #     quarto::quarto_render("manuscript/hemp_nir_paper.qmd")
+  #     "manuscript/hemp_nir_paper.html"
+  #   },
+  #   format = "file"
+  # )
 )

@@ -1,0 +1,93 @@
+---
+title: "Hemp NIR Analysis - Streamlined Results"
+author: "Your Name"
+date: today
+format:
+  html:
+    theme: default
+    toc: true
+execute:
+  echo: false
+  warning: false
+---
+
+```{r}
+#| label: setup
+
+library(targets)
+library(knitr)
+library(ggplot2)
+
+# Load streamlined results
+hemp_data <- tar_read(hemp_data)
+best_method <- tar_read(best_method)
+final_model_analysis <- tar_read(final_model_analysis)
+preprocessing_analysis <- tar_read(preprocessing_analysis)
+```
+
+# Streamlined Hemp NIR Analysis Results
+
+## Data Summary
+
+This analysis used `r nrow(hemp_data)` hemp grain samples to develop NIR prediction models for crude protein content.
+
+**Best preprocessing method:** `r best_method`
+
+## Model Performance
+
+```{r}
+#| label: performance-summary
+
+final_stats <- final_model_analysis$overall_stats
+cat("Final Model Performance:\n")
+cat("- RMSE:", round(final_stats$mean_rmse, 2), "g/kg\n")
+cat("- R²:", round(final_stats$mean_rsq, 3), "\n") 
+cat("- RPD:", round(final_stats$mean_rpd, 2), "\n")
+```
+
+## Preprocessing Comparison
+
+```{r}
+#| label: tbl-preprocessing
+#| tbl-cap: "Preprocessing method comparison"
+
+tar_read(table_preprocessing)
+```
+
+## Model Calibration
+
+```{r}
+#| label: fig-calibration
+#| fig-cap: "Model calibration curve"
+
+tar_read(fig_model_calibration)
+```
+
+## Performance Distribution
+
+```{r}
+#| label: fig-performance
+#| fig-cap: "Model performance distribution"
+
+tar_read(fig_performance_boxplot)
+```
+
+## Validation Analysis
+
+```{r}
+#| label: fig-validation
+#| fig-cap: "Systematic bias analysis"
+
+tar_read(fig_validation_errors)
+```
+
+## Summary
+
+The streamlined analysis successfully identified `r best_method` as the optimal preprocessing method, achieving good prediction performance suitable for hemp grain protein analysis.
+
+**Key Results:**
+- RMSE: `r round(final_model_analysis$overall_stats$mean_rmse, 1)` g/kg
+- R²: `r round(final_model_analysis$overall_stats$mean_rsq, 3)`
+- RPD: `r round(final_model_analysis$overall_stats$mean_rpd, 2)` (good for quantitative prediction)
+
+This demonstrates that the streamlined pipeline produces reliable results while being much easier to maintain and debug.

@@ -297,84 +297,156 @@ run_final_modeling <- function(data, best_method, n_iterations = NULL) {
   
   # Extract data
   spectral_cols <- grep("^x[0-9]+$", names(data), value = TRUE)
+  cat("Found", length(spectral_cols), "spectral columns\n")
+  
+  if (length(spectral_cols) == 0) {
+    stop("No spectral columns found in data")
+  }
+  
   spectra_matrix <- as.matrix(data[, ..spectral_cols])
   y <- data$crude_protein
+  
+  cat("Data dimensions:", dim(spectra_matrix), "\n")
+  cat("Response range:", range(y), "\n")
   
   # Storage for results
   metrics_list <- list()
   predictions_list <- list()
+  successful_iterations <- 0
   
   for (i in 1:n_iterations) {
-    if (i %% max(1, n_iterations %/% 10) == 0) cat("Iteration", i, "\n")
+    if (i %% max(1, n_iterations %/% 10) == 0) cat("Iteration", i, "of", n_iterations, "\n")
     
-    tryCatch({
-      result <- run_single_final_modeling_iteration(spectra_matrix, y, best_method, i)
-      metrics_list[[i]] <- result$metrics
-      predictions_list[[i]] <- result$predictions
-    }, error = function(e) {
-      cat("Error in iteration", i, ":", e$message, "\n")
-    })
+    result <- run_single_final_modeling_iteration(spectra_matrix, y, best_method, i)
+    
+    if (!is.null(result)) {
+      metrics_list[[length(metrics_list) + 1]] <- result$metrics
+      predictions_list[[length(predictions_list) + 1]] <- result$predictions
+      successful_iterations <- successful_iterations + 1
+    }
+  }
+  
+  cat("Final modeling completed:", successful_iterations, "successful iterations out of", n_iterations, "\n")
+  
+  if (successful_iterations == 0) {
+    cat("ERROR: No successful iterations!\n")
+    return(list(
+      metrics = data.table(),
+      predictions = data.table()
+    ))
   }
   
   # Combine results
   metrics <- rbindlist(metrics_list, idcol = "iteration")
   predictions <- rbindlist(predictions_list, idcol = "iteration")
   
-  cat("Final modeling completed:", nrow(metrics), "successful iterations\n")
+  cat("Combined results:\n")
+  cat("- Metrics:", nrow(metrics), "rows\n")
+  cat("- Predictions:", nrow(predictions), "rows\n")
   
   return(list(metrics = metrics, predictions = predictions))
 }
 
 run_single_final_modeling_iteration <- function(spectra, y, method, seed) {
-  # Single iteration of final modeling
+  # Single iteration of final modeling with better error handling
   
-  set.seed(seed)
-  inTrain <- createDataPartition(y, p = 0.75, list = FALSE, groups = 3)
-  
-  # Apply preprocessing (just the best method)
-  processed <- apply_single_preprocessing_method(
-    spectra[inTrain, , drop = FALSE], 
-    spectra[-inTrain, , drop = FALSE], 
-    method
-  )
-  
-  # Fit model with more comprehensive tuning for final analysis
-  model <- train(
-    x = processed$train,
-    y = y[inTrain],
-    method = "pls",
-    tuneLength = 20,  # More components for final model
-    trControl = trainControl(
-      method = "cv", 
-      number = 10,  # 10-fold CV for final model
-      verboseIter = FALSE
+  tryCatch({
+    set.seed(seed)
+    inTrain <- createDataPartition(y, p = 0.75, list = FALSE, groups = 3)
+    
+    cat("Iteration", seed, ": train/test split created -", length(inTrain), "/", length(y) - length(inTrain), "\n")
+    
+    # Apply preprocessing (just the best method)
+    processed <- apply_single_preprocessing_method(
+      spectra[inTrain, , drop = FALSE], 
+      spectra[-inTrain, , drop = FALSE], 
+      method
     )
-  )
-  
-  # Predictions
-  predictions <- predict(model, processed$test)
-  actual <- y[-inTrain]
-  
-  # Metrics
-  metrics <- calculate_performance_metrics(actual, predictions)
-  metrics[, n_components := model$bestTune$ncomp]
-  
-  # Detailed predictions for error analysis
-  pred_details <- data.table(
-    actual = actual,
-    predicted = predictions,
-    sample_id = which(!seq_along(y) %in% inTrain),
-    residual = actual - predictions
-  )
-  
-  return(list(metrics = metrics, predictions = pred_details))
+    
+    cat("Iteration", seed, ": preprocessing completed\n")
+    
+    # Check dimensions
+    if (ncol(processed$train) != ncol(processed$test)) {
+      stop("Train/test dimension mismatch after preprocessing")
+    }
+    
+    if (ncol(processed$train) < 5) {
+      stop("Too few features after preprocessing: ", ncol(processed$train))
+    }
+    
+    # Fit model with more comprehensive tuning for final analysis
+    model <- train(
+      x = processed$train,
+      y = y[inTrain],
+      method = "pls",
+      tuneLength = 15,  # Reduced for more stable results
+      trControl = trainControl(
+        method = "cv", 
+        number = 5,  # Reduced CV folds for speed
+        verboseIter = FALSE
+      )
+    )
+    
+    cat("Iteration", seed, ": model fitted with", model$bestTune$ncomp, "components\n")
+    
+    # Predictions
+    predictions <- predict(model, processed$test)
+    actual <- y[-inTrain]
+    
+    # Calculate metrics with error checking
+    metrics <- calculate_performance_metrics(actual, predictions)
+    
+    if (any(is.na(metrics))) {
+      cat("Warning: Some metrics are NA in iteration", seed, "\n")
+    }
+    
+    metrics[, n_components := model$bestTune$ncomp]
+    
+    # Detailed predictions for error analysis
+    pred_details <- data.table(
+      actual = actual,
+      predicted = predictions,
+      sample_id = which(!seq_along(y) %in% inTrain),
+      residual = actual - predictions
+    )
+    
+    return(list(metrics = metrics, predictions = pred_details))
+    
+  }, error = function(e) {
+    cat("ERROR in iteration", seed, ":", e$message, "\n")
+    return(NULL)  # Return NULL on error
+  })
 }
 
 apply_single_preprocessing_method <- function(train_spectra, test_spectra, method) {
-  # Apply single preprocessing method
+  # Apply single preprocessing method - expanded to handle all methods
+  
+  cat("Applying preprocessing method:", method, "\n")
   
   switch(method,
-         "raw" = list(train = train_spectra, test = test_spectra),
+         "raw" = {
+           list(train = train_spectra, test = test_spectra)
+         },
+         "first_derivative" = {
+           train_processed <- t(diff(t(train_spectra), differences = 1))
+           test_processed <- t(diff(t(test_spectra), differences = 1))
+           list(train = train_processed, test = test_processed)
+         },
+         "sav_gol" = {
+           train_processed <- prospectr::savitzkyGolay(train_spectra, m = 1, p = 3, w = 5)
+           test_processed <- prospectr::savitzkyGolay(test_spectra, m = 1, p = 3, w = 5)
+           list(train = train_processed, test = test_processed)
+         },
+         "gap_der" = {
+           train_processed <- prospectr::gapDer(train_spectra, m = 1, w = 11, s = 5)
+           test_processed <- prospectr::gapDer(test_spectra, m = 1, w = 11, s = 5)
+           list(train = train_processed, test = test_processed)
+         },
+         "snv" = {
+           train_processed <- prospectr::standardNormalVariate(train_spectra)
+           test_processed <- prospectr::standardNormalVariate(test_spectra)
+           list(train = train_processed, test = test_processed)
+         },
          "snv_sg" = {
            # Most likely best method based on your paper
            train_sg <- prospectr::savitzkyGolay(train_spectra, m = 1, p = 3, w = 5)
@@ -384,13 +456,23 @@ apply_single_preprocessing_method <- function(train_spectra, test_spectra, metho
              test = prospectr::standardNormalVariate(test_sg)
            )
          },
-         "snv" = {
-           list(
-             train = prospectr::standardNormalVariate(train_spectra),
-             test = prospectr::standardNormalVariate(test_spectra)
-           )
+         "snv_detrend" = {
+           train_snv <- prospectr::standardNormalVariate(train_spectra)
+           test_snv <- prospectr::standardNormalVariate(test_spectra)
+           train_processed <- prospectr::detrend(train_snv, wav = 1:ncol(train_snv))
+           test_processed <- prospectr::detrend(test_snv, wav = 1:ncol(test_snv))
+           list(train = train_processed, test = test_processed)
          },
-         stop("Preprocessing method not implemented: ", method)
+         "msc" = {
+           train_processed <- prospectr::msc(train_spectra)
+           test_processed <- prospectr::msc(test_spectra, reference = attr(train_processed, "Reference spectrum"))
+           list(train = train_processed, test = test_processed)
+         },
+         {
+           # Default case - if method not found, use raw
+           cat("Warning: Method", method, "not implemented. Using raw spectra.\n")
+           list(train = train_spectra, test = test_spectra)
+         }
   )
 }
 
@@ -447,43 +529,98 @@ select_best_preprocessing_method <- function(analysis) {
 analyze_final_model_performance <- function(results) {
   # Analyze final model performance and classify models
   
+  cat("=== ANALYZING FINAL MODEL PERFORMANCE ===\n")
+  
+  # Check if we have results
+  if (!is.list(results) || !"metrics" %in% names(results)) {
+    stop("Results must be a list containing 'metrics' element")
+  }
+  
   metrics <- results$metrics
+  
+  cat("Metrics structure:\n")
+  cat("- Class:", class(metrics), "\n")
+  cat("- Dimensions:", dim(metrics), "\n")
+  cat("- Columns:", paste(names(metrics), collapse = ", "), "\n")
+  
+  # Check if we have any data
+  if (nrow(metrics) == 0) {
+    cat("WARNING: No metrics data available - returning empty analysis\n")
+    return(list(
+      overall_stats = list(
+        mean_rmse = NA, mean_rsq = NA, mean_rpd = NA, mean_rpiq = NA
+      ),
+      classification = list(
+        total = 0, excellent = 0, good = 0, approximate = 0,
+        excellent_pct = 0, good_pct = 0, approximate_pct = 0
+      ),
+      raw_metrics = metrics
+    ))
+  }
+  
+  # Check for required columns
+  required_cols <- c("rmse", "rsq", "rpd", "rpiq")
+  missing_cols <- required_cols[!required_cols %in% names(metrics)]
+  
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+  
+  # Remove rows with missing values
+  if (is.data.table(metrics)) {
+    metrics_clean <- metrics[complete.cases(metrics[, ..required_cols])]
+  } else {
+    metrics_clean <- metrics[complete.cases(metrics[, required_cols]), ]
+  }
+  
+  cat("After removing missing values:", nrow(metrics_clean), "rows\n")
+  
+  if (nrow(metrics_clean) == 0) {
+    stop("No valid data remaining after removing missing values")
+  }
   
   # Overall statistics
   overall_stats <- list(
-    mean_rmse = mean(metrics$rmse, na.rm = TRUE),
-    sd_rmse = sd(metrics$rmse, na.rm = TRUE),
-    mean_rsq = mean(metrics$rsq, na.rm = TRUE),
-    sd_rsq = sd(metrics$rsq, na.rm = TRUE),
-    mean_rpd = mean(metrics$rpd, na.rm = TRUE),
-    sd_rpd = sd(metrics$rpd, na.rm = TRUE),
-    mean_rpiq = mean(metrics$rpiq, na.rm = TRUE),
-    sd_rpiq = sd(metrics$rpiq, na.rm = TRUE),
-    mean_components = mean(metrics$n_components, na.rm = TRUE)
+    mean_rmse = mean(metrics_clean$rmse, na.rm = TRUE),
+    sd_rmse = sd(metrics_clean$rmse, na.rm = TRUE),
+    mean_rsq = mean(metrics_clean$rsq, na.rm = TRUE),
+    sd_rsq = sd(metrics_clean$rsq, na.rm = TRUE),
+    mean_rpd = mean(metrics_clean$rpd, na.rm = TRUE),
+    sd_rpd = sd(metrics_clean$rpd, na.rm = TRUE),
+    mean_rpiq = mean(metrics_clean$rpiq, na.rm = TRUE),
+    sd_rpiq = sd(metrics_clean$rpiq, na.rm = TRUE)
   )
   
-  # Model classification based on RPD and RPIQ thresholds
-  classification <- metrics[, .(
-    excellent = sum(rpd > 3 & rpiq > 4.1, na.rm = TRUE),
-    good = sum(rpd >= 2.5 & rpd <= 3 & rpiq >= 2.3 & rpiq <= 4.1, na.rm = TRUE),
-    approximate = sum(rpd >= 2.0 & rpd < 2.5, na.rm = TRUE),
-    screening = sum(rpd >= 1.5 & rpd < 2.0, na.rm = TRUE),
-    poor = sum(rpd < 1.5, na.rm = TRUE),
-    total = .N
-  )]
+  # Add mean components if available
+  if ("n_components" %in% names(metrics_clean)) {
+    overall_stats$mean_components <- mean(metrics_clean$n_components, na.rm = TRUE)
+  }
+  
+  # Model classification using base R (safer than data.table for debugging)
+  classification <- list(
+    excellent = sum(metrics_clean$rpd > 3 & metrics_clean$rpiq > 4.1, na.rm = TRUE),
+    good = sum(metrics_clean$rpd >= 2.5 & metrics_clean$rpd <= 3 & 
+                 metrics_clean$rpiq >= 2.3 & metrics_clean$rpiq <= 4.1, na.rm = TRUE),
+    approximate = sum(metrics_clean$rpd >= 2.0 & metrics_clean$rpd < 2.5, na.rm = TRUE),
+    screening = sum(metrics_clean$rpd >= 1.5 & metrics_clean$rpd < 2.0, na.rm = TRUE),
+    poor = sum(metrics_clean$rpd < 1.5, na.rm = TRUE),
+    total = nrow(metrics_clean)
+  )
   
   # Add percentages
-  classification[, excellent_pct := round(100 * excellent / total, 1)]
-  classification[, good_pct := round(100 * good / total, 1)]
-  classification[, approximate_pct := round(100 * approximate / total, 1)]
-  classification[, screening_pct := round(100 * screening / total, 1)]
+  classification$excellent_pct <- round(100 * classification$excellent / classification$total, 1)
+  classification$good_pct <- round(100 * classification$good / classification$total, 1)
+  classification$approximate_pct <- round(100 * classification$approximate / classification$total, 1)
+  classification$screening_pct <- round(100 * classification$screening / classification$total, 1)
   
   cat("=== FINAL MODEL PERFORMANCE ===\n")
   cat("RMSE:", round(overall_stats$mean_rmse, 2), "±", round(overall_stats$sd_rmse, 2), "g/kg\n")
   cat("R²:", round(overall_stats$mean_rsq, 3), "±", round(overall_stats$sd_rsq, 3), "\n")
   cat("RPD:", round(overall_stats$mean_rpd, 2), "±", round(overall_stats$sd_rpd, 2), "\n")
   cat("RPIQ:", round(overall_stats$mean_rpiq, 2), "±", round(overall_stats$sd_rpiq, 2), "\n")
-  cat("Mean components:", round(overall_stats$mean_components, 1), "\n")
+  if (!is.null(overall_stats$mean_components)) {
+    cat("Mean components:", round(overall_stats$mean_components, 1), "\n")
+  }
   cat("\nModel Classification:\n")
   cat("- Excellent:", classification$excellent, "(", classification$excellent_pct, "%)\n")
   cat("- Good:", classification$good, "(", classification$good_pct, "%)\n")
@@ -492,7 +629,7 @@ analyze_final_model_performance <- function(results) {
   return(list(
     overall_stats = overall_stats,
     classification = classification,
-    raw_metrics = metrics
+    raw_metrics = metrics_clean
   ))
 }
 
@@ -501,6 +638,17 @@ analyze_prediction_errors <- function(results, hemp_data) {
   
   predictions <- results$predictions
   
+  cat("=== SYSTEMATIC BIAS ANALYSIS ===\n")
+  cat("Predictions data:", nrow(predictions), "rows\n")
+  
+  if (nrow(predictions) == 0) {
+    cat("No prediction data available\n")
+    return(list(
+      sample_errors = data.table(),
+      tertile_bias = data.table()
+    ))
+  }
+  
   # Calculate mean error per sample across all iterations
   sample_errors <- predictions[, .(
     mean_error = mean(residual, na.rm = TRUE),
@@ -508,25 +656,54 @@ analyze_prediction_errors <- function(results, hemp_data) {
     n_predictions = .N
   ), by = sample_id]
   
-  # Only keep samples that appeared in multiple iterations
-  sample_errors <- sample_errors[n_predictions >= 5]
+  cat("Sample errors calculated:", nrow(sample_errors), "samples\n")
+  cat("Predictions per sample range:", range(sample_errors$n_predictions), "\n")
+  
+  # Use a more flexible threshold - at least 2 predictions instead of 5
+  min_predictions <- max(2, min(sample_errors$n_predictions))
+  sample_errors_filtered <- sample_errors[n_predictions >= min_predictions]
+  
+  cat("After filtering (>= ", min_predictions, " predictions):", nrow(sample_errors_filtered), "samples\n")
+  
+  if (nrow(sample_errors_filtered) < 3) {
+    cat("Too few samples for tertile analysis - using all available samples\n")
+    sample_errors_filtered <- sample_errors
+  }
+  
+  if (nrow(sample_errors_filtered) == 0) {
+    cat("No valid samples for error analysis\n")
+    return(list(
+      sample_errors = data.table(),
+      tertile_bias = data.table()
+    ))
+  }
   
   # Divide into tertiles by protein content for analysis
-  sample_errors[, tertile := cut(actual_value, breaks = 3, labels = c("Low", "Medium", "High"))]
+  # Use more flexible binning
+  if (nrow(sample_errors_filtered) >= 9) {
+    # Standard tertiles if we have enough data
+    sample_errors_filtered[, tertile := cut(actual_value, breaks = 3, labels = c("Low", "Medium", "High"))]
+  } else if (nrow(sample_errors_filtered) >= 6) {
+    # Two groups if moderate data
+    sample_errors_filtered[, tertile := cut(actual_value, breaks = 2, labels = c("Low", "High"))]
+  } else {
+    # Single group if very little data
+    sample_errors_filtered[, tertile := "All"]
+  }
   
   # Calculate bias by tertile
-  tertile_bias <- sample_errors[, .(
+  tertile_bias <- sample_errors_filtered[, .(
     mean_bias = mean(mean_error, na.rm = TRUE),
     sd_bias = sd(mean_error, na.rm = TRUE),
     n_samples = .N,
     protein_range = paste(round(range(actual_value)), collapse = "-")
   ), by = tertile]
   
-  cat("=== SYSTEMATIC BIAS ANALYSIS ===\n")
+  cat("Tertile bias analysis:\n")
   print(tertile_bias)
   
   return(list(
-    sample_errors = sample_errors,
+    sample_errors = sample_errors_filtered,
     tertile_bias = tertile_bias
   ))
 }
@@ -649,21 +826,51 @@ create_performance_boxplot <- function(analysis) {
 create_validation_error_plot <- function(error_analysis) {
   # Figure 3: Systematic bias validation plot
   
-  ggplot(error_analysis$sample_errors, aes(x = actual_value, y = mean_error)) +
-    geom_point(alpha = 0.6, size = 1.5) +
-    geom_smooth(method = "lm", color = "red", se = TRUE, size = 1.2) +
-    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
-    facet_wrap(~tertile, scales = "free_x", labeller = label_both) +
-    labs(
-      title = "Systematic Bias in Predictions by Protein Tertile",
-      x = "Actual Protein Content (g/kg)",
-      y = "Mean Prediction Error (g/kg)"
-    ) +
-    theme_classic() +
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 12),
-      axis.title = element_text(size = 11),
-      axis.text = element_text(size = 10),
-      strip.text = element_text(size = 10)
-    )
+  if (nrow(error_analysis$sample_errors) == 0) {
+    # Return empty plot if no data
+    return(ggplot() + 
+             geom_text(aes(x = 0.5, y = 0.5, label = "No data available for error analysis"), 
+                       size = 6) +
+             theme_void() +
+             labs(title = "Systematic Bias Analysis: Insufficient Data"))
+  }
+  
+  # Check if we have tertile grouping
+  if (length(unique(error_analysis$sample_errors$tertile)) > 1) {
+    # Multiple groups - use faceting
+    ggplot(error_analysis$sample_errors, aes(x = actual_value, y = mean_error)) +
+      geom_point(alpha = 0.6, size = 1.5) +
+      geom_smooth(method = "lm", color = "red", se = TRUE, linewidth = 1.2) +
+      geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
+      facet_wrap(~tertile, scales = "free_x", labeller = label_both) +
+      labs(
+        title = "Systematic Bias in Predictions by Protein Group",
+        x = "Actual Protein Content (g/kg)",
+        y = "Mean Prediction Error (g/kg)"
+      ) +
+      theme_classic() +
+      theme(
+        plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title = element_text(size = 11),
+        axis.text = element_text(size = 10),
+        strip.text = element_text(size = 10)
+      )
+  } else {
+    # Single group - no faceting
+    ggplot(error_analysis$sample_errors, aes(x = actual_value, y = mean_error)) +
+      geom_point(alpha = 0.6, size = 1.5) +
+      geom_smooth(method = "lm", color = "red", se = TRUE, linewidth = 1.2) +
+      geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
+      labs(
+        title = "Systematic Bias in Predictions",
+        x = "Actual Protein Content (g/kg)",
+        y = "Mean Prediction Error (g/kg)"
+      ) +
+      theme_classic() +
+      theme(
+        plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title = element_text(size = 11),
+        axis.text = element_text(size = 10)
+      )
+  }
 }

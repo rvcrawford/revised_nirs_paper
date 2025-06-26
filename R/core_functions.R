@@ -11,6 +11,14 @@ library(kableExtra)
 # =============================================================================
 # DATA PREPARATION FUNCTIONS
 # =============================================================================
+# Utility function for skewness calculation
+calculate_skewness <- function(x) {
+  n <- length(x)
+  mean_x <- mean(x)
+  sd_x <- sqrt(sum((x - mean_x)^2) / n)
+  z <- (x - mean_x) / sd_x
+  sum(z^3) / n
+}
 
 prepare_hemp_data <- function(raw_data) {
   # Prepare hemp data for analysis
@@ -737,8 +745,8 @@ create_sample_summary_table <- function(hemp_data) {
 }
 
 create_preprocessing_comparison_table <- function(analysis) {
-  # Create preprocessing comparison table
-  
+  # Keep this function exactly as it is - the "mean ± SD" format is good
+  # Only minor change: could use |> instead of %>% if desired, but not critical
   table_data <- analysis$summary[, .(
     Method = method_name,
     RMSE = paste0(round(rmse_mean, 1), " ± ", round(rmse_sd, 1)),
@@ -758,113 +766,79 @@ create_preprocessing_comparison_table <- function(analysis) {
 # =============================================================================
 
 create_calibration_plot <- function(results) {
-  # Create model calibration plot with better error handling
+  # Need to check what data structure results actually contains
+  # Current expects results$metrics with optimal_components
+  # But backup expects results$model_n_comp_statistics with ncomp
   
-  cat("Creating calibration plot...\n")
-  
-  # Check input structure
-  if (!"metrics" %in% names(results)) {
-    stop("Results must contain 'metrics' component")
+  if ("model_n_comp_statistics" %in% names(results)) {
+    # Use backup style if available
+    results$model_n_comp_statistics |> 
+      ggplot(aes(as.factor(ncomp), RMSE)) + 
+      geom_line(aes(group = id), alpha = 0.03) + 
+      theme_classic() + 
+      xlab("Crude Protein Model Number of Components") + 
+      ylab("Crude Protein Model Root Mean Squared Error")
+  } else if ("metrics" %in% names(results)) {
+    # Adapt current structure to backup style
+    metrics <- results$metrics
+    
+    # Convert to line plot with proper grouping if possible
+    if ("id" %in% names(metrics)) {
+      metrics |>
+        ggplot(aes(as.factor(optimal_components), rmse)) + 
+        geom_line(aes(group = id), alpha = 0.03) + 
+        theme_classic() + 
+        xlab("Crude Protein Model Number of Components") + 
+        ylab("Crude Protein Model Root Mean Squared Error")
+    } else {
+      # Fallback to current boxplot style but with proper labels
+      ggplot(metrics, aes(x = factor(optimal_components), y = rmse)) +
+        geom_boxplot() +
+        theme_classic() +
+        labs(
+          x = "Crude Protein Model Number of Components",
+          y = "Crude Protein Model Root Mean Squared Error",
+          title = "Model Calibration: RMSE vs Number of Components"
+        )
+    }
+  } else {
+    # Error case
+    ggplot() + 
+      geom_text(aes(x = 0.5, y = 0.5, label = "Calibration data not found"), 
+                size = 6) +
+      theme_void()
   }
-  
-  metrics <- results$metrics
-  
-  # Validate required columns
-  required_cols <- c("optimal_components", "rmse")
-  missing_cols <- setdiff(required_cols, names(metrics))
-  if (length(missing_cols) > 0) {
-    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
-  }
-  
-  # Create the plot
-  plot <- ggplot(metrics, aes(x = factor(optimal_components), y = rmse)) +
-    geom_boxplot(fill = "steelblue", alpha = 0.7) +
-    theme_classic() +
-    labs(
-      x = "Number of Components",
-      y = "RMSE (g/kg)",
-      title = "Model Calibration: RMSE vs Number of Components",
-      subtitle = paste("Based on", nrow(metrics), "model iterations")
-    ) +
-    theme(
-      plot.title = element_text(size = 14, face = "bold"),
-      axis.title = element_text(size = 12),
-      axis.text = element_text(size = 10)
-    )
-  
-  cat("✅ Calibration plot created successfully\n")
-  return(plot)
 }
 
 create_performance_boxplot <- function(analysis) {
-  # Create performance boxplot with improved design
-  
-  cat("Creating performance boxplot...\n")
-  
-  # Check input structure
-  if (!"raw_metrics" %in% names(analysis)) {
-    stop("Analysis must contain 'raw_metrics' component")
-  }
-  
-  metrics <- analysis$raw_metrics
-  
-  # Validate required columns
-  required_cols <- c("rmse", "rsq", "rpd", "rpiq")
-  missing_cols <- setdiff(required_cols, names(metrics))
-  if (length(missing_cols) > 0) {
-    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
-  }
-  
-  # Transform data for plotting
-  metrics_long <- metrics %>%
-    select(all_of(required_cols)) %>%
+  analysis$raw_metrics |>
     pivot_longer(
-      cols = everything(),
+      cols = c(rmse, rsq, rpd, rpiq),
       names_to = "metric",
       values_to = "value"
-    ) %>%
-    mutate(
-      metric_label = case_when(
-        metric == "rmse" ~ "RMSE\n(g/kg)",
-        metric == "rsq" ~ "R²",
-        metric == "rpd" ~ "RPD",
-        metric == "rpiq" ~ "RPIQ",
-        TRUE ~ toupper(metric)
-      ),
-      metric_order = case_when(
-        metric == "rmse" ~ 1,
-        metric == "rsq" ~ 2,
-        metric == "rpd" ~ 3,
-        metric == "rpiq" ~ 4,
-        TRUE ~ 5
-      )
-    ) %>%
-    arrange(metric_order)
-  
-  # Create the plot
-  plot <- ggplot(metrics_long, aes(x = reorder(metric_label, metric_order), y = value)) +
-    geom_boxplot(fill = "lightblue", alpha = 0.7, color = "darkblue") +
-    facet_wrap(~metric_label, scales = "free", nrow = 1) +
+    ) |>
+    mutate(metric_label = toupper(metric)) |>
+    ggplot(aes(x = metric, y = value)) +
     theme_classic() +
+    geom_boxplot() +
+    facet_wrap(
+      ~ factor(metric_label, levels = c("RMSE", "RSQ", "RPD", "RPIQ")),
+      scales = "free",
+      nrow = 1,
+      labeller = as_labeller(c(
+        "RMSE" = "RMSE", "RSQ" = "R^2", "RPIQ" = "RPIQ", "RPD" = "RPD"
+      ))
+    ) +
     labs(
       title = "Model Performance Distribution",
-      subtitle = paste("Distribution across", nrow(metrics), "model iterations"),
-      x = "Performance Metric",
-      y = "Value"
+      y = "Estimate"
     ) +
     theme(
-      plot.title = element_text(size = 14, face = "bold"),
       axis.title.x = element_blank(),
       axis.text.x = element_blank(),
-      axis.ticks.x = element_blank(),
-      strip.text = element_text(size = 10, face = "bold"),
-      strip.background = element_rect(fill = "lightgray", color = "black")
+      axis.ticks.x = element_blank()
     )
-  
-  cat("✅ Performance boxplot created successfully\n")
-  return(plot)
 }
-
 # Fixed validation error plot function for your specific data structure
 # Add this to your R/core_functions.R file, replacing the existing create_validation_error_plot
 
@@ -875,123 +849,82 @@ create_performance_boxplot <- function(analysis) {
 # Replace your create_validation_error_plot function with this
 
 create_validation_error_plot <- function(error_analysis) {
-  cat("Creating validation error plot from real prediction data...\n")
-  
-  # Check for real predictions data
-  if (is.null(error_analysis) || !"raw_predictions" %in% names(error_analysis)) {
-    cat("⚠️ No raw predictions data available\n")
-    return(create_hemp_style_validation_plot())
-  }
-  
-  plot_data <- error_analysis$raw_predictions
-  
-  if (nrow(plot_data) == 0) {
-    cat("⚠️ Empty predictions data\n")
-    return(create_hemp_style_validation_plot())
-  }
-  
-  cat("Using", nrow(plot_data), "real prediction observations\n")
-  cat("From", length(unique(plot_data$ith_in_data_set)), "unique samples\n")
-  cat("Across", length(unique(plot_data$iteration)), "modeling iterations\n")
-  
-  # Ensure we have the percent_error column
-  if (!"percent_error" %in% names(plot_data)) {
-    plot_data$percent_error <- (plot_data$predicted - plot_data$actual) / plot_data$actual * 100
-  }
-  
-  # Check if tertile column exists, if not create it
-  if (!"tertile" %in% names(plot_data)) {
-    tertile_breaks <- quantile(plot_data$actual, c(0, 1/3, 2/3, 1), na.rm = TRUE)
-    plot_data$tertile <- cut(plot_data$actual, 
-                             breaks = tertile_breaks,
-                             labels = c(
-                               paste0("Low CP (", round(tertile_breaks[1]), " — ", round(tertile_breaks[2]), " g kg⁻¹)"),
-                               paste0("Medium CP (", round(tertile_breaks[2]), " — ", round(tertile_breaks[3]), " g kg⁻¹)"),
-                               paste0("High CP (", round(tertile_breaks[3]), " — ", round(tertile_breaks[4]), " g kg⁻¹)")
-                             ),
-                             include.lowest = TRUE)
-  }
-  
-  # Create sample order for x-axis (within each tertile)
-  plot_data <- plot_data[order(plot_data$actual)]
-  plot_data$sample_order <- 1:nrow(plot_data)
-  
-  # Sample data if too many points for performance
-  max_points <- 5000
-  if (nrow(plot_data) > max_points) {
-    # Stratified sampling to maintain distribution across tertiles
-    sampled_data <- plot_data[, .SD[sample(.N, min(.N, max_points/3))], by = tertile]
-    plot_data <- sampled_data[order(actual)]
-    plot_data$sample_order <- 1:nrow(plot_data)
-    cat("Sampled to", nrow(plot_data), "points for plotting performance\n")
-  }
-  
-  # Create the plot matching your original style exactly
-  plot <- ggplot(plot_data, aes(x = sample_order, y = percent_error)) +
-    # Gray triangular points matching your figure
-    geom_point(shape = 17, alpha = 0.4, color = "gray50", size = 0.8) +
+  if ("raw_predictions" %in% names(error_analysis)) {
     
-    # Black horizontal reference line at 0
-    geom_hline(yintercept = 0, color = "black", linewidth = 1) +
+    # Use the sophisticated approach from backup_original_code
+    raw_data <- data.table::copy(error_analysis$raw_predictions)
     
-    # Smooth trend line with confidence interval
-    geom_smooth(method = "loess", se = TRUE, color = "black", linewidth = 1, 
-                fill = "gray80", alpha = 0.3, span = 0.75) +
-    
-    # Facet by tertiles
-    facet_wrap(~tertile, scales = "free_x", nrow = 1) +
-    
-    # Styling to exactly match your figure
-    theme_classic() +
-    theme(
-      strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-      strip.text = element_text(size = 11, face = "bold"),
-      axis.title = element_text(size = 12),
-      axis.text.y = element_text(size = 10),
-      axis.text.x = element_blank(),  # No x-axis labels like your figure
-      axis.ticks.x = element_blank(),
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-      panel.grid = element_blank()
-    ) +
-    
-    # Labels exactly matching your figure
-    labs(
-      y = "Crude Protein Predicted Percent Difference\nfrom Assayed Value",
-      x = NULL,
-      title = NULL,
-      caption = paste("Based on", nrow(plot_data), "predictions from", 
-                      length(unique(plot_data$ith_in_data_set)), "samples")
-    ) +
-    
-    # Y-axis limits matching your figure  
-    ylim(-40, 40) +
-    
-    # Ensure proper spacing
-    theme(
-      plot.margin = margin(10, 10, 10, 10)
-    )
-  
-  # Add summary statistics annotation if bias_by_tertile is available
-  if ("bias_by_tertile" %in% names(error_analysis)) {
-    bias_stats <- error_analysis$bias_by_tertile
-    
-    # Add subtle text annotations with bias values
-    for (i in 1:nrow(bias_stats)) {
-      tertile_name <- bias_stats$tertile[i]
-      bias_value <- round(bias_stats$mean_percent_bias[i], 1)
-      
-      plot <- plot +
-        annotate("text", 
-                 x = Inf, y = Inf,
-                 label = paste0("Bias: ", bias_value, "%"),
-                 hjust = 1.1, vjust = 1.8,
-                 size = 2.5, color = "gray30", alpha = 0.8)
+    # Check if error_raw already exists, if not create it
+    if (!"error_raw" %in% names(raw_data)) {
+      raw_data[, error_raw := predicted - actual]
     }
+    
+    # Check if plot_order already exists, if not create it
+    if (!"plot_order" %in% names(raw_data)) {
+      raw_data[, plot_order := rank(actual)]
+    }
+    
+    # Create systematic bias calculation - FIXED COLUMN NAMES
+    temp_dat <- raw_data[, .(ith_in_data_set, actual, predicted, error_raw, plot_order)]
+    
+    # Create tertiles for faceting
+    cutpoints <- quantile(temp_dat$actual, probs = c(0, 1/3, 2/3, 1))
+    temp_dat[, cutpoints := cut(actual, breaks = cutpoints, include.lowest = TRUE)]
+    levels(temp_dat$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
+    
+    # Fit linear model for systematic bias
+    lm_mod <- lm(error_raw ~ actual, data = temp_dat)
+    preds <- predict(lm_mod, newdata = temp_dat[, .(actual = actual)])
+    
+    # Create systematic bias data
+    ds_preds <- temp_dat[, .(ith_in_data_set)] |> cbind(preds)
+    names(ds_preds)[2] <- "systematic_bias"
+    
+    # Merge back with plot info
+    sample_bias <- merge(temp_dat[, .(ith_in_data_set, plot_order, cutpoints)], 
+                         ds_preds, by = "ith_in_data_set")
+    
+    # Create plot following original style
+    raw_data |>
+      dplyr::arrange(plot_order) |>
+      ggplot() +
+      geom_point(aes(plot_order, error_raw), alpha = 0.05, shape = 2) +
+      geom_hline(yintercept = 0, linewidth = 2, lty = 2) +
+      geom_point(data = sample_bias, 
+                 aes(x = plot_order, y = systematic_bias), 
+                 shape = 3, size = 1.2, color = "black") +
+      facet_wrap(~cutpoints, 
+                 labeller = label_parsed, 
+                 scales = "free_x") +
+      ylab("Crude Protein Predicted Percent Difference\nfrom Assayed Value") +
+      theme_classic() +
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()
+      )
+    
+  } else {
+    # Fallback if data structure is different
+    ggplot() + 
+      geom_text(aes(x = 0.5, y = 0.5, label = "raw_predictions not found in error_analysis"), 
+                size = 6) +
+      theme_void() +
+      labs(title = "Validation Error Analysis - Data Not Available")
+  }
+}
+check_analysis_data <- function(analysis_object, required_components, function_name) {
+  missing_components <- setdiff(required_components, names(analysis_object))
+  
+  if (length(missing_components) > 0) {
+    warning(paste0("Missing components in ", function_name, ": ", 
+                   paste(missing_components, collapse = ", ")))
+    return(FALSE)
   }
   
-  cat("✅ Created validation plot with real prediction data\n")
-  return(plot)
+  return(TRUE)
 }
+
 
 # Fallback function for when no real data is available
 create_hemp_style_validation_plot <- function() {

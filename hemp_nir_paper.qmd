@@ -121,6 +121,58 @@ A NIRS-scanned sample of whole grain may be used for other purposes besides the 
 
 For this study, a benchtop NIR spectrometer was used to develop a model to predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR.
 
+## MATERIALS AND METHODS
+
+### Hemp Grain Sample Background
+
+Spectral data were obtained from whole (unground) hemp grain samples, harvested at maturity, collected from 2017--2021 from r nrow(distinct(hemp_data |> filter(loc!= "kentucky"), harv_year, loc)) cultivar trials in New York (NY) (149 samples). Grain samples were obtained by hand sampling or mechanical harvest and were cleaned of chaff and dried at 30 C for six days in a forced-air dryer. All CP values were expressed as concentration dry matter. In total, `r nrow(hemp_data)` samples from `r hemp_data$cultivar |> unique() |> length()` cultivars were represented in the data set. Cultivars were grain or dual-purpose types and included both commercially available and experimental material. Seventy-eight samples were scanned and assayed in 2017, 19 in 2018, 24 in 2019, and 28 in 2021. More information about hemp cultivars and locations is available in Supplemental Table S1.
+
+```{r}
+#| label: tbl-hemp-provenance
+#| tbl-cap: "Sample distribution by location and type"
+
+# OPTION 1: Read directly from source file (recommended)
+library(data.table)
+cultivar_data <- fread("input_data/final_data_set/cultivar_table_clean.csv")
+
+# Create the table using knitr::kable for consistency with your style
+cultivar_data |>
+  knitr::kable(
+    caption = "Tally of hemp cultivars and locations. Private cultivars are labeled 'Cultivar1', 'Cultivar2', etc., while experimental cultivars are labeled 'Experimental1', 'Experimental2', etc."
+  )
+
+```
+
+All cultivar trials were planted in randomized complete block design with each cultivar replicated four times. The 2017 data were comprised of samples from the same 13 cultivars sampled from six NY locations. For those trials, grain was harvested from each plot individually and aggregated by cultivar within each trial. Four subsamples were drawn from each aggregated sample and scanned separately. These spectra were averaged at each 2 nm increment. All remaining samples from 2018-2021 were collected on a per-plot basis. All cultivars and locations were represented in 2017, but only a selected subset of cultivar-location combinations were represented in 2018-2021 because not all cultivars were planted everywhere and only a portion of these cultivar-location combinations were sampled, scanned, and assayed due to logistical constraints.
+
+### Spectral Data Collection and Preprocessing
+
+A benchtop NIR spectrometer (FOSS/ NIR FOSS/ NIR Systems model 5000) was used to obtain the spectra (FOSS North America, Eden Prairie, MN, USA). Spectra were collected every 2 nm from 1100-2498 nm and the logarithm of reciprocal reflectance was recorded. A 1/4 rectangular sample cup (5.7 cm × 4.6 cm) was used to scan the samples.
+
+WINISI software version 1.02A (Infrasoft International, Port Matilda, PA, USA) was used to calculate the mean spectra in 2017 and to select samples for laboratory assay in all years. Samples were selected according to their spectral distance from their nearest neighbor within the data set with a cutoff of a distance of 0.6 H, where H is approximately equal to the squared Mahalanobis distance divided by the number of principal components used in the calculation [@garrido-varo_note_2019]. Prior to selection, spectra were preprocessed using SNV (standard normal variate)-detrend with settings 1,4,4,1 for the derivative, gap, smooth, and smooth-two settings respectively.
+
+### Laboratory Validation
+
+Laboratory assays were performed by Dairy One Forage Laboratory (Ithaca, NY). For those assays, 1 mm ground samples were analyzed by combustion using a CN628 or CN928 Carbon/Nitrogen Determinator. Samples from 2017 were aggregated as described above, but the remaining samples were not aggregated.
+
+### R software and packages used
+
+### Model Development
+
+Training and testing sets were created by dividing samples by their laboratory CP concentration values into tertiles to ensure that a representative range of values was present in both training and testing sets. Within each tertile, 75% of the samples were randomly assigned to the training set and the remaining 25% were assigned to the testing set. For each training set, models were developed in the caret package using PLSR. In fitting the model, the number of components was optimized over a grid search from 1-20. Model performance was evaluated with 25 iterations of bootstrapping and minimized RMSE in selecting the number of components in the final model.
+
+Initially a number of common spectral preprocessing methods were tested by creating 100 training and testing sets, as described above. Spectral data were transformed by each of the following methods: 1) first derivative; 2) Savitzky-Golay (SG) using the first derivative, third order polynomial, and a window of size five; 3) gap-segment derivative using the first derivative, a gap of 11, and a segment size of five; 4) SNV; 5) standard normal variate following Savitzky-Golay (SNV-SG) using the same SG parameters as above; 6) SNV-detrend with second order polynomial; and 7) multiplicative scatter correction. For comparison, models were also developed using untransformed spectra.
+
+For each of these preprocessing methods, models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R^2^, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R^2^, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a "good" model varies depending upon the reference consulted, but for simplicity's sake the standard established for an acceptable model was R^2^ \> 0.80, an RPD greater than 2.5 and ideally greater than 3 ("good" to "excellent" quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set [@rawal_visible_2024; @luce_prediction_2017; @chadalavada_nir_2022].
+
+Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, 1000 more training and testing sets were created, and models were developed with that method. Performance on the testing sets was summarized with RMSE, R^2^, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.
+
+## RESULTS AND DISCUSSION
+
+### Laboratory assay CP values
+
+Laboratory assay CP concentration values are summarized in @tbl-lab-protein-vals. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of `r round(calculate_skewness(hemp_data$crude_protein), 2)`) and two thirds of the samples contained more than 250 g kg ^-1^ CP.
+
 # Hemp NIR Analysis - Streamlined Pipeline Results
 
 ## Data Overview

@@ -212,8 +212,8 @@ The model improved most rapidly as the number of components increased from one t
 fig_model_calibration
 ```
 
-The performance of the final models on the testing sets are summarized in @fig-performance-boxplot. The means of the final models were: RMSE = r round(mean(final_model_analysis$raw_metrics$rmse), 2), R^2^ = r round(mean(final_model_analysis$raw_metrics$rsq), 2), RPD = r round(mean(final_model_analysis$raw_metrics$rpd), 2), and RPIQ = r round(mean(final_model_analysis$raw_metrics$rpiq), 2).
-Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with r round(final_model_analysis$classification$total_acceptable, 0)% having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.
+The performance of the final models on the testing sets are summarized in @fig-performance-boxplot. The means of the final models were: RMSE = `r round(mean(final_model_analysis$raw_metrics$rmse), 2)`, R^2^ = `r round(mean(final_model_analysis$raw_metrics$rsq), 2)`, RPD = `r round(mean(final_model_analysis$raw_metrics$rpd), 2)`, and RPIQ = `r round(mean(final_model_analysis$raw_metrics$rpiq), 2)`.
+Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with `r round(final_model_analysis$classification$approximate_pct + final_model_analysis$classification$good_pct + final_model_analysis$classification$excellent_pct)`% having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.
 
 ```{r}
 #| label: fig-performance-boxplot

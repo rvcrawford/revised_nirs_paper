@@ -74,9 +74,24 @@ prepare_preprocessing_key <- function(raw_key) {
 
 apply_preprocessing <- function(spectra_matrix, method = 1) {
   # Apply preprocessing method to spectral data
-  # method: 1=raw, 2=first_deriv, 3=sg, 4=gap_segment, 5=snv, 6=snv_sg, 7=snv_detrend, 8=msc
+  # method: can be numeric (1-8) or method name string
   
   library(prospectr)
+  
+  # Convert method name to numeric if it's a string
+  if (is.character(method)) {
+    method <- switch(method,
+                     "Raw spectra" = 1,
+                     "First derivative" = 2, 
+                     "Savitzky-Golay smoothing" = 3,
+                     "Gap-segment derivative" = 4,
+                     "Standard normal variate (SNV)" = 5,
+                     "SNV + Savitzky-Golay" = 6,
+                     "SNV + detrending" = 7,
+                     "Multiplicative scatter correction" = 8,
+                     stop("Unknown preprocessing method name: ", method)
+    )
+  }
   
   if (method == 1) {
     # Raw spectra (no preprocessing)
@@ -112,10 +127,9 @@ apply_preprocessing <- function(spectra_matrix, method = 1) {
     return(msc(spectra_matrix))
     
   } else {
-    stop("Unknown preprocessing method: ", method)
+    stop("Unknown preprocessing method ID: ", method)
   }
 }
-
 apply_all_preprocessing_methods <- function(spectra_train, spectra_test) {
   # Apply 8 preprocessing methods to spectral data (using your original parameters)
   
@@ -772,7 +786,7 @@ create_sample_summary_table <- function(hemp_data) {
   
   knitr::kable(
     summary_data,
-    caption = "Summary of Laboratory Assayed CP Values (g kg^-1)"
+    caption = "Summary of Laboratory Assayed CP Values (g kg^-1^)"
   )
 }
 create_preprocessing_comparison_table <- function(analysis) {
@@ -882,7 +896,6 @@ create_performance_boxplot <- function(analysis) {
 create_validation_error_plot <- function(error_analysis) {
   if ("raw_predictions" %in% names(error_analysis)) {
     
-    # Use the sophisticated approach from backup_original_code
     raw_data <- data.table::copy(error_analysis$raw_predictions)
     
     # Check if error_raw already exists, if not create it
@@ -890,38 +903,41 @@ create_validation_error_plot <- function(error_analysis) {
       raw_data[, error_raw := predicted - actual]
     }
     
-    # Check if plot_order already exists, if not create it
-    if (!"plot_order" %in% names(raw_data)) {
-      raw_data[, plot_order := rank(actual)]
-    }
+    # FIXED: Create sample-level data first, then assign plot_order
+    # Aggregate to one row per sample
+    sample_data <- raw_data[, .(
+      mean_actual = mean(actual, na.rm = TRUE),
+      mean_error = mean(error_raw, na.rm = TRUE)
+    ), by = ith_in_data_set]
     
-    # Create systematic bias calculation - FIXED COLUMN NAMES
-    temp_dat <- raw_data[, .(ith_in_data_set, actual, predicted, error_raw, plot_order)]
+    # FIXED: Create plot order based on sample ranking
+    sample_data[, plot_order := rank(mean_actual)]
     
     # Create tertiles for faceting
-    cutpoints <- quantile(temp_dat$actual, probs = c(0, 1/3, 2/3, 1))
-    temp_dat[, cutpoints := cut(actual, breaks = cutpoints, include.lowest = TRUE)]
-    levels(temp_dat$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
+    cutpoints <- quantile(sample_data$mean_actual, probs = c(0, 1/3, 2/3, 1))
+    sample_data[, cutpoints := cut(mean_actual, breaks = cutpoints, include.lowest = TRUE)]
+    levels(sample_data$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
     
-    # Fit linear model for systematic bias
-    lm_mod <- lm(error_raw ~ actual, data = temp_dat)
-    preds <- predict(lm_mod, newdata = temp_dat[, .(actual = actual)])
+    # Add plot_order back to raw_data for the scatter points
+    raw_data <- merge(raw_data, sample_data[, .(ith_in_data_set, plot_order, cutpoints)], 
+                      by = "ith_in_data_set")
     
-    # Create systematic bias data
-    ds_preds <- temp_dat[, .(ith_in_data_set)] |> cbind(preds)
-    names(ds_preds)[2] <- "systematic_bias"
+    # Fit linear model for systematic bias using sample-level data
+    lm_mod <- lm(mean_error ~ mean_actual, data = sample_data)
+    sample_data[, systematic_bias := predict(lm_mod, newdata = sample_data)]
     
-    # Merge back with plot info
-    sample_bias <- merge(temp_dat[, .(ith_in_data_set, plot_order, cutpoints)], 
-                         ds_preds, by = "ith_in_data_set")
+    # FIXED: Merge systematic bias back using sample data
+    plot_data <- merge(raw_data, sample_data[, .(ith_in_data_set, systematic_bias)], 
+                       by = "ith_in_data_set")
     
-    # Create plot following original style
-    raw_data |>
+    # Create plot with properly spaced crosses
+    plot_data |>
       dplyr::arrange(plot_order) |>
       ggplot() +
       geom_point(aes(plot_order, error_raw), alpha = 0.05, shape = 2) +
       geom_hline(yintercept = 0, linewidth = 2, lty = 2) +
-      geom_point(data = sample_bias, 
+      # FIXED: Use sample_data for crosses to ensure one per sample
+      geom_point(data = sample_data, 
                  aes(x = plot_order, y = systematic_bias), 
                  shape = 3, size = 1.2, color = "black") +
       facet_wrap(~cutpoints, 
@@ -936,7 +952,6 @@ create_validation_error_plot <- function(error_analysis) {
       )
     
   } else {
-    # Fallback if data structure is different
     ggplot() + 
       geom_text(aes(x = 0.5, y = 0.5, label = "raw_predictions not found in error_analysis"), 
                 size = 6) +
@@ -944,6 +959,7 @@ create_validation_error_plot <- function(error_analysis) {
       labs(title = "Validation Error Analysis - Data Not Available")
   }
 }
+
 check_analysis_data <- function(analysis_object, required_components, function_name) {
   missing_components <- setdiff(required_components, names(analysis_object))
   

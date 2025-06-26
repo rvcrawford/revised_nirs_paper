@@ -233,7 +233,13 @@ fig_validation_errors
 
 The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.
 
+## ACKNOWLEDGMENTS
 
+This work would not have been possible without the efforts of the field staff, undergraduate, and graduate students who planted, maintained, monitored and harvested these trials. Funding was provided by New York State through a grant from Empire State Development (AC477). We are grateful to those who provided seed for this project, including: Uniseeds, Verve Seeds, Winterfox Farms, International Hemp, Fiacre Seeds, and KonopiUS.
+
+## CONFLICT OF INTEREST
+
+The authors declare no conflict of interest.
 
 
 **Generated:** `r format(Sys.time())`  

@@ -66,6 +66,58 @@ prepare_preprocessing_key <- function(raw_key) {
   return(key)
 }
 
+# Function to select protein-specific wavelengths
+select_protein_wavelengths <- function(data) {
+  
+  cat("Selecting protein-specific wavelengths...\n")
+  
+  # Define protein absorption bands (nm) - EXPANDED with more specific assignments
+  protein_ranges <- list(
+    list(start = 1180, end = 1230, name = "C-H stretch 2nd overtone (amino acids)"),
+    list(start = 1480, end = 1530, name = "N-H stretch 1st overtone (peptide bonds)"),
+    list(start = 1660, end = 1700, name = "C-H stretch 1st overtone (aliphatic amino acids)"),
+    list(start = 2040, end = 2070, name = "N-H + C-N combination (protein backbone)"),
+    list(start = 2270, end = 2310, name = "C-H + C-H combination (amino acid structure)")
+  )
+  
+  # Get all available wavelengths
+  wavelength_info <- extract_wavelengths(data)
+  all_wavelengths <- wavelength_info$wavelengths
+  
+  # Select wavelengths in protein bands
+  protein_wavelengths <- c()
+  protein_assignments <- c()
+  
+  for (band in protein_ranges) {
+    in_band <- all_wavelengths >= band$start & all_wavelengths <= band$end
+    band_wavelengths <- all_wavelengths[in_band]
+    
+    if (length(band_wavelengths) > 0) {
+      protein_wavelengths <- c(protein_wavelengths, band_wavelengths)
+      protein_assignments <- c(protein_assignments, rep(band$name, length(band_wavelengths)))
+      
+      cat("- Band", band$start, "-", band$end, "nm:", length(band_wavelengths), "wavelengths\n")
+    }
+  }
+  
+  # Create column names for selected wavelengths
+  selected_columns <- paste0("x", protein_wavelengths)
+  
+  # Verify columns exist in data
+  available_columns <- selected_columns[selected_columns %in% names(data)]
+  
+  cat("Selected", length(protein_wavelengths), "protein-specific wavelengths\n")
+  cat("Available in data:", length(available_columns), "wavelengths\n")
+  
+  list(
+    wavelengths = protein_wavelengths[selected_columns %in% names(data)],
+    column_names = available_columns,
+    assignments = protein_assignments[selected_columns %in% names(data)],
+    n_selected = length(available_columns),
+    ranges = protein_ranges
+  )
+}
+
 # =============================================================================
 # PREPROCESSING FUNCTIONS
 # =============================================================================
@@ -130,6 +182,7 @@ apply_preprocessing <- function(spectra_matrix, method = 1) {
     stop("Unknown preprocessing method ID: ", method)
   }
 }
+
 apply_all_preprocessing_methods <- function(spectra_train, spectra_test) {
   # Apply 8 preprocessing methods to spectral data (using your original parameters)
   
@@ -321,6 +374,120 @@ run_single_iteration <- function(hemp_data, preprocessing_method_id, iteration) 
 # =============================================================================
 # CORE ANALYSIS FUNCTIONS
 # =============================================================================
+
+# Enhanced protein-focused analysis function
+run_protein_focused_analysis <- function(data, best_method = "snv_sg") {
+  
+  cat("=== PROTEIN-FOCUSED MODEL ANALYSIS ===\n")
+  
+  # Select protein-specific wavelengths
+  protein_selection <- select_protein_wavelengths(data)
+  
+  cat("Using", protein_selection$n_selected, "protein-specific wavelengths\n")
+  
+  # Extract spectral data for protein wavelengths only
+  spectral_cols <- protein_selection$column_names
+  spectra_matrix <- as.matrix(data[, ..spectral_cols])
+  y <- data$crude_protein
+  
+  cat("Protein-focused data dimensions:", dim(spectra_matrix), "\n")
+  
+  # Create train/test split (use same approach as full model for fair comparison)
+  set.seed(42)  # For reproducibility
+  inTrain <- split_spectra(y)
+  y_train <- y[inTrain]
+  y_test <- y[-inTrain]
+  
+  # Apply preprocessing
+  spectra_processed <- my_preprocess(spectra_matrix[inTrain, ], spectra_matrix[-inTrain, ])
+  
+  # Get preprocessed data for the best method
+  method_train_name <- paste0(best_method, "_train")
+  method_test_name <- paste0(best_method, "_test")
+  
+  X_train <- spectra_processed[[1]][[method_train_name]]
+  X_test <- spectra_processed[[1]][[method_test_name]]
+  
+  # Convert to data frame (required by caret)
+  X_train_df <- as.data.frame(X_train)
+  X_test_df <- as.data.frame(X_test)
+  
+  # Set up caret training control
+  train_control <- trainControl(
+    method = "cv",
+    number = 10,
+    savePredictions = "final"
+  )
+  
+  cat("Training protein-focused PLS model...\n")
+  
+  # Train PLS model
+  model <- train(
+    x = X_train_df,
+    y = y_train,
+    method = "pls",
+    trControl = train_control,
+    tuneLength = 15,  # Test up to 15 components
+    preProcess = NULL  # Already preprocessed
+  )
+  
+  cat("Optimal components:", model$bestTune$ncomp, "\n")
+  cat("Training RMSE:", min(model$results$RMSE), "\n")
+  
+  # Create spectral fit object for coefficient extraction
+  spectral_fit <- list(
+    model = model,
+    wavelengths = protein_selection$wavelengths,
+    X_train = X_train_df,
+    y_train = y_train,
+    train_indices = inTrain,
+    preprocessing_method = best_method
+  )
+  
+  # Extract coefficients and VIP scores
+  coeff_data <- extract_pls_coefficients(spectral_fit)
+  vip_data <- calculate_vip_scores(spectral_fit)
+  protein_bands_data <- identify_protein_bands(coeff_data, vip_data)
+  summary_table <- create_wavelength_summary_table(protein_bands_data)
+  
+  # Calculate summary statistics
+  n_important_vip <- sum(vip_data$vip_score > 1.0)
+  n_protein_related <- sum(protein_bands_data$likely_protein_related)
+  
+  # Test set evaluation
+  test_predictions <- predict(model, X_test_df)
+  test_rmse <- sqrt(mean((y_test - test_predictions)^2))
+  test_rsq <- cor(y_test, test_predictions)^2
+  
+  cat("Protein-focused analysis complete:\n")
+  cat("- Wavelengths with VIP > 1.0:", n_important_vip, "\n")
+  cat("- Wavelengths near protein bands:", n_protein_related, "\n")
+  cat("- Model used", model$bestTune$ncomp, "components\n")
+  cat("- Test RMSE:", round(test_rmse, 3), "\n")
+  cat("- Test R²:", round(test_rsq, 3), "\n")
+  
+  list(
+    spectral_fit = spectral_fit,
+    coefficients = coeff_data,
+    vip_scores = vip_data,
+    protein_bands = protein_bands_data,
+    summary_table = summary_table,
+    analysis_stats = list(
+      n_important_vip = n_important_vip,
+      n_protein_related = n_protein_related,
+      optimal_components = model$bestTune$ncomp,
+      training_rmse = min(model$results$RMSE),
+      test_rmse = test_rmse,
+      test_rsq = test_rsq
+    ),
+    protein_selection = protein_selection,
+    test_predictions = data.frame(
+      actual = y_test,
+      predicted = test_predictions,
+      sample_id = which(!inTrain)
+    )
+  )
+}
 
 run_preprocessing_comparison <- function(data, n_iterations = NULL) {
   # Compare 8 preprocessing methods - core analysis for paper
@@ -621,6 +788,136 @@ analyze_final_model_performance <- function(results) {
     classification = classification,
     raw_metrics = metrics
   ))
+}
+
+# ENHANCED: Function to compare full spectrum vs protein-focused models
+compare_full_vs_protein_models <- function(full_analysis, protein_analysis) {
+  
+  cat("=== ENHANCED MODEL COMPARISON: FULL SPECTRUM vs PROTEIN-FOCUSED ===\n")
+  
+  # Extract metrics with better error handling
+  full_rmse <- full_analysis$analysis_stats$training_rmse
+  protein_rmse <- protein_analysis$analysis_stats$training_rmse
+  
+  # Also compare test performance if available
+  full_test_rmse <- ifelse("test_rmse" %in% names(full_analysis$analysis_stats),
+                           full_analysis$analysis_stats$test_rmse, NA)
+  protein_test_rmse <- ifelse("test_rmse" %in% names(protein_analysis$analysis_stats),
+                              protein_analysis$analysis_stats$test_rmse, NA)
+  
+  # Extract components and wavelengths
+  full_components <- full_analysis$analysis_stats$optimal_components
+  protein_components <- protein_analysis$analysis_stats$optimal_components
+  full_wavelengths <- length(full_analysis$coefficients$wavelength)
+  protein_wavelengths <- protein_analysis$protein_selection$n_selected
+  
+  # Calculate differences
+  rmse_diff <- protein_rmse - full_rmse
+  rmse_pct_change <- (rmse_diff / full_rmse) * 100
+  complexity_reduction <- (1 - protein_wavelengths / full_wavelengths) * 100
+  component_reduction <- (1 - protein_components / full_components) * 100
+  
+  # Create detailed comparison table
+  comparison_table <- data.frame(
+    Metric = c(
+      "Training RMSE (g/kg)", 
+      "Test RMSE (g/kg)",
+      "Number of Wavelengths", 
+      "PLS Components", 
+      "Model Complexity Score",
+      "Interpretability Score"
+    ),
+    `Full Spectrum` = c(
+      round(full_rmse, 3),
+      ifelse(is.na(full_test_rmse), "N/A", round(full_test_rmse, 3)),
+      full_wavelengths,
+      full_components,
+      round(full_wavelengths * full_components, 0),
+      "Low (black box)"
+    ),
+    `Protein-Focused` = c(
+      round(protein_rmse, 3),
+      ifelse(is.na(protein_test_rmse), "N/A", round(protein_test_rmse, 3)),
+      protein_wavelengths,
+      protein_components,
+      round(protein_wavelengths * protein_components, 0),
+      "High (protein-specific)"
+    ),
+    `Change` = c(
+      paste0(ifelse(rmse_diff > 0, "+", ""), round(rmse_diff, 3)),
+      ifelse(is.na(full_test_rmse) | is.na(protein_test_rmse), "N/A", 
+             paste0(ifelse(protein_test_rmse - full_test_rmse > 0, "+", ""), 
+                    round(protein_test_rmse - full_test_rmse, 3))),
+      paste0("-", round(full_wavelengths - protein_wavelengths, 0)),
+      paste0("-", round(full_components - protein_components, 0)),
+      paste0("-", round((full_wavelengths * full_components) - (protein_wavelengths * protein_components), 0)),
+      "Substantial improvement"
+    )
+  )
+  
+  # Print results
+  cat("\nDetailed Performance Comparison:\n")
+  print(comparison_table)
+  
+  cat("\nSummary Statistics:\n")
+  cat("- Training RMSE change:", round(rmse_pct_change, 1), "%\n")
+  cat("- Wavelength reduction:", round(complexity_reduction, 1), "%\n")
+  cat("- Component reduction:", round(component_reduction, 1), "%\n")
+  cat("- Overall complexity reduction:", round(100 - (protein_wavelengths * protein_components) / (full_wavelengths * full_components) * 100, 1), "%\n")
+  
+  # Biological validation assessment
+  protein_bands_used <- length(protein_analysis$protein_selection$ranges)
+  vip_important <- protein_analysis$analysis_stats$n_important_vip
+  protein_relevant <- protein_analysis$analysis_stats$n_protein_related
+  
+  cat("\nBiological Validation:\n")
+  cat("- Protein absorption bands targeted:", protein_bands_used, "\n")
+  cat("- Wavelengths with VIP > 1.0:", vip_important, "\n")
+  cat("- Wavelengths near known protein bands:", protein_relevant, "\n")
+  cat("- Protein-relevance ratio:", round(protein_relevant / protein_wavelengths * 100, 1), "%\n")
+  
+  # Enhanced interpretation
+  cat("\nEnhanced Interpretation:\n")
+  if (abs(rmse_pct_change) < 5) {
+    cat("✓ EXCELLENT: Comparable performance with dramatically reduced complexity\n")
+    cat("  This validates the biological basis of NIRS protein predictions\n")
+  } else if (rmse_pct_change < 0) {
+    cat("✓ OUTSTANDING: Protein-focused model performs BETTER than full spectrum\n")
+    cat("  This suggests protein bands contain the most relevant information\n")
+  } else if (rmse_pct_change < 15) {
+    cat("✓ GOOD: Small performance decrease but major interpretability gain\n")
+    cat("  Trade-off is favorable for biological understanding\n")
+  } else {
+    cat("⚠ CAUTION: Significant performance decrease\n")
+    cat("  May need to include additional wavelength regions\n")
+  }
+  
+  # Return comprehensive results
+  list(
+    comparison_table = comparison_table,
+    performance_metrics = list(
+      full_rmse = full_rmse,
+      protein_rmse = protein_rmse,
+      rmse_difference = rmse_diff,
+      rmse_percent_change = rmse_pct_change,
+      full_test_rmse = full_test_rmse,
+      protein_test_rmse = protein_test_rmse
+    ),
+    complexity_metrics = list(
+      complexity_reduction = complexity_reduction,
+      component_reduction = component_reduction,
+      full_wavelengths = full_wavelengths,
+      protein_wavelengths = protein_wavelengths,
+      full_components = full_components,
+      protein_components = protein_components
+    ),
+    biological_validation = list(
+      protein_bands_used = protein_bands_used,
+      vip_important = vip_important,
+      protein_relevant = protein_relevant,
+      protein_relevance_ratio = protein_relevant / protein_wavelengths * 100
+    )
+  )
 }
 
 # Error analysis function that uses real prediction data
@@ -1179,4 +1476,115 @@ generate_all_figures_safely <- function() {
   
   cat("=== FIGURE GENERATION COMPLETE ===\n")
   return(figures)
+}
+
+# FIXED: Create side-by-side comparison plot (eliminates geom_rect warnings)
+create_model_comparison_plot <- function(full_analysis, protein_analysis) {
+  
+  # Prepare data for comparison
+  full_data <- full_analysis$coefficients %>%
+    mutate(model = "Full Spectrum")
+  
+  protein_data <- protein_analysis$coefficients %>%
+    mutate(model = "Protein-Focused")
+  
+  # Combine data
+  combined_data <- bind_rows(full_data, protein_data)
+  
+  # Create comparison plot
+  p <- ggplot(combined_data, aes(x = wavelength, y = coefficient)) +
+    geom_line(color = "black", linewidth = 0.6) +
+    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+    
+    # FIXED: Use annotate() instead of geom_rect() to eliminate warnings
+    # This approach uses annotate() which doesn't try to map aesthetics to data
+    annotate("rect", xmin = 1180, xmax = 1230, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 1480, xmax = 1530, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 1660, xmax = 1700, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 2040, xmax = 2070, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 2270, xmax = 2310, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    
+    # Add text labels for protein bands
+    annotate("text", x = 1205, y = Inf, label = "C-H", 
+             vjust = 1.5, size = 3, color = "blue", alpha = 0.8) +
+    annotate("text", x = 1505, y = Inf, label = "N-H", 
+             vjust = 1.5, size = 3, color = "blue", alpha = 0.8) +
+    annotate("text", x = 1680, y = Inf, label = "C-H", 
+             vjust = 1.5, size = 3, color = "blue", alpha = 0.8) +
+    annotate("text", x = 2055, y = Inf, label = "N-H+C-N", 
+             vjust = 1.5, size = 3, color = "blue", alpha = 0.8) +
+    annotate("text", x = 2290, y = Inf, label = "C-H+C-H", 
+             vjust = 1.5, size = 3, color = "blue", alpha = 0.8) +
+    
+    facet_wrap(~ model, scales = "free_x", ncol = 1) +
+    
+    labs(
+      x = "Wavelength (nm)",
+      y = "PLS Regression Coefficient",
+      title = "Model Comparison: Full Spectrum vs Protein-Focused",
+      subtitle = "Blue regions indicate known protein absorption bands"
+    ) +
+    theme_classic() +
+    theme(
+      plot.title = element_text(size = 12, face = "bold"),
+      plot.subtitle = element_text(size = 10, color = "gray50"),
+      strip.background = element_blank(),
+      strip.text = element_text(face = "bold", size = 11)
+    )
+  
+  return(p)
+}
+
+# Alternative version: Single panel with different colors for each model
+create_overlay_comparison_plot <- function(full_analysis, protein_analysis) {
+  
+  # Prepare data for comparison
+  full_data <- full_analysis$coefficients %>%
+    mutate(model = "Full Spectrum") %>%
+    # Subsample full spectrum for cleaner visualization
+    filter(row_number() %% 3 == 1)  # Every 3rd point
+  
+  protein_data <- protein_analysis$coefficients %>%
+    mutate(model = "Protein-Focused")
+  
+  # Combine data
+  combined_data <- bind_rows(full_data, protein_data)
+  
+  p <- ggplot(combined_data, aes(x = wavelength, y = coefficient, color = model)) +
+    geom_line(linewidth = 0.8, alpha = 0.8) +
+    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+    
+    # Add protein band regions
+    annotate("rect", xmin = 1180, xmax = 1230, ymin = -Inf, ymax = Inf, 
+             alpha = 0.05, fill = "blue") +
+    annotate("rect", xmin = 1480, xmax = 1530, ymin = -Inf, ymax = Inf, 
+             alpha = 0.05, fill = "blue") +
+    annotate("rect", xmin = 1660, xmax = 1700, ymin = -Inf, ymax = Inf, 
+             alpha = 0.05, fill = "blue") +
+    annotate("rect", xmin = 2040, xmax = 2070, ymin = -Inf, ymax = Inf, 
+             alpha = 0.05, fill = "blue") +
+    annotate("rect", xmin = 2270, xmax = 2310, ymin = -Inf, ymax = Inf, 
+             alpha = 0.05, fill = "blue") +
+    
+    labs(
+      x = "Wavelength (nm)",
+      y = "PLS Regression Coefficient",
+      color = "Model Type",
+      title = "Coefficient Comparison: Full Spectrum vs Protein-Focused Models",
+      subtitle = "Blue regions indicate known protein absorption bands"
+    ) +
+    theme_classic() +
+    theme(
+      plot.title = element_text(size = 12, face = "bold"),
+      plot.subtitle = element_text(size = 10, color = "gray50"),
+      legend.position = "bottom"
+    ) +
+    scale_color_manual(values = c("Full Spectrum" = "gray40", "Protein-Focused" = "red"))
+  
+  return(p)
 }

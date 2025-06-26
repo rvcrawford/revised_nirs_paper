@@ -88,6 +88,9 @@ library(knitr)
 library(ggplot2)
 library(targets)
 
+source("R/core_functions.R")
+
+
 # Load all required targets objects
 hemp_data <- tryCatch(tar_read(hemp_data), error = function(e) NULL)
 best_method <- tryCatch(tar_read(best_method), error = function(e) "Not available")
@@ -173,274 +176,65 @@ Analyses of variance were performed for each of these metrics in order to compar
 
 Laboratory assay CP concentration values are summarized in @tbl-lab-protein-vals. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of `r round(calculate_skewness(hemp_data$crude_protein), 2)`) and two thirds of the samples contained more than 250 g kg ^-1^ CP.
 
-# Hemp NIR Analysis - Streamlined Pipeline Results
-
-## Data Overview
 
 ```{r}
-#| label: data-overview
-#| eval: true
+#| label: tbl-protein-summary
+#| tbl-cap: "Summary of laboratory-assayed CP values"
 
-if (!is.null(hemp_data)) {
-  n_samples <- nrow(hemp_data)
-  
-  # Basic data summary
-  cat("**Dataset Summary:**\n")
-  cat("- Total samples: **", n_samples, "**\n")
-  
-  if ("crude_protein" %in% names(hemp_data)) {
-    protein_stats <- summary(hemp_data$crude_protein)
-    cat("- Protein range: ", round(protein_stats["Min."], 1), " - ", round(protein_stats["Max."], 1), " g/kg\n")
-    cat("- Protein mean: ", round(protein_stats["Mean"], 1), " g/kg\n")
-  }
-  
-  if ("location" %in% names(hemp_data)) {
-    locations <- unique(hemp_data$location)
-    n_locations <- length(locations)
-    cat("- Locations: ", n_locations, " (", paste(head(locations, 3), collapse = ", "), 
-        ifelse(n_locations > 3, ", ...", ""), ")\n")
-  }
-  
-  if ("year" %in% names(hemp_data)) {
-    years <- range(hemp_data$year, na.rm = TRUE)
-    cat("- Study period: ", years[1], "-", years[2], "\n")
-  }
-  
-  # Spectral data info
-  spectral_cols <- grep("^x[0-9]+$", names(hemp_data), value = TRUE)
-  if (length(spectral_cols) > 0) {
-    cat("- Spectral variables: ", length(spectral_cols), " wavelengths\n")
-  }
-  
-} else {
-  cat("❌ **Hemp data not loaded yet**\n")
-  cat("- Run `tar_make()` to process the data pipeline\n")
-}
+table_sample_summary
 ```
 
-## Preprocessing Method Selection
+### Preprocessing methods comparison
 
-**Optimal method identified:** `r ifelse(!is.null(best_method) && best_method != "Method TBD", paste0("**", best_method, "**"), "Analysis in progress...")`
+All preprocessing methods outperformed untransformed spectral data, as shown in @tbl-preproc. The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.
+
+### Preprocessing methods comparison
+
+All preprocessing methods outperformed untransformed spectral data, as shown in @tbl-preproc. The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.
 
 ```{r}
-#| label: preprocessing-results
-#| eval: true
+#| label: tbl-preproc
+#| tbl-cap: Evaluation of Preprocessing Methods by Metric ± Standard Error
 
-if (!is.null(preprocessing_analysis)) {
-  cat("### Preprocessing Comparison Summary\n\n")
-  
-  if ("summary" %in% names(preprocessing_analysis)) {
-    summary_data <- preprocessing_analysis$summary
-    n_methods <- nrow(summary_data)
-    cat("- **Methods tested:** ", n_methods, "\n")
-    
-    if ("mean_rmse" %in% names(summary_data)) {
-      best_rmse <- min(summary_data$mean_rmse, na.rm = TRUE)
-      worst_rmse <- max(summary_data$mean_rmse, na.rm = TRUE)
-      cat("- **RMSE range:** ", round(best_rmse, 2), " - ", round(worst_rmse, 2), " g/kg\n")
-    }
-    
-    if ("mean_rsq" %in% names(summary_data)) {
-      best_rsq <- max(summary_data$mean_rsq, na.rm = TRUE)
-      cat("- **Best R²:** ", round(best_rsq, 3), "\n")
-    }
-  }
-} else {
-  cat("⏳ Preprocessing comparison in progress...\n")
-}
+table_preprocessing
 ```
 
-## Model Performance
+From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples [@barnes_standard_1989]. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal's shape and features [@li_quantitative_2020; @luo_properties_2005]. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise [@rinnan_review_2009]. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.
+
+## Final model development and summary
+
+The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (@fig-model-calibration).
 
 ```{r}
-#| label: model-performance
-#| eval: true
+#| label: fig-model-calibration
+#| fig-cap: Decreasing RMSE with increasing number of components for 1000 training sets
 
-if (!is.null(final_model_analysis)) {
-  cat("### Final Model Performance\n\n")
-  
-  if ("overall_stats" %in% names(final_model_analysis)) {
-    stats <- final_model_analysis$overall_stats
-    
-    cat("**Performance Metrics (mean ± SD):**\n\n")
-    cat("| Metric | Value | Interpretation |\n")
-    cat("|--------|-------|----------------|\n")
-    
-    if ("mean_rmse" %in% names(stats)) {
-      rmse_val <- round(stats$mean_rmse, 2)
-      rmse_sd <- round(stats$sd_rmse, 2)
-      cat("| RMSE | ", rmse_val, " ± ", rmse_sd, " g/kg | Root Mean Square Error |\n")
-    }
-    
-    if ("mean_rsq" %in% names(stats)) {
-      rsq_val <- round(stats$mean_rsq, 3)
-      rsq_sd <- round(stats$sd_rsq, 3)
-      rsq_percent <- round(rsq_val * 100, 1)
-      cat("| R² | ", rsq_val, " ± ", rsq_sd, " | ", rsq_percent, "% variance explained |\n")
-    }
-    
-    if ("mean_rpd" %in% names(stats)) {
-      rpd_val <- round(stats$mean_rpd, 2)
-      rpd_sd <- round(stats$sd_rpd, 2)
-      
-      # RPD interpretation
-      if (rpd_val > 2.5) {
-        rpd_qual <- "Excellent"
-      } else if (rpd_val > 2.0) {
-        rpd_qual <- "Good"
-      } else if (rpd_val > 1.5) {
-        rpd_qual <- "Approximate"
-      } else {
-        rpd_qual <- "Poor"
-      }
-      
-      cat("| RPD | ", rpd_val, " ± ", rpd_sd, " | ", rpd_qual, " for quantitative use |\n")
-    }
-    
-    # Model classification summary
-    if ("classification" %in% names(final_model_analysis)) {
-      class_info <- final_model_analysis$classification
-      cat("\n**Model Quality Distribution:**\n")
-      cat("- Excellent models (RPD > 2.5): ", class_info$excellent, "\n")
-      cat("- Good models (RPD 2.0-2.5): ", class_info$good, "\n")
-      cat("- Approximate models (RPD 1.5-2.0): ", class_info$approximate, "\n")
-    }
-  }
-} else {
-  cat("⏳ Final model analysis in progress...\n")
-}
+fig_model_calibration
 ```
 
-## Data Tables
-
-### Sample Summary
+The performance of the final models on the testing sets are summarized in @fig-performance-boxplot. The means of the final models were: RMSE = r round(mean(final_model_analysis$raw_metrics$rmse), 2), R^2^ = r round(mean(final_model_analysis$raw_metrics$rsq), 2), RPD = r round(mean(final_model_analysis$raw_metrics$rpd), 2), and RPIQ = r round(mean(final_model_analysis$raw_metrics$rpiq), 2).
+Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with r round(final_model_analysis$classification$total_acceptable, 0)% having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.
 
 ```{r}
-#| label: tbl-sample-summary
-#| tbl-cap: "Hemp grain sample summary"
-#| eval: true
+#| label: fig-performance-boxplot
+#| fig-cap: Final model testing set performance over 1000 iterations
 
-if (!is.null(table_sample_summary)) {
-  table_sample_summary
-} else {
-  cat("⏳ Sample summary table being generated...\n")
-}
+fig_performance_boxplot
 ```
 
-### Preprocessing Method Comparison
+Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (@fig-validation-errors). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.
 
 ```{r}
-#| label: tbl-preprocessing
-#| tbl-cap: "Comparison of spectral preprocessing methods"
-#| eval: true
+#| label: fig-validation-errors
+#| fig-cap: Testing set prediction errors on a per-sample basis. Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value 
 
-if (!is.null(table_preprocessing)) {
-  table_preprocessing
-} else {
-  cat("⏳ Preprocessing comparison table being generated...\n")
-}
+fig_validation_errors
 ```
 
-## Visualizations
+The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.
 
-### Model Calibration
 
-```{r}
-#| label: fig-calibration
-#| fig-cap: "Model calibration showing component optimization"
-#| eval: true
 
-if (!is.null(fig_model_calibration)) {
-  print(fig_model_calibration)
-} else {
-  cat("⏳ Model calibration plot being generated...\n")
-}
-```
 
-### Performance Distribution
-
-```{r}
-#| label: fig-performance
-#| fig-cap: "Distribution of model performance metrics across iterations"
-#| eval: true
-
-if (!is.null(fig_performance_boxplot)) {
-  print(fig_performance_boxplot)
-} else {
-  cat("⏳ Performance distribution plot being generated...\n")
-}
-```
-
-### Validation Analysis
-
-```{r}
-#| label: fig-validation
-#| fig-cap: "Validation error analysis across protein concentration range"
-#| eval: true
-
-if (!is.null(fig_validation_errors)) {
-  print(fig_validation_errors)
-} else {
-  cat("⏳ Validation analysis plot being generated...\n")
-}
-```
-
-## Summary and Conclusions
-
-```{r}
-#| label: conclusions
-#| eval: true
-
-cat("### Research Outcomes\n\n")
-
-# Check completion status
-n_complete <- sum(!sapply(list(hemp_data, best_method, final_model_analysis), is.null))
-total_components <- 3
-
-if (n_complete == total_components) {
-  cat("✅ **Analysis Complete:** All pipeline components successfully executed\n\n")
-  
-  if (!is.null(best_method) && best_method != "Method TBD") {
-    cat("🎯 **Optimal preprocessing identified:** ", best_method, " provides best prediction performance\n\n")
-  }
-  
-  if (!is.null(final_model_analysis) && "overall_stats" %in% names(final_model_analysis)) {
-    stats <- final_model_analysis$overall_stats
-    if ("mean_rpd" %in% names(stats)) {
-      rpd_val <- round(stats$mean_rpd, 2)
-      cat("📈 **Prediction quality:** RPD = ", rpd_val, " indicates ", 
-          ifelse(rpd_val > 2.0, "good to excellent", "moderate"), 
-          " prediction capability\n\n")
-    }
-  }
-  
-  cat("🔬 **NIR spectroscopy demonstrates strong potential** for non-destructive hemp grain protein assessment\n\n")
-  cat("⚙️ **Preprocessing optimization proves critical** for achieving reliable predictions\n\n")
-  cat("🔄 **Reproducible pipeline ensures** transparent and reliable research workflow\n\n")
-  
-} else {
-  cat("⏳ **Analysis Status:** ", n_complete, " of ", total_components, " components complete\n\n")
-  cat("To complete the analysis, run: `tar_make()`\n\n")
-}
-
-cat("### Technical Implementation\n\n")
-cat("- **Framework:** R targets pipeline for reproducible research\n")
-cat("- **Model type:** Partial Least Squares Regression (PLSR)\n")
-cat("- **Validation:** Cross-validation with multiple preprocessing approaches\n")
-cat("- **Iterations:** Multiple modeling iterations for robust performance assessment\n")
-
-if (!is.null(hemp_data)) {
-  cat("- **Sample size:** ", nrow(hemp_data), " hemp grain samples\n")
-  spectral_cols <- grep("^x[0-9]+$", names(hemp_data), value = TRUE)
-  if (length(spectral_cols) > 0) {
-    wavelength_range <- c(1100, 2500)  # Typical NIR range
-    cat("- **Spectral range:** ", wavelength_range[1], "-", wavelength_range[2], " nm (", length(spectral_cols), " variables)\n")
-  }
-}
-```
-
----
-
-**Pipeline Status:** `r ifelse(n_complete == total_components, "✅ Complete", paste("⏳", n_complete, "of", total_components, "complete"))`  
 **Generated:** `r format(Sys.time())`  
 **Framework:** Targets-based reproducible workflow

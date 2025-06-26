@@ -70,6 +70,52 @@ prepare_preprocessing_key <- function(raw_key) {
 # PREPROCESSING FUNCTIONS
 # =============================================================================
 
+# Add this function to your R/core_functions.R file:
+
+apply_preprocessing <- function(spectra_matrix, method = 1) {
+  # Apply preprocessing method to spectral data
+  # method: 1=raw, 2=first_deriv, 3=sg, 4=gap_segment, 5=snv, 6=snv_sg, 7=snv_detrend, 8=msc
+  
+  library(prospectr)
+  
+  if (method == 1) {
+    # Raw spectra (no preprocessing)
+    return(spectra_matrix)
+    
+  } else if (method == 2) {
+    # First derivative
+    return(diff(t(spectra_matrix), differences = 1) |> t())
+    
+  } else if (method == 3) {
+    # Savitzky-Golay
+    return(savitzkyGolay(spectra_matrix, m = 1, p = 3, w = 5))
+    
+  } else if (method == 4) {
+    # Gap-segment derivative  
+    return(gapDer(spectra_matrix, m = 1, w1 = 11, w2 = 5))
+    
+  } else if (method == 5) {
+    # Standard Normal Variate
+    return(standardNormalVariate(spectra_matrix))
+    
+  } else if (method == 6) {
+    # SNV + Savitzky-Golay
+    snv_spectra <- standardNormalVariate(spectra_matrix)
+    return(savitzkyGolay(snv_spectra, m = 1, p = 3, w = 5))
+    
+  } else if (method == 7) {
+    # SNV + detrend
+    return(detrend(standardNormalVariate(spectra_matrix), p = 2))
+    
+  } else if (method == 8) {
+    # Multiplicative Scatter Correction
+    return(msc(spectra_matrix))
+    
+  } else {
+    stop("Unknown preprocessing method: ", method)
+  }
+}
+
 apply_all_preprocessing_methods <- function(spectra_train, spectra_test) {
   # Apply 8 preprocessing methods to spectral data (using your original parameters)
   
@@ -340,110 +386,104 @@ select_best_preprocessing_method <- function(analysis) {
 # Enhanced run_final_modeling function that captures individual predictions
 # Replace your existing run_final_modeling function in R/core_functions.R with this
 
-run_final_modeling <- function(hemp_data, best_method, n_iterations = NULL) {
-  # Run final modeling with best preprocessing method AND capture individual predictions
+run_final_modeling <- function(hemp_data, best_method, n_iterations = 10, max_components = 20) {
   
   config <- get_analysis_config()
   n_iterations <- resolve_param(n_iterations, config$n_iterations, "n_iterations")
   
-  cat("=== ENHANCED FINAL MODELING ===\n")
-  cat("Method:", best_method, "\n")
-  cat("Iterations:", n_iterations, "\n")
-  cat("Capturing individual predictions for validation analysis\n")
+  cat("Running final modeling with", best_method, "for", n_iterations, "iterations\n")
   
-  # Extract spectral data and response
-  spectral_cols <- grep("^x[0-9]+$", names(hemp_data), value = TRUE)
-  spectra_matrix <- as.matrix(hemp_data[, ..spectral_cols])
-  y <- hemp_data$crude_protein
+  # Extract spectral data
+  spec_cols <- grep("^x[0-9]+", names(hemp_data), value = TRUE)
+  spectral_data <- as.matrix(hemp_data[, ..spec_cols])
+  protein_data <- hemp_data$crude_protein
   
-  # Get sample identifiers
-  if ("ith_in_data_set" %in% names(hemp_data)) {
-    sample_ids <- hemp_data$ith_in_data_set
-  } else {
-    sample_ids <- 1:nrow(hemp_data)
-    cat("⚠️ Using row numbers as sample IDs (ith_in_data_set not found)\n")
-  }
-  
-  cat("Data dimensions:", dim(spectra_matrix), "\n")
-  cat("Response range:", round(range(y, na.rm = TRUE), 1), "g/kg\n")
-  
-  # Map method name to method ID (you may need to adjust this mapping)
-  method_id <- 1  # Default to method 1 for now - adjust based on your preprocessing key
+  # Apply preprocessing
+  processed_spectra <- apply_preprocessing(spectral_data, method = best_method)
   
   # Storage for results
-  all_metrics <- data.table()
-  all_predictions <- data.table()
-  successful_iterations <- 0
+  metrics <- data.table()
+  predictions <- data.table()
+  model_n_comp_statistics <- data.table()  # NEW: Store component progression
   
-  # Run iterations
-  for (iter in 1:n_iterations) {
-    if (iter %% 50 == 0) cat("Iteration", iter, "/", n_iterations, "\n")
+  set.seed(123)
+  
+  for(i in 1:n_iterations) {
     
-    tryCatch({
-      # Create train/test split
-      set.seed(iter)  # Reproducible splits
-      n_samples <- length(y)
-      train_prop <- 0.75
+    # Create train/test split
+    train_idx <- sample(nrow(hemp_data), size = floor(0.75 * nrow(hemp_data)))
+    test_idx <- setdiff(1:nrow(hemp_data), train_idx)
+    
+    X_train <- processed_spectra[train_idx, ]
+    y_train <- protein_data[train_idx]
+    X_test <- processed_spectra[test_idx, ]
+    y_test <- protein_data[test_idx]
+    
+    # NEW: Test each number of components and store progression
+    iteration_rmse <- numeric(max_components)
+    
+    for(ncomp in 1:max_components) {
+      # Fit PLS model with ncomp components
+      pls_model <- plsr(y_train ~ X_train, ncomp = ncomp, validation = "none")
       
-      # Stratified sampling to maintain protein distribution
-      train_indices <- stratified_split(y, train_prop)
-      test_indices <- setdiff(1:n_samples, train_indices)
+      # Predict on test set
+      test_preds <- predict(pls_model, newdata = X_test, ncomp = ncomp)[,,1]
       
-      # Split data
-      x_train <- spectra_matrix[train_indices, ]
-      x_test <- spectra_matrix[test_indices, ]
-      y_train <- y[train_indices]
-      y_test <- y[test_indices]
-      test_sample_ids <- sample_ids[test_indices]
+      # Calculate RMSE for this component number
+      iteration_rmse[ncomp] <- sqrt(mean((y_test - test_preds)^2))
       
-      # Apply preprocessing (simplified - adjust to your actual preprocessing)
-      processed <- apply_preprocessing_method(x_train, x_test, method_id)
-      x_train_processed <- processed$train
-      x_test_processed <- processed$test
-      
-      # Fit PLS model with cross-validation for component selection
-      model_result <- fit_pls_with_cv(x_train_processed, y_train, x_test_processed, y_test)
-      
-      # Store metrics
-      metrics_row <- data.table(
-        iteration = iter,
-        preprocessing_method = method_id,
-        rmse = model_result$rmse,
-        rsq = model_result$rsq,
-        rpd = model_result$rpd,
-        rpiq = model_result$rpiq,
-        optimal_components = model_result$optimal_components
-      )
-      all_metrics <- rbind(all_metrics, metrics_row)
-      
-      # Store individual predictions
-      predictions_rows <- data.table(
-        iteration = iter,
-        ith_in_data_set = test_sample_ids,
-        actual = y_test,
-        predicted = model_result$predictions,
-        residual = model_result$predictions - y_test,
-        abs_residual = abs(model_result$predictions - y_test),
-        sample_in_iteration = 1:length(y_test)
-      )
-      all_predictions <- rbind(all_predictions, predictions_rows)
-      
-      successful_iterations <- successful_iterations + 1
-      
-    }, error = function(e) {
-      cat("Error in iteration", iter, ":", e$message, "\n")
-    })
+      # Store in component progression data
+      model_n_comp_statistics <- rbind(model_n_comp_statistics,
+                                       data.table(id = i, ncomp = ncomp, RMSE = iteration_rmse[ncomp]))
+    }
+    
+    # Find optimal number of components (minimum RMSE)
+    optimal_ncomp <- which.min(iteration_rmse)
+    
+    # Fit final model with optimal components
+    final_model <- plsr(y_train ~ X_train, ncomp = optimal_ncomp, validation = "none")
+    final_preds <- predict(final_model, newdata = X_test, ncomp = optimal_ncomp)[,,1]
+    
+    # Calculate final metrics
+    final_rmse <- sqrt(mean((y_test - final_preds)^2))
+    final_rsq <- cor(y_test, final_preds)^2
+    final_rpd <- sd(y_test) / final_rmse
+    final_rpiq <- (quantile(y_test, 0.75) - quantile(y_test, 0.25)) / final_rmse
+    
+    # Store final metrics
+    metrics <- rbind(metrics, data.table(
+      iteration = i,
+      preprocessing_method = best_method,
+      rmse = final_rmse,
+      rsq = final_rsq,
+      rpd = final_rpd,
+      rpiq = final_rpiq,
+      optimal_components = optimal_ncomp
+    ))
+    
+    # Store predictions
+    test_data <- hemp_data[test_idx]
+    iter_predictions <- data.table(
+      iteration = i,
+      ith_in_data_set = test_data$ith_in_data_set,
+      actual = y_test,
+      predicted = final_preds,
+      residual = final_preds - y_test,
+      abs_residual = abs(final_preds - y_test),
+      sample_in_iteration = 1:length(test_idx)
+    )
+    
+    predictions <- rbind(predictions, iter_predictions)
+    
+    if(i %% 10 == 0) cat("Completed iteration", i, "\n")
   }
   
-  cat("✅ Final modeling complete\n")
-  cat("Successful iterations:", successful_iterations, "/", n_iterations, "\n")
-  cat("Total predictions captured:", nrow(all_predictions), "\n")
-  cat("Unique samples:", length(unique(all_predictions$ith_in_data_set)), "\n")
+  cat("Final modeling completed!\n")
   
-  # Return both metrics and predictions
   return(list(
-    metrics = all_metrics,
-    predictions = all_predictions
+    metrics = metrics,
+    predictions = predictions,
+    model_n_comp_statistics = model_n_comp_statistics  # NEW: Include component progression
   ))
 }
 
@@ -715,35 +755,26 @@ analyze_prediction_errors <- function(final_model_results, hemp_data) {
 # =============================================================================
 
 create_sample_summary_table <- function(hemp_data) {
-  # Create sample summary table
+  # Create basic summary statistics for crude protein
+  protein_stats <- summary(hemp_data$crude_protein)
   
-  # Summary by location
-  summary_by_location <- hemp_data[, .(
-    n_samples = .N,
-    mean_protein = round(mean(crude_protein), 1),
-    sd_protein = round(sd(crude_protein), 1),
-    min_protein = round(min(crude_protein), 1),
-    max_protein = round(max(crude_protein), 1)
-  ), by = location]
+  # Create a summary table with the format you want
+  summary_data <- data.frame(
+    Mean = round(mean(hemp_data$crude_protein, na.rm = TRUE), 0),
+    SD = round(sd(hemp_data$crude_protein, na.rm = TRUE), 0),
+    Minimum = round(min(hemp_data$crude_protein, na.rm = TRUE), 0),
+    `First Quartile` = round(quantile(hemp_data$crude_protein, 0.25, na.rm = TRUE), 0),
+    Median = round(median(hemp_data$crude_protein, na.rm = TRUE), 0),
+    `Third Quartile` = round(quantile(hemp_data$crude_protein, 0.75, na.rm = TRUE), 0),
+    Maximum = round(max(hemp_data$crude_protein, na.rm = TRUE), 0),
+    check.names = FALSE
+  )
   
-  # Add total row
-  total_row <- hemp_data[, .(
-    location = "Total",
-    n_samples = .N,
-    mean_protein = round(mean(crude_protein), 1),
-    sd_protein = round(sd(crude_protein), 1),
-    min_protein = round(min(crude_protein), 1),
-    max_protein = round(max(crude_protein), 1)
-  )]
-  
-  final_table <- rbind(summary_by_location, total_row)
-  setnames(final_table, c("Location", "Samples", "Mean CP (g/kg)", "SD CP (g/kg)", 
-                          "Min CP (g/kg)", "Max CP (g/kg)"))
-  
-  kable(final_table, caption = "Sample characteristics by location") %>%
-    kable_styling(bootstrap_options = c("striped", "hover"))
+  knitr::kable(
+    summary_data,
+    caption = "Summary of Laboratory Assayed CP Values (g kg^-1)"
+  )
 }
-
 create_preprocessing_comparison_table <- function(analysis) {
   # Keep this function exactly as it is - the "mean ± SD" format is good
   # Only minor change: could use |> instead of %>% if desired, but not critical

@@ -25,7 +25,6 @@ list(
     hemp_data_raw,
     fread("./input_data/final_data_set/full_hemp_data.csv")
   ),
-  
   tar_target(
     preproc_key_raw,
     fread("./input_data/final_data_set/preprocessing_key.csv")
@@ -61,6 +60,9 @@ list(
     best_method,
     select_best_preprocessing_method(preprocessing_analysis)
   ),
+  tar_target(protein_focused_analysis, run_protein_focused_analysis(hemp_data, best_preprocessing_method)),
+  tar_target(model_comparison, compare_full_vs_protein_models(spectral_analysis, protein_focused_analysis)),
+  
   
   # Final modeling with best method
   tar_target(
@@ -107,7 +109,10 @@ list(
   tar_target(
     fig_validation_errors,
     create_validation_error_plot(error_analysis)
-  )
+  ),
+  
+  tar_target(fig_model_comparison, create_model_comparison_plot(spectral_analysis, protein_focused_analysis)),
+  tar_target(table_model_comparison, create_performance_comparison_table(model_comparison))
   
   # =============================================================================
   # MANUSCRIPT GENERATION

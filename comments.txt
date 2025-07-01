@@ -1,0 +1,45 @@
+Comments to the Author
+The manuscript "Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain" provides valuable information to the current literature. However, there are critical things that need to be addressed. Attached here are some major comments, and I also have comments in the attached document.
+
+1. The Results and Discussion section is too descriptive and lacks critical interpretation.
+The authors primarily report the model performance metrics without deeper analysis of why these patterns occurred.
+
+2. The manuscript does not sufficiently connect statistical results to practical implications.
+For instance, it is unclear whether the achieved prediction accuracies (R², RPD, RPIQ) are adequate for breeding or commercial quality control in hemp.
+
+3. The discussion of Geneva samples being poorly predicted is superficial.
+More investigation into environmental, genetic, or sample preparation differences between Ithaca and Geneva locations is necessary to explain this trend.
+
+4. There is excessive repetition of numerical results without broader synthesis.
+Instead of only restating R² or RPD classes, the authors should attempt to explain broader biological or technological lessons from these findings.
+
+5. Model limitations are under-discussed.
+The small sample size and single-machine dependency are acknowledged, but potential issues like overfitting with 12 components, year-to-year variability, and possible wavelength-specific noise should be discussed in more detail.
+
+6. Future directions for improving the model are not sufficiently specific.
+The authors should propose clear next steps, such as adding samples from underrepresented locations #GENEVA#, using independent year-based validation, exploring alternative modeling approaches (e.g., Random Forest, SVM), or selecting key spectral bands for targeted modeling.
+
+7. Figures (especially Figures 1–3) are under-interpreted.
+The discussion should explain patterns shown in figures more clearly, such as why the models tend to overestimate CP at lower concentrations and the biological relevance of prediction errors.
+
+Overall, the discussion needs a quite a bit improvement with adding more literature information to back your results.
+
+
+More comments/feedback is in the attached document.
+
+Reviewer: 2
+
+Comments to the Author
+1. The study acknowledges but inadequately addresses the limitation of model specificity to a single NIR instrument. Given the potential variability across instruments, future work should explicitly assess the transferability of calibration models between multiple instruments.
+2. The actual number of unique samples (149 total) and the representation across certain cultivars (some minimally represented) could limit broader applicability. Increasing the diversity and number of samples would significantly enhance model generalizability.
+3. Long-term stability of the models, particularly under varied environmental conditions and storage durations, should be addressed.
+4. A clear imbalance between sample numbers from different locations (e.g., Geneva versus Ithaca) significantly impacted model predictive accuracy. Such imbalance can cause model bias and limit the broader applicability.
+5. Include spectral feature analysis (loading plots, regression coefficients) to highlight critical wavelengths associated with protein content
+6. Provide clear visualization of regression coefficients and spectral loadings to facilitate deeper interpretation of spectral relationships with protein content.
+7. For enhanced reproducibility and transparency, the authors should ideally provide a link to an openly accessible repository containing the dataset & script used in the analysis
+8. Clarify how the spectral distances (0.6 H cutoff) were determined
+
+Associate Editor's Comments to Author:
+Associate Editor: 1
+Comments to the Author:
+(There are no comments.)

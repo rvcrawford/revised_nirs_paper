@@ -107,6 +107,9 @@ fig_performance_boxplot <- tryCatch(tar_read(fig_performance_boxplot), error = f
 fig_validation_errors <- tryCatch(tar_read(fig_validation_errors), error = function(e) NULL)
 fig_model_comparison <- tryCatch(tar_read(fig_model_comparison), error = function(e) NULL)
 
+fig_algorithm_comparison <- tryCatch(tar_read(fig_algorithm_comparison), error = function(e) NULL)
+
+table_algorithm_comparison <- tryCatch(tar_read(table_algorithm_comparison), error = function(e) NULL)
 
 # Show what we got
 cat("Simple check:\n")
@@ -204,6 +207,24 @@ table_preprocessing
 ```
 
 From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples [@barnes_standard_1989]. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal's shape and features [@li_quantitative_2020; @luo_properties_2005]. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise [@rinnan_review_2009]. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.
+
+## Algorithm comparison
+
+```{r}
+#| label: fig-algorithm-comparison
+#| fig-cap: Comparing algorithms
+
+fig_algorithm_comparison
+```
+
+
+```{r}
+#| label: table-algorithm-comparison
+#| fig-cap: Comparing algorithms
+
+table_algorithm_comparison
+```
+
 
 ## Final model development and summary
 

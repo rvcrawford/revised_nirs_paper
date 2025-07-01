@@ -1,0 +1,12 @@
+C-H Bands (~1200 nm region):
+C-H stretch 2nd overtone from amino acid side chains (1180-1230 nm) Near-infrared spectroscopy and hyperspectral imaging: non-destructive analysis of biological materials - Chemical Society Reviews (RSC Publishing) DOI:10.1039/C4CS00062E
+
+
+N-H Bands (~1500 nm region):
+N-H stretching first overtone around 1500 nm NIR Instruments and Prediction Methods for Rapid Access to Grain Protein Content in Multiple Cereals
+--## CONFIRMED VIA NIR Instruments and Prediction Methods for Rapid Access to Grain Protein Content in Multiple Cereals
+
+
+N-H+C-N Combination Bands (~2050 nm region):
+Protein manifests itself as two distinctive bands, at 2050 and 2180nm A Guide to NIR: Understanding NIR spectra | NIR spectra information
+##CONFIMRED VIA https://pubs.rsc.org/en/content/articlehtml/2014/cs/c4cs00062e

@@ -11,7 +11,7 @@
 <meta name="author" content="Julie L. Hansen">
 <meta name="author" content="Lawrence B. Smart">
 <meta name="author" content="Virginia M. Moore">
-<meta name="dcterms.date" content="2025-06-30">
+<meta name="dcterms.date" content="2025-07-01">
 <meta name="keywords" content="Hemp, Grain, Spectroscopy">
 
 <title>Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain</title>
@@ -154,10 +154,11 @@ window.Quarto = {
   <li><a href="#preprocessing-methods-comparison" id="toc-preprocessing-methods-comparison" class="nav-link" data-scroll-target="#preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing methods comparison</a></li>
   <li><a href="#preprocessing-methods-comparison-1" id="toc-preprocessing-methods-comparison-1" class="nav-link" data-scroll-target="#preprocessing-methods-comparison-1"><span class="header-section-number">3.3</span> Preprocessing methods comparison</a></li>
   </ul></li>
-  <li><a href="#final-model-development-and-summary" id="toc-final-model-development-and-summary" class="nav-link" data-scroll-target="#final-model-development-and-summary"><span class="header-section-number">4</span> Final model development and summary</a></li>
-  <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">5</span> Protein-Focused Model Validation</a></li>
-  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments"><span class="header-section-number">6</span> ACKNOWLEDGMENTS</a></li>
-  <li><a href="#conflict-of-interest" id="toc-conflict-of-interest" class="nav-link" data-scroll-target="#conflict-of-interest"><span class="header-section-number">7</span> CONFLICT OF INTEREST</a></li>
+  <li><a href="#algorithm-comparison" id="toc-algorithm-comparison" class="nav-link" data-scroll-target="#algorithm-comparison"><span class="header-section-number">4</span> Algorithm comparison</a></li>
+  <li><a href="#final-model-development-and-summary" id="toc-final-model-development-and-summary" class="nav-link" data-scroll-target="#final-model-development-and-summary"><span class="header-section-number">5</span> Final model development and summary</a></li>
+  <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</a></li>
+  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments"><span class="header-section-number">7</span> ACKNOWLEDGMENTS</a></li>
+  <li><a href="#conflict-of-interest" id="toc-conflict-of-interest" class="nav-link" data-scroll-target="#conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</a></li>
   </ul>
 </nav>
     </div>
@@ -172,7 +173,7 @@ window.Quarto = {
 <p class="author">Lawrence B. Smart</p>
 <p class="author">Virginia M. Moore</p>
 
-<p class="date">2025-06-30</p>
+<p class="date">2025-07-01</p>
 <div class="abstract">
 <div class="abstract-title">Abstract</div>
 <p>The protein concentration of hemp (<em>Cannabis sativa</em> L.) grain is of interest to researchers, producers, and consumers. This study was conducted to determine whether hemp grain can be non-destructively assayed for crude protein (CP) concentration using spectra obtained from near-infrared spectroscopy (NIRS) to build a prediction model for crude protein concentration using partial least squares regression (PLSR). One hundred and fourty-nine whole hemp grain samples were obtained from 18 cultivar trials in New York (NY) from 2017-2021. The samples’ NIRS spectra were collected and the samples were ground and assayed by combustion. Seven potential preprocessing methods, as well as untransformed spectra, were tested using 100 training and testing set splits of the data and the best method was selected. That method was applied to 1000 additional splits of the data set. Model fit was evaluated using RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ). Once a preprocessing method was selected, the optimal number of model components and prediction performance on the testing sets were examined. A preprocessing method consisting of the standard normal variate transformation following a Savitzky-Golay filter had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ, with RPD and RPIQ 2.1%, and 2.4% higher than a Savitzky-Golay filter by itself (significant at <span class="math inline">\(\alpha\)</span> &lt;0.05). All preprocessing methods outperformed untransformed spectra. Optimal final models typically consisted of 12 components. Seventy-four percent of the 1000 final models had, at minimum, the ability to distinguish between high and low values of CP concentration, with 49% of the models capable of approximating quantitative prodiction. The models tested to overestimate CP concentration by 0.5% in the lowest tertile of samples and underestimate CP concentration by 0.4% in the highest tertile of samples. The worst-predicted samples tended to come from Geneva, NY, possibly as a result of the models’ class imbalance (half of the samples were from Ithaca, NY while 28% were from Geneva). The research shows the promise that NIRS offers in the non-desctructive assay of CP concentration in hemp grain.</p>
@@ -818,9 +819,83 @@ Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <p>From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples <span class="citation" data-cites="barnes_standard_1989">(<a href="#ref-barnes_standard_1989" role="doc-biblioref">Barnes et al., 1989</a>)</span>. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal’s shape and features <span class="citation" data-cites="li_quantitative_2020 luo_properties_2005">(<a href="#ref-li_quantitative_2020" role="doc-biblioref">Li et al., 2020</a>; <a href="#ref-luo_properties_2005" role="doc-biblioref">Luo et al., 2005</a>)</span>. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise <span class="citation" data-cites="rinnan_review_2009">(<a href="#ref-rinnan_review_2009" role="doc-biblioref">Rinnan et al., 2009</a>)</span>. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.</p>
 </section>
 </section>
-<section id="final-model-development-and-summary" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="final-model-development-and-summary"><span class="header-section-number">4</span> Final model development and summary</h2>
-<p>The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (<a href="#fig-model-calibration" class="quarto-xref">Figure&nbsp;1</a>).</p>
+<section id="algorithm-comparison" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="algorithm-comparison"><span class="header-section-number">4</span> Algorithm comparison</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-algorithm-comparison" class="quarto-figure quarto-figure-center quarto-float anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-algorithm-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="hemp_nir_paper_files/figure-html/fig-algorithm-comparison-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-algorithm-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Comparing algorithms
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<caption>Performance comparison of machine learning algorithms for hemp grain protein prediction</caption>
+<colgroup>
+<col style="width: 17%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 19%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Algorithm</th>
+<th style="text-align: center;">RMSE (±SD)</th>
+<th style="text-align: center;">R² (±SD)</th>
+<th style="text-align: center;">RPD (±SD)</th>
+<th style="text-align: center;">RPIQ (±SD)</th>
+<th style="text-align: center;">Quantitative Capable (%)</th>
+<th style="text-align: center;">Total Acceptable (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Partial Least Squares</td>
+<td style="text-align: center;">10.309 (±1.159)</td>
+<td style="text-align: center;">0.831 (±0.042)</td>
+<td style="text-align: center;">2.45 (±0.37)</td>
+<td style="text-align: center;">3.93 (±0.87)</td>
+<td style="text-align: center;">60%</td>
+<td style="text-align: center;">70%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random Forest</td>
+<td style="text-align: center;">13.248 (±1.677)</td>
+<td style="text-align: center;">0.725 (±0.072)</td>
+<td style="text-align: center;">1.9 (±0.23)</td>
+<td style="text-align: center;">3.05 (±0.6)</td>
+<td style="text-align: center;">30%</td>
+<td style="text-align: center;">100%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Support Vector Machine</td>
+<td style="text-align: center;">11.834 (±1.191)</td>
+<td style="text-align: center;">0.779 (±0.05)</td>
+<td style="text-align: center;">2.12 (±0.25)</td>
+<td style="text-align: center;">3.41 (±0.7)</td>
+<td style="text-align: center;">50%</td>
+<td style="text-align: center;">90%</td>
+</tr>
+</tbody>
+</table>
+<p>Comparing algorithms</p>
+</div>
+</div>
+</section>
+<section id="final-model-development-and-summary" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="final-model-development-and-summary"><span class="header-section-number">5</span> Final model development and summary</h2>
+<p>The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (<a href="#fig-model-calibration" class="quarto-xref">Figure&nbsp;2</a>).</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-model-calibration" class="quarto-figure quarto-figure-center quarto-float anchored">
@@ -829,13 +904,13 @@ Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <img src="hemp_nir_paper_files/figure-html/fig-model-calibration-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-calibration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Decreasing RMSE with increasing number of components for 1000 training sets
+Figure&nbsp;2: Decreasing RMSE with increasing number of components for 1000 training sets
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure&nbsp;2</a>. The means of the final models were: RMSE = 10.88, R<sup>2</sup> = 0.79, RPD = 2.11, and RPIQ = 3.18. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with 100% having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
+<p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure&nbsp;3</a>. The means of the final models were: RMSE = 10.88, R<sup>2</sup> = 0.79, RPD = 2.11, and RPIQ = 3.18. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with 100% having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-performance-boxplot" class="quarto-figure quarto-figure-center quarto-float anchored">
@@ -844,13 +919,13 @@ Figure&nbsp;1: Decreasing RMSE with increasing number of components for 1000 tra
 <img src="hemp_nir_paper_files/figure-html/fig-performance-boxplot-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-performance-boxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Final model testing set performance over 1000 iterations
+Figure&nbsp;3: Final model testing set performance over 1000 iterations
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<a href="#fig-validation-errors" class="quarto-xref">Figure&nbsp;3</a>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
+<p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<a href="#fig-validation-errors" class="quarto-xref">Figure&nbsp;4</a>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-validation-errors" class="quarto-figure quarto-figure-center quarto-float anchored">
@@ -859,7 +934,7 @@ Figure&nbsp;2: Final model testing set performance over 1000 iterations
 <img src="hemp_nir_paper_files/figure-html/fig-validation-errors-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Testing set prediction errors on a per-sample basis. Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value
+Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value
 </figcaption>
 </figure>
 </div>
@@ -867,8 +942,8 @@ Figure&nbsp;3: Testing set prediction errors on a per-sample basis. Actual sampl
 </div>
 <p>The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.</p>
 </section>
-<section id="protein-focused-model-validation" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="protein-focused-model-validation"><span class="header-section-number">5</span> Protein-Focused Model Validation</h2>
+<section id="protein-focused-model-validation" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</h2>
 <p>The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands. Five distinct absorption regions were selected based on established vibrational assignments: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 1660-1700 nm (C-H stretch 1st overtone from aliphatic amino acids), 2040-2070 nm (N-H + C-N combination bands from protein backbone), and 2270-2310 nm (C-H + C-H combination bands from amino acid structural features).</p>
 <div class="cell" data-tbl-cap="Enhanced performance comparison demonstrating biological validation through protein-specific wavelength selection">
 <div class="cell-output cell-output-stdout">
@@ -887,21 +962,21 @@ Figure&nbsp;3: Testing set prediction errors on a per-sample basis. Actual sampl
 <img src="hemp_nir_paper_files/figure-html/fig-model-comparison-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Comparing models developed using full and protein-specific spectra
+Figure&nbsp;5: Comparing models developed using full and protein-specific spectra
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
 </section>
-<section id="acknowledgments" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="acknowledgments"><span class="header-section-number">6</span> ACKNOWLEDGMENTS</h2>
+<section id="acknowledgments" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="acknowledgments"><span class="header-section-number">7</span> ACKNOWLEDGMENTS</h2>
 <p>This work would not have been possible without the efforts of the field staff, undergraduate, and graduate students who planted, maintained, monitored and harvested these trials. Funding was provided by New York State through a grant from Empire State Development (AC477). We are grateful to those who provided seed for this project, including: Uniseeds, Verve Seeds, Winterfox Farms, International Hemp, Fiacre Seeds, and KonopiUS.</p>
 </section>
-<section id="conflict-of-interest" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">7</span> CONFLICT OF INTEREST</h2>
+<section id="conflict-of-interest" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-06-30 21:29:07<br>
+<p><strong>Generated:</strong> 2025-07-01 10:35:29<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

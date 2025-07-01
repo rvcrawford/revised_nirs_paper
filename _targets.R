@@ -67,6 +67,39 @@ list(
     run_spectral_analysis(hemp_data, best_method)
   ),
   
+  tar_target(
+    multi_algorithm_comparison,
+    run_multi_algorithm_comparison(
+      data = hemp_data,
+      best_method = preproc_key[method_name%in%best_method]$preproc,
+      n_iterations = 100,                            # Perfect for stark differences
+      algorithms = c("pls", "svmRadial", "rf"),     # All 3 algorithms
+      training_mode = FALSE,                        # Full validation rigor
+      fair_comparison = TRUE                        # Fair hyperparameter optimization
+    )
+  ),
+  
+  tar_target(
+    multi_algorithm_analysis,
+    analyze_multi_algorithm_results(multi_algorithm_comparison)
+  ),
+  
+  # Create visualizations and outputs
+  tar_target(
+    fig_algorithm_comparison,
+    create_algorithm_comparison_plot(multi_algorithm_analysis)
+  ),
+  
+  tar_target(
+    table_algorithm_comparison,
+    create_algorithm_comparison_table(multi_algorithm_analysis)
+  ),
+  
+  tar_target(
+    algorithm_interpretation,
+    generate_algorithm_interpretation(multi_algorithm_analysis)
+  ),
+  
   # Your existing targets:
   tar_target(
     protein_focused_analysis, 

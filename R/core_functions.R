@@ -2275,3 +2275,1127 @@ create_performance_comparison_table <- function(model_comparison) {
   
   return(comparison_df)
 }
+
+run_multi_algorithm_comparison <- function(data, 
+                                           best_method, 
+                                           n_iterations = 10,  # Small default for testing
+                                           algorithms = c("pls", "svmRadial", "rf"),
+                                           training_mode = TRUE) {
+  
+  cat("=== MULTI-ALGORITHM COMPARISON ===\n")
+  cat("Algorithms:", paste(algorithms, collapse = ", "), "\n")
+  cat("Preprocessing method:", best_method, "\n")
+  cat("Iterations:", n_iterations, "\n")
+  cat("Training mode:", ifelse(training_mode, "FAST (for development)", "FULL (for production)"), "\n\n")
+  
+  # Validate inputs
+  if (!best_method %in% c("raw", "snv", "snv_sg", "first_derivative", "sav_gol", "gap_der", "snv_detrend", "msc")) {
+    stop("Invalid preprocessing method: ", best_method)
+  }
+  
+  # Extract spectral data
+  spectral_cols <- grep("^x[0-9]+$", names(data), value = TRUE)
+  if (length(spectral_cols) == 0) {
+    stop("No spectral columns found with pattern '^x[0-9]+$'")
+  }
+  
+  spectra_matrix <- as.matrix(data[, ..spectral_cols])
+  y <- data$crude_protein
+  
+  # Get original sample identifiers
+  if ("ith_in_data_set" %in% names(data)) {
+    original_sample_ids <- data$ith_in_data_set
+  } else {
+    original_sample_ids <- 1:nrow(data)
+  }
+  
+  cat("Data dimensions:", dim(spectra_matrix), "\n")
+  cat("Response range:", range(y, na.rm = TRUE), "\n\n")
+  
+  # Set algorithm parameters based on training mode
+  if (training_mode) {
+    # FAST settings for development
+    cv_folds <- 3
+    tune_length_pls <- 5
+    tune_length_others <- 3
+    verbose <- FALSE
+  } else {
+    # FULL settings for production
+    cv_folds <- 10
+    tune_length_pls <- 20
+    tune_length_others <- 10
+    verbose <- FALSE
+  }
+  
+  # Storage for results
+  results_list <- list()
+  predictions_list <- list()
+  successful_iterations <- 0
+  
+  # Main iteration loop
+  for (i in 1:n_iterations) {
+    if (i %% max(1, floor(n_iterations/4)) == 0) {
+      cat("Iteration", i, "of", n_iterations, "- successful so far:", successful_iterations, "\n")
+    }
+    
+    tryCatch({
+      # Use SAME train/test split for all algorithms (critical for fair comparison)
+      set.seed(i)  # Ensure reproducible splits
+      inTrain <- split_spectra(y)  # Your existing function
+      y_train <- y[inTrain]
+      y_test <- y[-inTrain]
+      test_sample_ids <- original_sample_ids[-inTrain]
+      
+      # Apply preprocessing using your existing function
+      spectra_processed <- my_preprocess(spectra_matrix[inTrain, ], spectra_matrix[-inTrain, ])
+      
+      # Get preprocessed data for the best method
+      method_train_name <- paste0(best_method, "_train")
+      method_test_name <- paste0(best_method, "_test")
+      
+      if (!method_train_name %in% names(spectra_processed[[1]])) {
+        stop("Method ", method_train_name, " not found in preprocessing output")
+      }
+      
+      train_data <- spectra_processed[[1]][[method_train_name]]
+      test_data <- spectra_processed[[2]][[method_test_name]]
+      
+      # Prepare training data frame
+      train_df <- data.frame(y_train = y_train, train_data)
+      test_df <- data.frame(test_data)
+      
+      # Fix column names to avoid issues
+      names(train_df) <- make.names(names(train_df))
+      names(test_df) <- make.names(names(test_df))
+      
+      # Fit each algorithm on the SAME data
+      iteration_results <- list()
+      iteration_predictions <- list()
+      
+      for (alg in algorithms) {
+        
+        # Set up training control
+        train_control <- trainControl(
+          method = "cv", 
+          number = cv_folds, 
+          verboseIter = verbose
+        )
+        
+        # Algorithm-specific parameters and training
+        if (alg == "pls") {
+          model <- train(
+            y_train ~ .,
+            data = train_df,
+            method = "pls",
+            tuneLength = tune_length_pls,
+            trControl = train_control
+          )
+        } else if (alg == "svmRadial") {
+          model <- train(
+            y_train ~ .,
+            data = train_df,
+            method = "svmRadial",
+            tuneLength = tune_length_others,
+            trControl = train_control,
+            preProcess = c("center", "scale")  # SVM benefits from scaling
+          )
+        } else if (alg == "rf") {
+          model <- train(
+            y_train ~ .,
+            data = train_df,
+            method = "rf",
+            tuneLength = tune_length_others,
+            trControl = train_control,
+            importance = TRUE,  # For feature importance
+            ntree = ifelse(training_mode, 100, 500)  # Fewer trees in training mode
+          )
+        } else {
+          # Generic approach for other algorithms
+          model <- train(
+            y_train ~ .,
+            data = train_df,
+            method = alg,
+            tuneLength = tune_length_others,
+            trControl = train_control
+          )
+        }
+        
+        # Make predictions
+        predictions <- predict(model, newdata = test_df)
+        
+        # Calculate metrics
+        rmse_val <- sqrt(mean((y_test - predictions)^2))
+        rsq_val <- cor(y_test, predictions)^2
+        rpd_val <- sd(y_test) / rmse_val
+        rpiq_val <- (quantile(y_test, 0.75) - quantile(y_test, 0.25)) / rmse_val
+        
+        # Store results for this algorithm
+        iteration_results[[alg]] <- data.frame(
+          iteration = i,
+          algorithm = alg,
+          rmse = rmse_val,
+          rsq = rsq_val,
+          rpd = rpd_val,
+          rpiq = rpiq_val,
+          optimal_param = ifelse(alg == "pls", model$bestTune$ncomp, 
+                                 ifelse(alg == "rf", model$bestTune$mtry, NA))
+        )
+        
+        # Store predictions for this algorithm
+        iteration_predictions[[alg]] <- data.frame(
+          iteration = i,
+          algorithm = alg,
+          sample_id = test_sample_ids,
+          actual = y_test,
+          predicted = as.numeric(predictions)
+        )
+      }
+      
+      # Combine results from all algorithms for this iteration
+      results_list[[i]] <- do.call(rbind, iteration_results)
+      predictions_list[[i]] <- do.call(rbind, iteration_predictions)
+      
+      successful_iterations <- successful_iterations + 1
+      
+    }, error = function(e) {
+      cat("Error in iteration", i, ":", e$message, "\n")
+    })
+  }
+  
+  # Combine all results
+  if (length(results_list) > 0) {
+    final_results <- do.call(rbind, results_list)
+    final_predictions <- do.call(rbind, predictions_list)
+    
+    cat("\n=== COMPLETION SUMMARY ===\n")
+    cat("Successful iterations:", successful_iterations, "out of", n_iterations, "\n")
+    cat("Algorithms tested:", paste(unique(final_results$algorithm), collapse = ", "), "\n")
+    cat("Total prediction rows:", nrow(final_predictions), "\n")
+    
+    return(list(
+      metrics = final_results,
+      predictions = final_predictions,
+      settings = list(
+        training_mode = training_mode,
+        cv_folds = cv_folds,
+        successful_iterations = successful_iterations,
+        preprocessing_method = best_method
+      )
+    ))
+  } else {
+    stop("No successful iterations completed!")
+  }
+}
+
+run_multi_algorithm_comparison <- function(data, 
+                                           best_method, 
+                                           n_iterations = 10,  # Small default for testing
+                                           algorithms = c("pls", "svmRadial", "rf"),
+                                           training_mode = TRUE,
+                                           fair_comparison = TRUE) {
+  
+  cat("=== MULTI-ALGORITHM COMPARISON ===\n")
+  cat("Algorithms:", paste(algorithms, collapse = ", "), "\n")
+  cat("Preprocessing method:", best_method, "\n")
+  cat("Iterations:", n_iterations, "\n")
+  cat("Fair comparison:", ifelse(fair_comparison, "YES (each algorithm optimizes hyperparameters)", "NO (fixed parameters)"), "\n")
+  cat("Training mode:", ifelse(training_mode, "FAST (for development)", "FULL (for production)"), "\n\n")
+  
+  # Validate inputs
+  if (!best_method %in% c("raw", "snv", "snv_sg", "first_derivative", "sav_gol", "gap_der", "snv_detrend", "msc")) {
+    stop("Invalid preprocessing method: ", best_method)
+  }
+  
+  # Extract spectral data
+  spectral_cols <- grep("^x[0-9]+$", names(data), value = TRUE)
+  if (length(spectral_cols) == 0) {
+    stop("No spectral columns found with pattern '^x[0-9]+$'")
+  }
+  
+  spectra_matrix <- as.matrix(data[, ..spectral_cols])
+  y <- data$crude_protein
+  
+  # Get original sample identifiers
+  if ("ith_in_data_set" %in% names(data)) {
+    original_sample_ids <- data$ith_in_data_set
+  } else {
+    original_sample_ids <- 1:nrow(data)
+  }
+  
+  cat("Data dimensions:", dim(spectra_matrix), "\n")
+  cat("Response range:", range(y, na.rm = TRUE), "\n\n")
+  
+  # Set algorithm parameters based on training mode and fairness
+  if (fair_comparison) {
+    # FAIR COMPARISON: Each algorithm optimizes hyperparameters
+    if (training_mode) {
+      # Reduced tuning for development
+      cv_folds <- 5
+      pls_max_comp <- 15
+      svm_tune_length <- 5
+      rf_tune_length <- 5
+      rf_ntree <- 200
+      verbose <- FALSE
+    } else {
+      # Full tuning for production
+      cv_folds <- 10
+      pls_max_comp <- 20
+      svm_tune_length <- 10
+      rf_tune_length <- 8
+      rf_ntree <- 500
+      verbose <- FALSE
+    }
+    
+    cat("Fair comparison mode: Each algorithm will optimize hyperparameters\n")
+    cat("- PLS: tuning 1 to", pls_max_comp, "components\n")
+    cat("- SVM: tuning C and sigma (", svm_tune_length, "values each)\n") 
+    cat("- RF: tuning mtry (", rf_tune_length, "values) with", rf_ntree, "trees\n")
+    cat("- CV folds for hyperparameter tuning:", cv_folds, "\n\n")
+    
+  } else {
+    # FIXED PARAMETERS: Faster but less fair
+    cv_folds <- 3
+    pls_fixed_comp <- 12
+    verbose <- FALSE
+    
+    cat("Fixed parameter mode: No hyperparameter optimization\n")
+    cat("- PLS: fixed at", pls_fixed_comp, "components\n")
+    cat("- SVM: default parameters\n")
+    cat("- RF: default parameters\n\n")
+  }
+  
+  # Storage for results
+  results_list <- list()
+  predictions_list <- list()
+  successful_iterations <- 0
+  
+  # Main iteration loop
+  for (i in 1:n_iterations) {
+    if (i %% max(1, floor(n_iterations/4)) == 0) {
+      cat("Iteration", i, "of", n_iterations, "- successful so far:", successful_iterations, "\n")
+    }
+    
+    tryCatch({
+      # Use SAME train/test split for all algorithms (critical for fair comparison)
+      set.seed(i)  # Ensure reproducible splits
+      inTrain <- split_spectra(y)  # Your existing function
+      y_train <- y[inTrain]
+      y_test <- y[-inTrain]
+      test_sample_ids <- original_sample_ids[-inTrain]
+      
+      # Apply preprocessing using your existing function
+      spectra_processed <- my_preprocess(spectra_matrix[inTrain, ], spectra_matrix[-inTrain, ])
+      
+      # Get preprocessed data for the best method
+      method_train_name <- paste0(best_method, "_train")
+      method_test_name <- paste0(best_method, "_test")
+      
+      if (!method_train_name %in% names(spectra_processed[[1]])) {
+        stop("Method ", method_train_name, " not found in preprocessing output")
+      }
+      
+      train_data <- spectra_processed[[1]][[method_train_name]]
+      test_data <- spectra_processed[[2]][[method_test_name]]
+      
+      # Prepare training data frame
+      train_df <- data.frame(y_train = y_train, train_data)
+      test_df <- data.frame(test_data)
+      
+      # Fix column names to avoid issues
+      names(train_df) <- make.names(names(train_df))
+      names(test_df) <- make.names(names(test_df))
+      
+      # Fit each algorithm on the SAME data
+      iteration_results <- list()
+      iteration_predictions <- list()
+      
+      for (alg in algorithms) {
+        
+        # Set up training control (same for all algorithms for fairness)
+        train_control <- trainControl(
+          method = "cv", 
+          number = cv_folds, 
+          verboseIter = verbose
+        )
+        
+        # Algorithm-specific parameters and training
+        if (alg == "pls") {
+          if (fair_comparison) {
+            # Fair: Optimize number of components
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "pls",
+              tuneGrid = data.frame(ncomp = 1:pls_max_comp),
+              trControl = train_control,
+              metric = "RMSE"
+            )
+          } else {
+            # Fixed: Use predetermined components
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "pls",
+              tuneGrid = data.frame(ncomp = pls_fixed_comp),
+              trControl = trainControl(method = "none")
+            )
+          }
+        } else if (alg == "svmRadial") {
+          if (fair_comparison) {
+            # Fair: Optimize C and sigma
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "svmRadial",
+              tuneLength = svm_tune_length,
+              trControl = train_control,
+              preProcess = c("center", "scale"),
+              metric = "RMSE"
+            )
+          } else {
+            # Fixed: Use default parameters
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "svmRadial",
+              tuneGrid = data.frame(C = 1, sigma = 0.01),  # Default values
+              trControl = trainControl(method = "none"),
+              preProcess = c("center", "scale")
+            )
+          }
+        } else if (alg == "rf") {
+          if (fair_comparison) {
+            # Fair: Optimize mtry
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "rf",
+              tuneLength = rf_tune_length,
+              trControl = train_control,
+              importance = TRUE,
+              ntree = rf_ntree,
+              metric = "RMSE"
+            )
+          } else {
+            # Fixed: Use default parameters
+            default_mtry <- max(1, floor(ncol(train_df)/3))
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "rf",
+              tuneGrid = data.frame(mtry = default_mtry),
+              trControl = trainControl(method = "none"),
+              importance = TRUE,
+              ntree = 100  # Fewer trees for speed
+            )
+          }
+        } else {
+          # Generic approach for other algorithms
+          if (fair_comparison) {
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = alg,
+              tuneLength = 5,
+              trControl = train_control
+            )
+          } else {
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = alg,
+              trControl = trainControl(method = "none")
+            )
+          }
+        }
+        
+        # Make predictions
+        predictions <- predict(model, newdata = test_df)
+        
+        # Calculate metrics
+        rmse_val <- sqrt(mean((y_test - predictions)^2))
+        rsq_val <- cor(y_test, predictions)^2
+        rpd_val <- sd(y_test) / rmse_val
+        rpiq_val <- (quantile(y_test, 0.75) - quantile(y_test, 0.25)) / rmse_val
+        
+        # Store results for this algorithm
+        optimal_param <- if (alg == "pls") {
+          if (fair_comparison) model$bestTune$ncomp else pls_fixed_comp
+        } else if (alg == "svmRadial") {
+          if (fair_comparison) paste0("C=", round(model$bestTune$C, 3), ",σ=", round(model$bestTune$sigma, 4)) else "default"
+        } else if (alg == "rf") {
+          if (fair_comparison) model$bestTune$mtry else "default"
+        } else {
+          "unknown"
+        }
+        
+        iteration_results[[alg]] <- data.frame(
+          iteration = i,
+          algorithm = alg,
+          rmse = rmse_val,
+          rsq = rsq_val,
+          rpd = rpd_val,
+          rpiq = rpiq_val,
+          optimal_param = optimal_param,
+          fair_comparison = fair_comparison
+        )
+        
+        # Store predictions for this algorithm
+        iteration_predictions[[alg]] <- data.frame(
+          iteration = i,
+          algorithm = alg,
+          sample_id = test_sample_ids,
+          actual = y_test,
+          predicted = as.numeric(predictions)
+        )
+      }
+      
+      # Combine results from all algorithms for this iteration
+      results_list[[i]] <- do.call(rbind, iteration_results)
+      predictions_list[[i]] <- do.call(rbind, iteration_predictions)
+      
+      successful_iterations <- successful_iterations + 1
+      
+    }, error = function(e) {
+      cat("Error in iteration", i, ":", e$message, "\n")
+    })
+  }
+  
+  # Combine all results
+  if (length(results_list) > 0) {
+    final_results <- do.call(rbind, results_list)
+    final_predictions <- do.call(rbind, predictions_list)
+    
+    cat("\n=== COMPLETION SUMMARY ===\n")
+    cat("Successful iterations:", successful_iterations, "out of", n_iterations, "\n")
+    cat("Algorithms tested:", paste(unique(final_results$algorithm), collapse = ", "), "\n")
+    cat("Total prediction rows:", nrow(final_predictions), "\n")
+    
+    # Show hyperparameter optimization results if fair comparison
+    if (fair_comparison && nrow(final_results) > 0) {
+      cat("\n=== HYPERPARAMETER OPTIMIZATION SUMMARY ===\n")
+      
+      param_summary <- final_results %>%
+        group_by(algorithm) %>%
+        summarise(
+          mean_rmse = round(mean(rmse, na.rm = TRUE), 3),
+          typical_params = paste(unique(optimal_param)[1:3], collapse = ", "),
+          .groups = 'drop'
+        )
+      
+      for (i in 1:nrow(param_summary)) {
+        cat(sprintf("- %s: RMSE=%.3f, Typical params: %s\n", 
+                    param_summary$algorithm[i], 
+                    param_summary$mean_rmse[i],
+                    param_summary$typical_params[i]))
+      }
+    }
+    
+    return(list(
+      metrics = final_results,
+      predictions = final_predictions,
+      settings = list(
+        training_mode = training_mode,
+        fair_comparison = fair_comparison,
+        cv_folds = cv_folds,
+        successful_iterations = successful_iterations,
+        preprocessing_method = best_method,
+        algorithm_details = if (fair_comparison) {
+          list(
+            pls_components_range = paste("1 to", pls_max_comp),
+            svm_tuning = paste(svm_tune_length, "values for C and sigma"),
+            rf_tuning = paste(rf_tune_length, "values for mtry,", rf_ntree, "trees")
+          )
+        } else {
+          list(
+            pls_components = pls_fixed_comp,
+            svm_params = "default",
+            rf_params = "default"
+          )
+        }
+      )
+    ))
+  } else {
+    stop("No successful iterations completed!")
+  }
+}
+
+# =============================================================================
+# MULTI-ALGORITHM COMPARISON FUNCTIONS - FAIR COMPARISON VERSION
+# Add these to your R/core_functions.R file
+# Optimized for scientific rigor - each algorithm gets its best shot
+# =============================================================================
+
+run_multi_algorithm_comparison <- function(data, 
+                                           best_method, 
+                                           n_iterations = 10,  # Small default for testing
+                                           algorithms = c("pls", "svmRadial", "rf"),
+                                           training_mode = TRUE,
+                                           fair_comparison = TRUE) {
+  
+  cat("=== MULTI-ALGORITHM COMPARISON ===\n")
+  cat("Algorithms:", paste(algorithms, collapse = ", "), "\n")
+  cat("Preprocessing method:", best_method, "\n")
+  cat("Iterations:", n_iterations, "\n")
+  cat("Fair comparison:", ifelse(fair_comparison, "YES (each algorithm optimizes hyperparameters)", "NO (fixed parameters)"), "\n")
+  cat("Training mode:", ifelse(training_mode, "FAST (for development)", "FULL (for production)"), "\n\n")
+  
+  # Validate inputs
+  if (!best_method %in% c("raw", "snv", "snv_sg", "first_derivative", "sav_gol", "gap_der", "snv_detrend", "msc")) {
+    stop("Invalid preprocessing method: ", best_method)
+  }
+  
+  # Extract spectral data
+  spectral_cols <- grep("^x[0-9]+$", names(data), value = TRUE)
+  if (length(spectral_cols) == 0) {
+    stop("No spectral columns found with pattern '^x[0-9]+$'")
+  }
+  
+  spectra_matrix <- as.matrix(data[, ..spectral_cols])
+  y <- data$crude_protein
+  
+  # Get original sample identifiers
+  if ("ith_in_data_set" %in% names(data)) {
+    original_sample_ids <- data$ith_in_data_set
+  } else {
+    original_sample_ids <- 1:nrow(data)
+  }
+  
+  cat("Data dimensions:", dim(spectra_matrix), "\n")
+  cat("Response range:", range(y, na.rm = TRUE), "\n\n")
+  
+  # Set algorithm parameters based on training mode and fairness
+  if (fair_comparison) {
+    # FAIR COMPARISON: Each algorithm optimizes hyperparameters
+    if (training_mode) {
+      # Reduced tuning for development
+      cv_folds <- 5
+      pls_max_comp <- 15
+      svm_tune_length <- 5
+      rf_tune_length <- 5
+      rf_ntree <- 200
+      verbose <- FALSE
+    } else {
+      # Full tuning for production
+      cv_folds <- 10
+      pls_max_comp <- 20
+      svm_tune_length <- 10
+      rf_tune_length <- 8
+      rf_ntree <- 500
+      verbose <- FALSE
+    }
+    
+    cat("Fair comparison mode: Each algorithm will optimize hyperparameters\n")
+    cat("- PLS: tuning 1 to", pls_max_comp, "components\n")
+    cat("- SVM: tuning C and sigma (", svm_tune_length, "values each)\n") 
+    cat("- RF: tuning mtry (", rf_tune_length, "values) with", rf_ntree, "trees\n")
+    cat("- CV folds for hyperparameter tuning:", cv_folds, "\n\n")
+    
+  } else {
+    # FIXED PARAMETERS: Faster but less fair
+    cv_folds <- 3
+    pls_fixed_comp <- 12
+    verbose <- FALSE
+    
+    cat("Fixed parameter mode: No hyperparameter optimization\n")
+    cat("- PLS: fixed at", pls_fixed_comp, "components\n")
+    cat("- SVM: default parameters\n")
+    cat("- RF: default parameters\n\n")
+  }
+  
+  # Storage for results
+  results_list <- list()
+  predictions_list <- list()
+  successful_iterations <- 0
+  
+  # Main iteration loop
+  for (i in 1:n_iterations) {
+    if (i %% max(1, floor(n_iterations/4)) == 0) {
+      cat("Iteration", i, "of", n_iterations, "- successful so far:", successful_iterations, "\n")
+    }
+    
+    tryCatch({
+      # Use SAME train/test split for all algorithms (critical for fair comparison)
+      set.seed(i)  # Ensure reproducible splits
+      inTrain <- split_spectra(y)  # Your existing function
+      y_train <- y[inTrain]
+      y_test <- y[-inTrain]
+      test_sample_ids <- original_sample_ids[-inTrain]
+      
+      # Apply preprocessing using your existing function
+      spectra_processed <- my_preprocess(spectra_matrix[inTrain, ], spectra_matrix[-inTrain, ])
+      
+      # Get preprocessed data for the best method
+      method_train_name <- paste0(best_method, "_train")
+      method_test_name <- paste0(best_method, "_test")
+      
+      if (!method_train_name %in% names(spectra_processed[[1]])) {
+        stop("Method ", method_train_name, " not found in preprocessing output")
+      }
+      
+      train_data <- spectra_processed[[1]][[method_train_name]]
+      test_data <- spectra_processed[[2]][[method_test_name]]
+      
+      # Prepare training data frame
+      train_df <- data.frame(y_train = y_train, train_data)
+      test_df <- data.frame(test_data)
+      
+      # Fix column names to avoid issues
+      names(train_df) <- make.names(names(train_df))
+      names(test_df) <- make.names(names(test_df))
+      
+      # Fit each algorithm on the SAME data
+      iteration_results <- list()
+      iteration_predictions <- list()
+      
+      for (alg in algorithms) {
+        
+        # Set up training control (same for all algorithms for fairness)
+        train_control <- trainControl(
+          method = "cv", 
+          number = cv_folds, 
+          verboseIter = verbose
+        )
+        
+        # Algorithm-specific parameters and training
+        if (alg == "pls") {
+          if (fair_comparison) {
+            # Fair: Optimize number of components
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "pls",
+              tuneGrid = data.frame(ncomp = 1:pls_max_comp),
+              trControl = train_control,
+              metric = "RMSE"
+            )
+          } else {
+            # Fixed: Use predetermined components
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "pls",
+              tuneGrid = data.frame(ncomp = pls_fixed_comp),
+              trControl = trainControl(method = "none")
+            )
+          }
+        } else if (alg == "svmRadial") {
+          if (fair_comparison) {
+            # Fair: Optimize C and sigma
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "svmRadial",
+              tuneLength = svm_tune_length,
+              trControl = train_control,
+              preProcess = c("center", "scale"),
+              metric = "RMSE"
+            )
+          } else {
+            # Fixed: Use default parameters
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "svmRadial",
+              tuneGrid = data.frame(C = 1, sigma = 0.01),  # Default values
+              trControl = trainControl(method = "none"),
+              preProcess = c("center", "scale")
+            )
+          }
+        } else if (alg == "rf") {
+          if (fair_comparison) {
+            # Fair: Optimize mtry
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "rf",
+              tuneLength = rf_tune_length,
+              trControl = train_control,
+              importance = TRUE,
+              ntree = rf_ntree,
+              metric = "RMSE"
+            )
+          } else {
+            # Fixed: Use default parameters
+            default_mtry <- max(1, floor(ncol(train_df)/3))
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = "rf",
+              tuneGrid = data.frame(mtry = default_mtry),
+              trControl = trainControl(method = "none"),
+              importance = TRUE,
+              ntree = 100  # Fewer trees for speed
+            )
+          }
+        } else {
+          # Generic approach for other algorithms
+          if (fair_comparison) {
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = alg,
+              tuneLength = 5,
+              trControl = train_control
+            )
+          } else {
+            model <- train(
+              y_train ~ .,
+              data = train_df,
+              method = alg,
+              trControl = trainControl(method = "none")
+            )
+          }
+        }
+        
+        # Make predictions
+        predictions <- predict(model, newdata = test_df)
+        
+        # Calculate metrics
+        rmse_val <- sqrt(mean((y_test - predictions)^2))
+        rsq_val <- cor(y_test, predictions)^2
+        rpd_val <- sd(y_test) / rmse_val
+        rpiq_val <- (quantile(y_test, 0.75) - quantile(y_test, 0.25)) / rmse_val
+        
+        # Store results for this algorithm
+        optimal_param <- if (alg == "pls") {
+          if (fair_comparison) model$bestTune$ncomp else pls_fixed_comp
+        } else if (alg == "svmRadial") {
+          if (fair_comparison) paste0("C=", round(model$bestTune$C, 3), ",σ=", round(model$bestTune$sigma, 4)) else "default"
+        } else if (alg == "rf") {
+          if (fair_comparison) model$bestTune$mtry else "default"
+        } else {
+          "unknown"
+        }
+        
+        iteration_results[[alg]] <- data.frame(
+          iteration = i,
+          algorithm = alg,
+          rmse = rmse_val,
+          rsq = rsq_val,
+          rpd = rpd_val,
+          rpiq = rpiq_val,
+          optimal_param = optimal_param,
+          fair_comparison = fair_comparison
+        )
+        
+        # Store predictions for this algorithm
+        iteration_predictions[[alg]] <- data.frame(
+          iteration = i,
+          algorithm = alg,
+          sample_id = test_sample_ids,
+          actual = y_test,
+          predicted = as.numeric(predictions)
+        )
+      }
+      
+      # Combine results from all algorithms for this iteration
+      results_list[[i]] <- do.call(rbind, iteration_results)
+      predictions_list[[i]] <- do.call(rbind, iteration_predictions)
+      
+      successful_iterations <- successful_iterations + 1
+      
+    }, error = function(e) {
+      cat("Error in iteration", i, ":", e$message, "\n")
+    })
+  }
+  
+  # Combine all results
+  if (length(results_list) > 0) {
+    final_results <- do.call(rbind, results_list)
+    final_predictions <- do.call(rbind, predictions_list)
+    
+    cat("\n=== COMPLETION SUMMARY ===\n")
+    cat("Successful iterations:", successful_iterations, "out of", n_iterations, "\n")
+    cat("Algorithms tested:", paste(unique(final_results$algorithm), collapse = ", "), "\n")
+    cat("Total prediction rows:", nrow(final_predictions), "\n")
+    
+    # Show hyperparameter optimization results if fair comparison
+    if (fair_comparison && nrow(final_results) > 0) {
+      cat("\n=== HYPERPARAMETER OPTIMIZATION SUMMARY ===\n")
+      
+      param_summary <- final_results %>%
+        group_by(algorithm) %>%
+        summarise(
+          mean_rmse = round(mean(rmse, na.rm = TRUE), 3),
+          typical_params = paste(unique(optimal_param)[1:3], collapse = ", "),
+          .groups = 'drop'
+        )
+      
+      for (i in 1:nrow(param_summary)) {
+        cat(sprintf("- %s: RMSE=%.3f, Typical params: %s\n", 
+                    param_summary$algorithm[i], 
+                    param_summary$mean_rmse[i],
+                    param_summary$typical_params[i]))
+      }
+    }
+    
+    return(list(
+      metrics = final_results,
+      predictions = final_predictions,
+      settings = list(
+        training_mode = training_mode,
+        fair_comparison = fair_comparison,
+        cv_folds = cv_folds,
+        successful_iterations = successful_iterations,
+        preprocessing_method = best_method,
+        algorithm_details = if (fair_comparison) {
+          list(
+            pls_components_range = paste("1 to", pls_max_comp),
+            svm_tuning = paste(svm_tune_length, "values for C and sigma"),
+            rf_tuning = paste(rf_tune_length, "values for mtry,", rf_ntree, "trees")
+          )
+        } else {
+          list(
+            pls_components = pls_fixed_comp,
+            svm_params = "default",
+            rf_params = "default"
+          )
+        }
+      )
+    ))
+  } else {
+    stop("No successful iterations completed!")
+  }
+}
+
+#' Analyze multi-algorithm results and generate summary statistics
+analyze_multi_algorithm_results <- function(multi_algorithm_results) {
+  
+  cat("=== ANALYZING MULTI-ALGORITHM RESULTS ===\n")
+  
+  metrics_data <- as.data.table(multi_algorithm_results$metrics)
+  predictions_data <- as.data.table(multi_algorithm_results$predictions)
+  
+  # Calculate summary statistics by algorithm
+  summary_stats <- metrics_data[, .(
+    mean_rmse = mean(rmse, na.rm = TRUE),
+    sd_rmse = sd(rmse, na.rm = TRUE),
+    mean_rsq = mean(rsq, na.rm = TRUE),
+    sd_rsq = sd(rsq, na.rm = TRUE),
+    mean_rpd = mean(rpd, na.rm = TRUE),
+    sd_rpd = sd(rpd, na.rm = TRUE),
+    mean_rpiq = mean(rpiq, na.rm = TRUE),
+    sd_rpiq = sd(rpiq, na.rm = TRUE),
+    n_iterations = .N
+  ), by = algorithm]
+  
+  # Calculate model quality classifications by algorithm
+  model_quality <- metrics_data[, .(
+    excellent_pct = mean(rpd > 3 & rpiq > 4.1 & rsq > 0.8, na.rm = TRUE) * 100,
+    good_pct = mean(rpd >= 2.5 & rpd <= 3 & rpiq >= 2.3 & rpiq <= 4.1 & rsq > 0.8, na.rm = TRUE) * 100,
+    fair_pct = mean(rpd >= 2.0 & rpd < 2.5 & rpiq >= 2.3, na.rm = TRUE) * 100,
+    poor_but_functional_pct = mean(rpd >= 1.5 & rpd < 2.0, na.rm = TRUE) * 100,
+    inadequate_pct = mean(rpd < 1.5, na.rm = TRUE) * 100
+  ), by = algorithm]
+  
+  model_quality[, total_acceptable := excellent_pct + good_pct + fair_pct + poor_but_functional_pct]
+  model_quality[, quantitative_capable := excellent_pct + good_pct + fair_pct]
+  
+  # Statistical comparisons (pairwise t-tests)
+  algorithms <- unique(metrics_data$algorithm)
+  pairwise_comparisons <- data.table()
+  
+  if (length(algorithms) > 1) {
+    for (metric in c("rmse", "rsq", "rpd", "rpiq")) {
+      for (i in 1:(length(algorithms)-1)) {
+        for (j in (i+1):length(algorithms)) {
+          alg1 <- algorithms[i]
+          alg2 <- algorithms[j]
+          
+          values1 <- metrics_data[algorithm == alg1][[metric]]
+          values2 <- metrics_data[algorithm == alg2][[metric]]
+          
+          # Only do test if we have enough data points
+          if (length(values1) > 2 && length(values2) > 2) {
+            test_result <- t.test(values1, values2, paired = TRUE)
+            
+            pairwise_comparisons <- rbind(pairwise_comparisons, data.table(
+              metric = metric,
+              algorithm1 = alg1,
+              algorithm2 = alg2,
+              mean_diff = mean(values1 - values2, na.rm = TRUE),
+              p_value = test_result$p.value,
+              significant = test_result$p.value < 0.05
+            ))
+          }
+        }
+      }
+    }
+  }
+  
+  # Print summary
+  cat("\nSUMMARY STATISTICS BY ALGORITHM:\n")
+  print(summary_stats)
+  
+  cat("\nMODEL QUALITY CLASSIFICATIONS:\n")
+  print(model_quality)
+  
+  if (nrow(pairwise_comparisons) > 0) {
+    cat("\nSIGNIFICANT DIFFERENCES (p < 0.05):\n")
+    significant_diffs <- pairwise_comparisons[significant == TRUE]
+    if (nrow(significant_diffs) > 0) {
+      print(significant_diffs[, .(metric, algorithm1, algorithm2, mean_diff, p_value)])
+    } else {
+      cat("No significant differences found\n")
+    }
+  }
+  
+  return(list(
+    summary_stats = summary_stats,
+    model_quality = model_quality,
+    pairwise_comparisons = pairwise_comparisons,
+    raw_metrics = metrics_data,
+    raw_predictions = predictions_data
+  ))
+}
+
+#' Create comparison plot for algorithms
+create_algorithm_comparison_plot <- function(multi_algo_analysis) {
+  
+  metrics_data <- multi_algo_analysis$raw_metrics
+  
+  # Create comparison boxplot
+  metrics_long <- metrics_data %>%
+    pivot_longer(
+      cols = c(rmse, rsq, rpd, rpiq),
+      names_to = "metric",
+      values_to = "value"
+    ) %>%
+    mutate(
+      metric_label = case_when(
+        metric == "rmse" ~ "RMSE",
+        metric == "rsq" ~ "R²",
+        metric == "rpd" ~ "RPD", 
+        metric == "rpiq" ~ "RPIQ"
+      ),
+      algorithm_label = case_when(
+        algorithm == "pls" ~ "PLS",
+        algorithm == "svmRadial" ~ "SVM",
+        algorithm == "rf" ~ "RF",
+        TRUE ~ toupper(algorithm)
+      )
+    )
+  
+  p <- ggplot(metrics_long, aes(x = algorithm_label, y = value)) +
+    geom_boxplot() +
+    facet_wrap(~ factor(metric_label, levels = c("RMSE", "R²", "RPD", "RPIQ")), 
+               scales = "free_y", 
+               nrow = 2) +
+    labs(
+      title = "Algorithm Comparison: PLS vs SVM vs RF",
+      y = "Metric Value",
+      x = "Algorithm"
+    ) +
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none",
+      strip.background = element_rect(fill = "white", color = "black")
+    )
+  
+  return(p)
+}
+
+#' Create comparison table for manuscript
+create_algorithm_comparison_table <- function(multi_algo_analysis) {
+  
+  summary_stats <- multi_algo_analysis$summary_stats
+  model_quality <- multi_algo_analysis$model_quality
+  
+  # Combine summary stats with quality metrics
+  combined_table <- merge(summary_stats, model_quality, by = "algorithm")
+  
+  # Format for manuscript
+  formatted_table <- combined_table %>%
+    mutate(
+      Algorithm = case_when(
+        algorithm == "pls" ~ "Partial Least Squares",
+        algorithm == "svmRadial" ~ "Support Vector Machine", 
+        algorithm == "rf" ~ "Random Forest",
+        TRUE ~ str_to_title(algorithm)
+      ),
+      RMSE_formatted = paste0(round(mean_rmse, 3), " (±", round(sd_rmse, 3), ")"),
+      R2_formatted = paste0(round(mean_rsq, 3), " (±", round(sd_rsq, 3), ")"),
+      RPD_formatted = paste0(round(mean_rpd, 2), " (±", round(sd_rpd, 2), ")"),
+      RPIQ_formatted = paste0(round(mean_rpiq, 2), " (±", round(sd_rpiq, 2), ")"),
+      Quantitative_formatted = paste0(round(quantitative_capable, 1), "%"),
+      Total_formatted = paste0(round(total_acceptable, 1), "%")
+    )
+  
+  # Create final table with proper column names
+  final_table <- data.frame(
+    "Algorithm" = formatted_table$Algorithm,
+    "RMSE (±SD)" = formatted_table$RMSE_formatted,
+    "R² (±SD)" = formatted_table$R2_formatted,
+    "RPD (±SD)" = formatted_table$RPD_formatted,
+    "RPIQ (±SD)" = formatted_table$RPIQ_formatted,
+    "Quantitative Capable (%)" = formatted_table$Quantitative_formatted,
+    "Total Acceptable (%)" = formatted_table$Total_formatted,
+    check.names = FALSE
+  )
+  
+  # Create kable table
+  table_output <- final_table %>%
+    knitr::kable(
+      caption = "Performance comparison of machine learning algorithms for hemp grain protein prediction",
+      row.names = FALSE,
+      align = c("l", rep("c", 6))
+    )
+  
+  return(table_output)
+}
+
+#' Generate interpretation text for manuscript
+generate_algorithm_interpretation <- function(multi_algo_analysis) {
+  
+  summary_stats <- multi_algo_analysis$summary_stats
+  pairwise_comparisons <- multi_algo_analysis$pairwise_comparisons
+  
+  # Find best performing algorithm by RMSE
+  best_algorithm <- summary_stats[which.min(mean_rmse)]$algorithm
+  best_rmse <- round(summary_stats[which.min(mean_rmse)]$mean_rmse, 3)
+  
+  # Find best performing algorithm by RPD
+  best_rpd_algorithm <- summary_stats[which.max(mean_rpd)]$algorithm
+  best_rpd <- round(summary_stats[which.max(mean_rpd)]$mean_rpd, 2)
+  
+  # Check for significant differences
+  significant_diffs <- pairwise_comparisons[significant == TRUE]
+  
+  # Algorithm name mapping
+  alg_names <- list(
+    "pls" = "PLS",
+    "svmRadial" = "SVM", 
+    "rf" = "Random Forest"
+  )
+  
+  interpretation <- paste0(
+    "Comparison of three machine learning algorithms revealed that ",
+    alg_names[[best_algorithm]], " achieved the lowest RMSE (", best_rmse, "), ",
+    "while ", alg_names[[best_rpd_algorithm]], " achieved the highest RPD (", best_rpd, "). "
+  )
+  
+  if (nrow(significant_diffs) > 0) {
+    interpretation <- paste0(interpretation,
+                             "Statistical analysis revealed significant differences between algorithms for ",
+                             length(unique(significant_diffs$metric)), " out of 4 performance metrics. "
+    )
+  } else {
+    interpretation <- paste0(interpretation,
+                             "Statistical analysis revealed no significant differences between algorithms, ",
+                             "suggesting that the choice of algorithm may be less important than proper preprocessing ",
+                             "and feature selection for this application. "
+    )
+  }
+  
+  interpretation <- paste0(interpretation,
+                           "These results demonstrate that multiple machine learning approaches can successfully ",
+                           "predict hemp grain protein content from NIR spectra, providing researchers with ",
+                           "flexibility in model selection based on specific requirements for interpretability, ",
+                           "computational efficiency, or prediction accuracy."
+  )
+  
+  return(interpretation)
+}
+

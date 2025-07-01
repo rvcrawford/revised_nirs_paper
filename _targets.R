@@ -127,6 +127,7 @@ list(
   ),
   
   tar_target(fig_model_comparison, create_model_comparison_plot(spectral_analysis, protein_focused_analysis)),
+  
   tar_target(table_model_comparison, create_performance_comparison_table(model_comparison))
   
   # =============================================================================

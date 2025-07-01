@@ -97,12 +97,16 @@ best_method <- tryCatch(tar_read(best_method), error = function(e) "Not availabl
 final_model_analysis <- tryCatch(tar_read(final_model_analysis), error = function(e) NULL)
 preprocessing_analysis <- tryCatch(tar_read(preprocessing_analysis), error = function(e) NULL)
 
+
+table_model_comparison <- tar_read(table_model_comparison)
 # Also load the table and figure objects that are referenced later
 table_sample_summary <- tryCatch(tar_read(table_sample_summary), error = function(e) NULL)
 table_preprocessing <- tryCatch(tar_read(table_preprocessing), error = function(e) NULL)
 fig_model_calibration <- tryCatch(tar_read(fig_model_calibration), error = function(e) NULL)
 fig_performance_boxplot <- tryCatch(tar_read(fig_performance_boxplot), error = function(e) NULL)
 fig_validation_errors <- tryCatch(tar_read(fig_validation_errors), error = function(e) NULL)
+fig_model_comparison <- tryCatch(tar_read(fig_model_comparison), error = function(e) NULL)
+
 
 # Show what we got
 cat("Simple check:\n")
@@ -232,6 +236,25 @@ fig_validation_errors
 ```
 
 The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.
+
+##  Protein-Focused Model Validation
+ 
+The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands. Five distinct absorption regions were selected based on established vibrational assignments: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 1660-1700 nm (C-H stretch 1st overtone from aliphatic amino acids), 2040-2070 nm (N-H + C-N combination bands from protein backbone), and 2270-2310 nm (C-H + C-H combination bands from amino acid structural features).
+
+```{r}
+#| label: tbl_mod_compare
+#| tbl-cap: "Enhanced performance comparison demonstrating biological validation through protein-specific wavelength selection"
+
+table_model_comparison |> slice(1:4)
+```
+
+```{r}
+#| label: fig-model-comparison
+#| fig-cap: Comparing models developed using full and protein-specific spectra
+
+fig_model_comparison
+```
+
 
 ## ACKNOWLEDGMENTS
 

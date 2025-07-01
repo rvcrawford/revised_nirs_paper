@@ -1509,7 +1509,12 @@ generate_all_figures_safely <- function() {
 }
 
 # FIXED: Create side-by-side comparison plot (eliminates geom_rect warnings)
+# FIXED: Create side-by-side comparison plot (eliminates geom_rect warnings)
+
 create_model_comparison_plot <- function(full_analysis, protein_analysis) {
+  
+  library(ggplot2)
+  library(dplyr)
   
   # Prepare data for comparison
   full_data <- full_analysis$coefficients %>%
@@ -1523,11 +1528,16 @@ create_model_comparison_plot <- function(full_analysis, protein_analysis) {
   
   # Create comparison plot
   p <- ggplot(combined_data, aes(x = wavelength, y = coefficient)) +
-    geom_line(color = "black", linewidth = 0.6) +
+    
+    # FIXED: Use different geoms for each model
+    geom_line(data = filter(combined_data, model == "Full Spectrum"), 
+              color = "black", linewidth = 0.6) +
+    geom_point(data = filter(combined_data, model == "Protein-Focused"), 
+               color = "black", size = 0.8, alpha = 0.7) +  # Points only for protein model
+    
     geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
     
-    # FIXED: Use annotate() instead of geom_rect() to eliminate warnings
-    # This approach uses annotate() which doesn't try to map aesthetics to data
+    # Add protein band regions
     annotate("rect", xmin = 1180, xmax = 1230, ymin = -Inf, ymax = Inf, 
              alpha = 0.1, fill = "blue") +
     annotate("rect", xmin = 1480, xmax = 1530, ymin = -Inf, ymax = Inf, 
@@ -1539,7 +1549,7 @@ create_model_comparison_plot <- function(full_analysis, protein_analysis) {
     annotate("rect", xmin = 2270, xmax = 2310, ymin = -Inf, ymax = Inf, 
              alpha = 0.1, fill = "blue") +
     
-    # Add text labels for protein bands
+    # Add labels
     annotate("text", x = 1205, y = Inf, label = "C-H", 
              vjust = 1.5, size = 3, color = "blue", alpha = 0.8) +
     annotate("text", x = 1505, y = Inf, label = "N-H", 
@@ -1557,7 +1567,7 @@ create_model_comparison_plot <- function(full_analysis, protein_analysis) {
       x = "Wavelength (nm)",
       y = "PLS Regression Coefficient",
       title = "Model Comparison: Full Spectrum vs Protein-Focused",
-      subtitle = "Blue regions indicate known protein absorption bands"
+      subtitle = "Full spectrum: continuous line; Protein-focused: discrete points in selected bands only"
     ) +
     theme_classic() +
     theme(
@@ -1570,6 +1580,90 @@ create_model_comparison_plot <- function(full_analysis, protein_analysis) {
   return(p)
 }
 
+create_protein_band_plot <- function(protein_analysis) {
+  
+  library(ggplot2)
+  library(dplyr)
+  
+  coeff_data <- protein_analysis$coefficients
+  
+  # Define protein bands and assign each wavelength to its band
+  coeff_data <- coeff_data %>%
+    mutate(
+      protein_band = case_when(
+        wavelength >= 1180 & wavelength <= 1230 ~ "C-H stretch\n(1180-1230 nm)",
+        wavelength >= 1480 & wavelength <= 1530 ~ "N-H stretch\n(1480-1530 nm)",
+        wavelength >= 1660 & wavelength <= 1700 ~ "C-H stretch\n(1660-1700 nm)",
+        wavelength >= 2040 & wavelength <= 2070 ~ "N-H + C-N\n(2040-2070 nm)",
+        wavelength >= 2270 & wavelength <= 2310 ~ "C-H + C-H\n(2270-2310 nm)",
+        TRUE ~ "Other"
+      )
+    ) %>%
+    filter(protein_band != "Other")
+  
+  ggplot(coeff_data, aes(x = wavelength, y = coefficient)) +
+    geom_line(color = "black", linewidth = 0.8) +
+    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+    facet_wrap(~ protein_band, scales = "free_x", ncol = 5) +
+    labs(
+      x = "Wavelength (nm)",
+      y = "PLS Coefficient", 
+      title = "Protein-Focused Model: Coefficients by Absorption Band"
+    ) +
+    theme_classic() +
+    theme(
+      strip.text = element_text(size = 8),
+      axis.text.x = element_text(size = 8)
+    )
+}
+# Create coefficient plot for individual models
+create_coefficient_plot <- function(spectral_analysis) {
+  
+  library(ggplot2)
+  library(dplyr)
+  
+  coeff_data <- spectral_analysis$coefficients
+  
+  # Get top 10 most important wavelengths for annotation
+  top_waves <- coeff_data %>%
+    arrange(desc(abs_coefficient)) %>%
+    slice_head(n = 10)
+  
+  p <- ggplot(coeff_data, aes(x = wavelength, y = coefficient)) +
+    geom_line(color = "black", linewidth = 0.8) +
+    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+    
+    # Highlight key protein absorption regions
+    annotate("rect", xmin = 1180, xmax = 1230, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 1480, xmax = 1530, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 2040, xmax = 2070, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    annotate("rect", xmin = 2270, xmax = 2310, ymin = -Inf, ymax = Inf, 
+             alpha = 0.1, fill = "blue") +
+    
+    # Mark the most important wavelengths
+    geom_point(data = top_waves, 
+               aes(x = wavelength, y = coefficient), 
+               color = "red", size = 2, shape = 21, fill = "red") +
+    
+    labs(
+      x = "Wavelength (nm)",
+      y = "PLS Regression Coefficient",
+      title = "PLS Regression Coefficients",
+      subtitle = "Blue regions = protein absorption bands; Red points = most important wavelengths"
+    ) +
+    theme_classic() +
+    theme(
+      plot.title = element_text(size = 12, face = "bold"),
+      plot.subtitle = element_text(size = 10, color = "gray50"),
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 11)
+    )
+  
+  return(p)
+}
 # Alternative version: Single panel with different colors for each model
 create_overlay_comparison_plot <- function(full_analysis, protein_analysis) {
   

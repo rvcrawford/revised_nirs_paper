@@ -1294,114 +1294,98 @@ create_performance_boxplot <- function(analysis) {
 
 # FIGURE 3: Validation Error Plot (Fixed version from backup)
 create_validation_error_plot <- function(error_analysis) {
-  if ("raw_predictions" %in% names(error_analysis)) {
-    
-    # Use the raw_predictions data which should already have plot_order
-    plot_data <- data.table::copy(error_analysis$raw_predictions)
-    
-    # Verify that plot_order exists, if not create it
-    if (!"plot_order" %in% names(plot_data)) {
-      cat("⚠️ plot_order missing, creating it...\n")
-      
-      # Create sample ordering based on actual values
-      sample_order <- plot_data[, .(
-        mean_actual = mean(actual, na.rm = TRUE)
-      ), by = ith_in_data_set][order(mean_actual)]
-      sample_order[, plot_order := 1:.N]
-      
-      # Merge back to plot_data
-      plot_data <- merge(plot_data, sample_order[, .(ith_in_data_set, plot_order)], 
-                         by = "ith_in_data_set")
-    }
-    
-    # Verify error_raw exists
-    if (!"error_raw" %in% names(plot_data)) {
-      plot_data[, error_raw := predicted - actual]
-    }
-    
-    # Create tertiles for faceting if not already present
-    if (!"cutpoints" %in% names(plot_data)) {
-      # Create sample-level data for tertile calculation
-      sample_data <- plot_data[, .(
-        mean_actual = mean(actual, na.rm = TRUE),
-        mean_error = mean(error_raw, na.rm = TRUE)
-      ), by = ith_in_data_set]
-      
-      # Create tertiles
-      cutpoints <- quantile(sample_data$mean_actual, probs = c(0, 1/3, 2/3, 1))
-      sample_data[, cutpoints := cut(mean_actual, breaks = cutpoints, include.lowest = TRUE)]
-      levels(sample_data$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
-      
-      # Merge tertiles back to plot_data
-      plot_data <- merge(plot_data, sample_data[, .(ith_in_data_set, cutpoints)], 
-                         by = "ith_in_data_set")
-    }
-    
-    # Create systematic bias trend if not present
-    if (!"systematic_bias" %in% names(plot_data)) {
-      # Create sample-level data for bias calculation
-      sample_data <- plot_data[, .(
-        mean_actual = mean(actual, na.rm = TRUE),
-        mean_error = mean(error_raw, na.rm = TRUE)
-      ), by = ith_in_data_set]
-      
-      # Fit linear model for systematic bias
-      lm_mod <- lm(mean_error ~ mean_actual, data = sample_data)
-      sample_data[, systematic_bias := predict(lm_mod, newdata = sample_data)]
-      
-      # Merge back to plot_data
-      plot_data <- merge(plot_data, sample_data[, .(ith_in_data_set, systematic_bias)], 
-                         by = "ith_in_data_set")
-    }
-    
-    # DEBUG: Show what we have
-    cat("Plot data columns:", paste(names(plot_data), collapse = ", "), "\n")
-    cat("Plot data rows:", nrow(plot_data), "\n")
-    cat("Unique samples:", length(unique(plot_data$ith_in_data_set)), "\n")
-    
-    # Verify all required columns exist
-    required_cols <- c("plot_order", "error_raw", "cutpoints", "systematic_bias")
-    missing_cols <- setdiff(required_cols, names(plot_data))
-    
-    if (length(missing_cols) > 0) {
-      cat("❌ Still missing columns:", paste(missing_cols, collapse = ", "), "\n")
-      return(create_error_placeholder())
-    }
-    
-    # Create the plot - EXACTLY LIKE YOUR PUBLISHED FIGURE 3
-    p <- ggplot(plot_data, aes(x = plot_order, y = error_raw)) +
-      geom_point(alpha = 0.3, size = 0.8, color = "gray60") +
-      geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
-      geom_smooth(aes(y = systematic_bias), method = "lm", se = TRUE, 
-                  color = "orange", linewidth = 1.2, alpha = 0.8) +
-      facet_grid(
-        . ~ cutpoints,
-        scales = "free_x",
-        space = "free_x",
-        labeller = label_parsed
-      ) +
-      theme_classic() +
-      labs(
-        title = "Testing Set Prediction Errors by Sample",
-        subtitle = "Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value",
-        x = "Sample Rank Order",
-        y = "Prediction Error (g/kg)",
-        caption = "Orange line shows systematic bias trend"
-      ) +
-      theme(
-        plot.title = element_text(size = 14, face = "bold"),
-        plot.subtitle = element_text(size = 12),
-        plot.caption = element_text(face = "italic", color = "gray50"),
-        strip.text = element_text(size = 10)
-      )
-    
-    return(p)
-    
-  } else {
+  
+  # Check for required data
+  if (!"raw_predictions" %in% names(error_analysis)) {
     cat("❌ raw_predictions not found in error_analysis\n")
-    cat("Available components:", paste(names(error_analysis), collapse = ", "), "\n")
     return(create_error_placeholder())
   }
+  
+  # Start with clean copy
+  raw_data <- data.table::copy(error_analysis$raw_predictions)
+  
+  cat("DEBUG: Starting with", nrow(raw_data), "rows\n")
+  cat("DEBUG: Columns:", paste(names(raw_data), collapse = ", "), "\n")
+  
+  # Ensure basic error calculation
+  if (!"error_raw" %in% names(raw_data)) {
+    raw_data[, error_raw := predicted - actual]
+  }
+  
+  # STEP 1: Remove existing plot_order to avoid merge conflicts
+  if ("plot_order" %in% names(raw_data)) {
+    raw_data[, plot_order := NULL]
+    cat("DEBUG: Removed existing plot_order column\n")
+  }
+  
+  # STEP 2: Create sample-level summaries with fresh plot_order
+  sample_summaries <- raw_data[, .(
+    mean_actual = mean(actual, na.rm = TRUE),
+    mean_error = mean(error_raw, na.rm = TRUE),
+    n_obs = .N
+  ), by = ith_in_data_set]
+  
+  # Add plot order to sample summaries
+  sample_summaries <- sample_summaries[order(mean_actual)]
+  sample_summaries[, plot_order := 1:.N]
+  
+  # Add tertiles to sample summaries
+  cutpoints <- quantile(sample_summaries$mean_actual, probs = c(0, 1/3, 2/3, 1))
+  sample_summaries[, cutpoints := cut(mean_actual, breaks = cutpoints, include.lowest = TRUE)]
+  levels(sample_summaries$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
+  
+  # Add systematic bias to sample summaries
+  lm_mod <- lm(mean_error ~ mean_actual, data = sample_summaries)
+  sample_summaries[, systematic_bias := predict(lm_mod)]
+  
+  cat("DEBUG: Sample summaries complete with", nrow(sample_summaries), "rows\n")
+  
+  # STEP 3: Clean merge - now no plot_order conflicts
+  plot_data <- merge(
+    raw_data, 
+    sample_summaries[, .(ith_in_data_set, plot_order, cutpoints, systematic_bias)], 
+    by = "ith_in_data_set",
+    all.x = TRUE
+  )
+  
+  cat("DEBUG: After merge, plot_data has", nrow(plot_data), "rows\n")
+  cat("DEBUG: Plot data columns:", paste(names(plot_data), collapse = ", "), "\n")
+  
+  # Verify plot_order exists (should now work!)
+  if (!"plot_order" %in% names(plot_data)) {
+    cat("❌ plot_order STILL missing! Using fallback\n")
+    return(create_error_placeholder())
+  }
+  
+  cat("✅ plot_order successfully created! Range:", range(plot_data$plot_order, na.rm = TRUE), "\n")
+  
+  # STEP 4: Create the plot
+  plot_data <- plot_data[order(plot_order)]
+  
+  p <- ggplot(plot_data) +
+    # Background points (very light triangles)
+    geom_point(aes(x = plot_order, y = error_raw), alpha = 0.05, shape = 2) +
+    # Heavy dashed horizontal line at zero
+    geom_hline(yintercept = 0, linewidth = 2, lty = 2) +
+    # CROSSES for systematic bias
+    geom_point(data = sample_summaries, 
+               aes(x = plot_order, y = systematic_bias), 
+               shape = 3, size = 1.2, color = "black") +
+    # Faceting
+    facet_wrap(~cutpoints, 
+               labeller = label_parsed, 
+               scales = "free_x") +
+    # Y-axis label matching backup
+    ylab("Crude Protein Predicted Percent Difference\nfrom Assayed Value") +
+    theme_classic() +
+    # Remove x-axis labeling
+    theme(
+      axis.title.x = element_blank(),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+    )
+  
+  return(p)
 }
 
 # Helper function for placeholder plot

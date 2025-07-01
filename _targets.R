@@ -167,6 +167,11 @@ list(
   tar_target(
     fig_model_comparison,
     create_model_comparison_plot(spectral_analysis, protein_focused_analysis)
+  ),
+  
+  tar_target(
+    fig_validation_errors,
+    create_validation_error_plot(error_analysis)
   )
   
   # =============================================================================

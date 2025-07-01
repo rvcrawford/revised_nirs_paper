@@ -1101,3 +1101,221 @@ create_model_comparison_plot <- function(spectral_analysis, protein_focused_anal
     theme_minimal() +
     theme(legend.position = "bottom")
 }
+
+# =============================================================================
+# FIXED PLOTTING FUNCTIONS FOR FIGURES 2 AND 3
+# Add these functions to your R/core_functions.R file
+# =============================================================================
+
+# FIGURE 2: Performance Boxplot (Fixed version from backup)
+create_performance_boxplot <- function(analysis) {
+  analysis$metrics |>
+    pivot_longer(
+      cols = c(rmse, rsq, rpd, rpiq),
+      names_to = "metric",
+      values_to = "value"
+    ) |>
+    mutate(metric_label = toupper(metric)) |>
+    ggplot(aes(x = metric, y = value)) +
+    theme_classic() +
+    geom_boxplot() +
+    facet_wrap(
+      ~ factor(metric_label, levels = c("RMSE", "RSQ", "RPD", "RPIQ")),
+      scales = "free",
+      nrow = 1,
+      labeller = as_labeller(c(
+        "RMSE" = "RMSE", "RSQ" = "R^2", "RPIQ" = "RPIQ", "RPD" = "RPD"
+      ))
+    ) +
+    labs(
+      title = "Model Performance Distribution",
+      y = "Estimate"
+    ) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+    )
+}
+
+# FIGURE 3: Validation Error Plot (Fixed version from backup)
+create_validation_error_plot <- function(error_analysis) {
+  if ("raw_predictions" %in% names(error_analysis)) {
+    
+    raw_data <- data.table::copy(error_analysis$raw_predictions)
+    
+    # Check if error_raw already exists, if not create it
+    if (!"error_raw" %in% names(raw_data)) {
+      raw_data[, error_raw := predicted - actual]
+    }
+    
+    # Create sample-level data first, then assign plot_order
+    # Aggregate to one row per sample
+    sample_data <- raw_data[, .(
+      mean_actual = mean(actual, na.rm = TRUE),
+      mean_error = mean(error_raw, na.rm = TRUE)
+    ), by = ith_in_data_set]
+    
+    # Create plot order based on sample ranking
+    sample_data[, plot_order := rank(mean_actual)]
+    
+    # Create tertiles for faceting
+    cutpoints <- quantile(sample_data$mean_actual, probs = c(0, 1/3, 2/3, 1))
+    sample_data[, cutpoints := cut(mean_actual, breaks = cutpoints, include.lowest = TRUE)]
+    levels(sample_data$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
+    
+    # Add plot_order back to raw_data for the scatter points
+    raw_data <- merge(raw_data, sample_data[, .(ith_in_data_set, plot_order, cutpoints)], 
+                      by = "ith_in_data_set")
+    
+    # Fit linear model for systematic bias using sample-level data
+    lm_mod <- lm(mean_error ~ mean_actual, data = sample_data)
+    sample_data[, systematic_bias := predict(lm_mod, newdata = sample_data)]
+    
+    # Merge systematic bias back using sample data
+    plot_data <- merge(raw_data, sample_data[, .(ith_in_data_set, systematic_bias)], 
+                       by = "ith_in_data_set")
+    
+    # Create the plot
+    p <- ggplot(plot_data, aes(x = plot_order, y = error_raw)) +
+      geom_point(alpha = 0.3, size = 0.8, color = "gray60") +
+      geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
+      geom_smooth(aes(y = systematic_bias), method = "lm", se = TRUE, 
+                  color = "orange", linewidth = 1.2, alpha = 0.8) +
+      facet_grid(
+        . ~ cutpoints,
+        scales = "free_x",
+        space = "free_x",
+        labeller = label_parsed
+      ) +
+      theme_classic() +
+      labs(
+        title = "Testing Set Prediction Errors by Sample",
+        subtitle = "Samples ranked from lowest to highest actual CP concentration",
+        x = "Sample Rank Order",
+        y = "Prediction Error (g/kg)",
+        caption = "Orange line shows systematic bias trend"
+      ) +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        plot.caption = element_text(face = "italic", color = "gray50"),
+        strip.text = element_text(size = 10)
+      )
+    
+    return(p)
+    
+  } else {
+    # Fallback to placeholder if data structure doesn't match
+    return(create_error_placeholder())
+  }
+}
+
+# Helper function for placeholder plot
+create_error_placeholder <- function() {
+  placeholder_data <- data.frame(
+    x = seq(200, 350, length.out = 50),
+    y = rnorm(50, 0, 3) + 0.01 * (seq(200, 350, length.out = 50) - 275)
+  )
+  
+  ggplot(placeholder_data, aes(x = x, y = y)) +
+    geom_point(alpha = 0.6, color = "gray50") +
+    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
+    geom_smooth(method = "lm", se = TRUE, alpha = 0.3, color = "orange") +
+    theme_classic() +
+    labs(
+      title = "Validation Error Analysis (Placeholder)",
+      subtitle = "Run diagnostic to understand your error_analysis structure",
+      x = "Actual Protein Concentration (g/kg)",
+      y = "Prediction Error (g/kg)",
+      caption = "Note: This is placeholder data - check error_analysis structure"
+    ) +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12),
+      plot.caption = element_text(face = "italic", color = "red")
+    ) +
+    annotate("text", x = 275, y = 0, 
+             label = "Check error_analysis structure\nwith debug script", 
+             hjust = 0.5, vjust = -1, size = 4, color = "red")
+}
+
+# =============================================================================
+# FIGURE GENERATION FUNCTION
+# =============================================================================
+
+generate_all_figures_safely <- function() {
+  # Safely generate all figures with error handling
+  
+  cat("=== GENERATING ALL FIGURES ===\n")
+  
+  figures <- list()
+  
+  # Figure 1: Model Calibration
+  tryCatch({
+    if (tar_exist_objects("final_model_results")) {
+      final_model_results <- tar_read(final_model_results)
+      figures$calibration <- create_calibration_plot(final_model_results)
+      cat("✅ Calibration plot generated\n")
+    } else {
+      cat("❌ final_model_results not available\n")
+    }
+  }, error = function(e) {
+    cat("❌ Error creating calibration plot:", e$message, "\n")
+  })
+  
+  # Figure 2: Performance Distribution
+  tryCatch({
+    if (tar_exist_objects("final_model_analysis")) {
+      final_model_analysis <- tar_read(final_model_analysis)
+      figures$performance <- create_performance_boxplot(final_model_analysis)
+      cat("✅ Performance boxplot generated\n")
+    } else {
+      cat("❌ final_model_analysis not available\n")
+    }
+  }, error = function(e) {
+    cat("❌ Error creating performance plot:", e$message, "\n")
+  })
+  
+  # Figure 3: Validation Errors
+  tryCatch({
+    if (tar_exist_objects("error_analysis")) {
+      error_analysis <- tar_read(error_analysis)
+      figures$validation <- create_validation_error_plot(error_analysis)
+      cat("✅ Validation error plot generated\n")
+    } else {
+      cat("❌ error_analysis not available\n")
+    }
+  }, error = function(e) {
+    cat("❌ Error creating validation plot:", e$message, "\n")
+  })
+  
+  cat("=== FIGURE GENERATION COMPLETE ===\n")
+  return(figures)
+}
+
+# =============================================================================
+# UTILITY FUNCTIONS FOR DEBUGGING
+# =============================================================================
+
+check_figure_dependencies <- function() {
+  # Check if all dependencies for figures are available
+  
+  cat("Checking figure dependencies...\n")
+  
+  required_targets <- c(
+    "final_model_results",
+    "final_model_analysis", 
+    "error_analysis"
+  )
+  
+  results <- list()
+  for (target in required_targets) {
+    exists <- tar_exist_objects(target)
+    results[[target]] <- exists
+    status <- if (exists) "✅" else "❌"
+    cat(sprintf("  %s %s\n", status, target))
+  }
+  
+  return(results)
+}

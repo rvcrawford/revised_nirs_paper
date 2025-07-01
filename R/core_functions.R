@@ -3399,3 +3399,318 @@ generate_algorithm_interpretation <- function(multi_algo_analysis) {
   return(interpretation)
 }
 
+# create_loading_plot <- function(spectral_analysis, component = 1) {
+#   # Create PLS loading plot showing important wavelengths
+#   
+#   if (is.null(spectral_analysis) || !("model" %in% names(spectral_analysis))) {
+#     stop("spectral_analysis must contain a 'model' component")
+#   }
+#   
+#   model <- spectral_analysis$model
+#   
+#   # Extract loadings for specified component
+#   loadings_data <- model$loadings[, component]
+#   
+#   # Convert variable names to wavelengths (x1100 -> 1100)
+#   wavelengths <- as.numeric(gsub("^x", "", names(loadings_data)))
+#   
+#   # Create data frame for plotting
+#   plot_data <- data.frame(
+#     wavelength = wavelengths,
+#     loading = as.numeric(loadings_data),
+#     abs_loading = abs(as.numeric(loadings_data))
+#   )
+#   
+#   # Identify important wavelengths (top 10% by absolute loading)
+#   threshold <- quantile(plot_data$abs_loading, 0.9)
+#   plot_data$important <- plot_data$abs_loading >= threshold
+#   
+#   # Create plot
+#   p <- ggplot(plot_data, aes(x = wavelength, y = loading)) +
+#     geom_line(color = "steelblue", alpha = 0.7) +
+#     geom_point(data = subset(plot_data, important), 
+#                aes(color = "Important"), size = 2) +
+#     geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+#     scale_color_manual(values = c("Important" = "red")) +
+#     labs(
+#       title = paste("PLS Loading Plot - Component", component),
+#       subtitle = "Red points indicate wavelengths with highest absolute loadings",
+#       x = "Wavelength (nm)",
+#       y = paste("Loading Value (Component", component, ")"),
+#       color = ""
+#     ) +
+#     theme_minimal() +
+#     theme(
+#       plot.title = element_text(size = 14, face = "bold"),
+#       plot.subtitle = element_text(size = 11, color = "gray50"),
+#       legend.position = "bottom"
+#     )
+#   
+#   # Add vertical lines for known protein bands
+#   protein_bands <- c(1200, 1500, 1680, 1940, 2060, 2180, 2300)
+#   protein_bands <- protein_bands[protein_bands >= min(wavelengths) & 
+#                                    protein_bands <= max(wavelengths)]
+#   
+#   if (length(protein_bands) > 0) {
+#     p <- p + geom_vline(xintercept = protein_bands, 
+#                         linetype = "dotted", color = "orange", alpha = 0.6)
+#   }
+#   
+#   return(p)
+# }
+# 
+# create_coefficients_plot <- function(spectral_analysis, optimal_components = NULL) {
+#   # Create regression coefficients plot
+#   
+#   if (is.null(spectral_analysis) || !("model" %in% names(spectral_analysis))) {
+#     stop("spectral_analysis must contain a 'model' component")
+#   }
+#   
+#   model <- spectral_analysis$model
+#   
+#   # Use optimal components if provided, otherwise use model default
+#   if (is.null(optimal_components)) {
+#     optimal_components <- model$ncomp
+#   }
+#   
+#   # Extract regression coefficients
+#   coeffs <- coef(model, ncomp = optimal_components, intercept = FALSE)
+#   coeffs_vector <- as.numeric(coeffs[, , 1])  # Extract the vector
+#   
+#   # Convert variable names to wavelengths
+#   var_names <- rownames(coeffs)
+#   wavelengths <- as.numeric(gsub("^x", "", var_names))
+#   
+#   # Create data frame
+#   plot_data <- data.frame(
+#     wavelength = wavelengths,
+#     coefficient = coeffs_vector,
+#     abs_coefficient = abs(coeffs_vector)
+#   )
+#   
+#   # Identify important coefficients
+#   threshold <- quantile(plot_data$abs_coefficient, 0.95)
+#   plot_data$important <- plot_data$abs_coefficient >= threshold
+#   
+#   # Create plot
+#   p <- ggplot(plot_data, aes(x = wavelength, y = coefficient)) +
+#     geom_line(color = "darkblue", alpha = 0.8) +
+#     geom_point(data = subset(plot_data, important), 
+#                aes(color = "High Impact"), size = 2.5) +
+#     geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+#     scale_color_manual(values = c("High Impact" = "red")) +
+#     labs(
+#       title = paste("PLS Regression Coefficients (", optimal_components, "components)"),
+#       subtitle = "Red points show wavelengths with highest impact on protein prediction",
+#       x = "Wavelength (nm)",
+#       y = "Regression Coefficient",
+#       color = ""
+#     ) +
+#     theme_minimal() +
+#     theme(
+#       plot.title = element_text(size = 14, face = "bold"),
+#       plot.subtitle = element_text(size = 11, color = "gray50"),
+#       legend.position = "bottom"
+#     )
+#   
+#   # Add protein absorption regions
+#   protein_regions <- data.frame(
+#     start = c(1180, 1480, 1660, 1920, 2040, 2160, 2280),
+#     end = c(1230, 1530, 1720, 1980, 2080, 2200, 2320),
+#     label = c("C-H 2nd", "N-H 1st", "Amide I", "HOH+Amide", "Amide II", "Amide III", "C-H comb")
+#   )
+#   
+#   # Only include regions within data range
+#   wavelength_range <- range(wavelengths)
+#   protein_regions <- subset(protein_regions, 
+#                             start <= wavelength_range[2] & end >= wavelength_range[1])
+#   
+#   if (nrow(protein_regions) > 0) {
+#     for (i in 1:nrow(protein_regions)) {
+#       p <- p + annotate("rect", 
+#                         xmin = protein_regions$start[i], 
+#                         xmax = protein_regions$end[i],
+#                         ymin = -Inf, ymax = Inf, 
+#                         alpha = 0.1, fill = "orange")
+#     }
+#   }
+#   
+#   return(p)
+# }
+# 
+# create_vip_plot <- function(spectral_analysis, threshold = 1.0) {
+#   # Create Variable Importance in Projection (VIP) plot
+#   
+#   if (is.null(spectral_analysis) || !("model" %in% names(spectral_analysis))) {
+#     stop("spectral_analysis must contain a 'model' component")
+#   }
+#   
+#   model <- spectral_analysis$model
+#   
+#   # Calculate VIP scores manually since pls package doesn't always include this
+#   # VIP formula: VIP_j = sqrt(p * sum(SS(b_jh * w_jh)^2 * q_h^2) / sum(q_h^2))
+#   
+#   # Get model components
+#   W <- model$loading.weights  # Loading weights
+#   P <- model$loadings         # X loadings  
+#   Q <- model$Yloadings        # Y loadings
+#   b <- c(model$coefficients)  # Regression coefficients
+#   
+#   # Number of variables and components
+#   p <- ncol(W)
+#   h_optimal <- ncol(W)  # Use all available components
+#   
+#   # Calculate VIP for each variable
+#   vip_scores <- rep(0, p)
+#   
+#   total_ss_y <- sum(Q[1:h_optimal]^2)  # Total sum of squares for Y
+#   
+#   for (j in 1:p) {
+#     ss_j <- 0
+#     for (h in 1:h_optimal) {
+#       w_jh <- W[j, h]
+#       q_h <- Q[h]
+#       ss_j <- ss_j + (w_jh^2) * (q_h^2)
+#     }
+#     vip_scores[j] <- sqrt(p * ss_j / total_ss_y)
+#   }
+#   
+#   # Convert variable names to wavelengths
+#   var_names <- rownames(W)
+#   wavelengths <- as.numeric(gsub("^x", "", var_names))
+#   
+#   # Create data frame
+#   plot_data <- data.frame(
+#     wavelength = wavelengths,
+#     vip = vip_scores,
+#     important = vip_scores >= threshold
+#   )
+#   
+#   # Create plot
+#   p <- ggplot(plot_data, aes(x = wavelength, y = vip)) +
+#     geom_line(color = "steelblue", alpha = 0.7) +
+#     geom_point(data = subset(plot_data, important), 
+#                aes(color = "VIP ≥ 1.0"), size = 2) +
+#     geom_hline(yintercept = threshold, linetype = "dashed", color = "red", alpha = 0.8) +
+#     scale_color_manual(values = c("VIP ≥ 1.0" = "red")) +
+#     labs(
+#       title = "Variable Importance in Projection (VIP) Scores",
+#       subtitle = paste("Threshold =", threshold, "(red line); Important variables shown in red"),
+#       x = "Wavelength (nm)",
+#       y = "VIP Score",
+#       color = ""
+#     ) +
+#     theme_minimal() +
+#     theme(
+#       plot.title = element_text(size = 14, face = "bold"),
+#       plot.subtitle = element_text(size = 11, color = "gray50"),
+#       legend.position = "bottom"
+#     )
+#   
+#   return(p)
+# }
+# 
+# analyze_wavelength_importance <- function(spectral_analysis, n_top = 20) {
+#   # Comprehensive analysis of important wavelengths combining multiple metrics
+#   
+#   if (is.null(spectral_analysis) || !("model" %in% names(spectral_analysis))) {
+#     stop("spectral_analysis must contain a 'model' component")
+#   }
+#   
+#   model <- spectral_analysis$model
+#   
+#   # Extract variable names and convert to wavelengths
+#   var_names <- rownames(model$loading.weights)
+#   wavelengths <- as.numeric(gsub("^x", "", var_names))
+#   
+#   # Get regression coefficients (for final model)
+#   coeffs <- as.numeric(coef(model, ncomp = model$ncomp, intercept = FALSE)[, , 1])
+#   
+#   # Calculate VIP scores (reuse logic from create_vip_plot)
+#   W <- model$loading.weights
+#   Q <- model$Yloadings
+#   p <- ncol(W)
+#   h_optimal <- ncol(W)
+#   
+#   vip_scores <- rep(0, p)
+#   total_ss_y <- sum(Q[1:h_optimal]^2)
+#   
+#   for (j in 1:p) {
+#     ss_j <- 0
+#     for (h in 1:h_optimal) {
+#       w_jh <- W[j, h]
+#       q_h <- Q[h]
+#       ss_j <- ss_j + (w_jh^2) * (q_h^2)
+#     }
+#     vip_scores[j] <- sqrt(p * ss_j / total_ss_y)
+#   }
+#   
+#   # Get first loading component (often most interpretable)
+#   loadings_comp1 <- as.numeric(model$loadings[, 1])
+#   
+#   # Combine into analysis data frame
+#   importance_data <- data.frame(
+#     wavelength = wavelengths,
+#     variable = var_names,
+#     coefficient = coeffs,
+#     abs_coefficient = abs(coeffs),
+#     vip_score = vip_scores,
+#     loading_comp1 = loadings_comp1,
+#     abs_loading_comp1 = abs(loadings_comp1)
+#   )
+#   
+#   # Create composite importance score (normalized combination)
+#   importance_data$composite_score <- (
+#     scale(importance_data$abs_coefficient)[,1] + 
+#       scale(importance_data$vip_score)[,1] + 
+#       scale(importance_data$abs_loading_comp1)[,1]
+#   ) / 3
+#   
+#   # Rank by composite score
+#   importance_data <- importance_data[order(importance_data$composite_score, decreasing = TRUE), ]
+#   
+#   # Get top important wavelengths
+#   top_wavelengths <- head(importance_data, n_top)
+#   
+#   # Assign biochemical interpretations for protein-relevant regions
+#   top_wavelengths$biochemical_assignment <- sapply(top_wavelengths$wavelength, function(wl) {
+#     if (wl >= 1180 & wl <= 1230) return("C-H stretch 2nd overtone (amino acids)")
+#     if (wl >= 1480 & wl <= 1530) return("N-H stretch 1st overtone (peptide bonds)")
+#     if (wl >= 1660 & wl <= 1720) return("Amide I (C=O stretch)")
+#     if (wl >= 1920 & wl <= 1980) return("H2O + Amide combination")
+#     if (wl >= 2040 & wl <= 2080) return("Amide II (N-H bend + C-N stretch)")
+#     if (wl >= 2160 & wl <= 2200) return("Amide III (C-N stretch + N-H bend)")
+#     if (wl >= 2280 & wl <= 2320) return("C-H combination bands")
+#     return("Non-specific/structural")
+#   })
+#   
+#   # Create summary statistics
+#   summary_stats <- list(
+#     n_important_vip = sum(importance_data$vip_score >= 1.0),
+#     mean_vip = mean(importance_data$vip_score),
+#     n_protein_specific = sum(top_wavelengths$biochemical_assignment != "Non-specific/structural"),
+#     wavelength_range = range(wavelengths),
+#     top_wavelength = top_wavelengths$wavelength[1],
+#     top_coefficient = top_wavelengths$coefficient[1]
+#   )
+#   
+#   # Create interpretation text
+#   interpretation <- paste0(
+#     "Wavelength Analysis Summary:\n",
+#     "- ", summary_stats$n_important_vip, " wavelengths have VIP ≥ 1.0 (important for prediction)\n",
+#     "- Top ", n_top, " wavelengths include ", summary_stats$n_protein_specific, " with protein-specific assignments\n",
+#     "- Most important wavelength: ", summary_stats$top_wavelength, " nm (",
+#     top_wavelengths$biochemical_assignment[1], ")\n",
+#     "- Coefficient range: ", round(min(coeffs), 4), " to ", round(max(coeffs), 4), "\n",
+#     "- Mean VIP score: ", round(summary_stats$mean_vip, 3)
+#   )
+#   
+#   cat(interpretation, "\n")
+#   
+#   return(list(
+#     top_wavelengths = top_wavelengths,
+#     full_analysis = importance_data,
+#     summary_stats = summary_stats,
+#     interpretation = interpretation
+#   ))
+# }

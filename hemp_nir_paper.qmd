@@ -175,7 +175,13 @@ Initially a number of common spectral preprocessing methods were tested by creat
 
 For each of these preprocessing methods, models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R^2^, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R^2^, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a "good" model varies depending upon the reference consulted, but for simplicity's sake the standard established for an acceptable model was R^2^ \> 0.80, an RPD greater than 2.5 and ideally greater than 3 ("good" to "excellent" quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set [@rawal_visible_2024; @luce_prediction_2017; @chadalavada_nir_2022].
 
-Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, 1000 more training and testing sets were created, and models were developed with that method. Performance on the testing sets was summarized with RMSE, R^2^, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.
+Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified,
+
+Next, three common machine learning algorithms were compared: PLS, RS, and SVM. Each comparison was permitted an optimal tuning using R's caret package to ensure a fair comparison. One hundred comparisons were performed and the best algorithm was selected.
+
+Third, using the optimal preprocessing method identified above, one thousand training and testing sets were generated and models were developed. The larger number of iterations was feasible once the preprocessing method was selected, allowing for more robust performance estimates. Performance on the testing sets was summarized with RMSE, R^2^, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.
+
+Finally, a protein-specific model was developed in order to investigate the biological basis for prediction differences. Variable importance scores were calculated across wavelengths.
 
 ## RESULTS AND DISCUSSION
 

@@ -661,7 +661,10 @@ Table&nbsp;1: Sample distribution by location and type
 <p>Training and testing sets were created by dividing samples by their laboratory CP concentration values into tertiles to ensure that a representative range of values was present in both training and testing sets. Within each tertile, 75% of the samples were randomly assigned to the training set and the remaining 25% were assigned to the testing set. For each training set, models were developed in the caret package using PLSR. In fitting the model, the number of components was optimized over a grid search from 1-20. Model performance was evaluated with 25 iterations of bootstrapping and minimized RMSE in selecting the number of components in the final model.</p>
 <p>Initially a number of common spectral preprocessing methods were tested by creating 100 training and testing sets, as described above. Spectral data were transformed by each of the following methods: 1) first derivative; 2) Savitzky-Golay (SG) using the first derivative, third order polynomial, and a window of size five; 3) gap-segment derivative using the first derivative, a gap of 11, and a segment size of five; 4) SNV; 5) standard normal variate following Savitzky-Golay (SNV-SG) using the same SG parameters as above; 6) SNV-detrend with second order polynomial; and 7) multiplicative scatter correction. For comparison, models were also developed using untransformed spectra.</p>
 <p>For each of these preprocessing methods, models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R<sup>2</sup>, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a “good” model varies depending upon the reference consulted, but for simplicity’s sake the standard established for an acceptable model was R<sup>2</sup> &gt; 0.80, an RPD greater than 2.5 and ideally greater than 3 (“good” to “excellent” quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set <span class="citation" data-cites="rawal_visible_2024 luce_prediction_2017 chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>; <a href="#ref-luce_prediction_2017" role="doc-biblioref">Luce et al., 2017</a>; <a href="#ref-rawal_visible_2024" role="doc-biblioref">Rawal et al., 2024</a>)</span>.</p>
-<p>Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, 1000 more training and testing sets were created, and models were developed with that method. Performance on the testing sets was summarized with RMSE, R<sup>2</sup>, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.</p>
+<p>Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified,</p>
+<p>Next, three common machine learning algorithms were compared: PLS, RS, and SVM. Each comparison was permitted an optimal tuning using R’s caret package to ensure a fair comparison. One hundred comparisons were performed and the best algorithm was selected.</p>
+<p>Third, using the optimal preprocessing method identified above, one thousand training and testing sets were generated and models were developed. The larger number of iterations was feasible once the preprocessing method was selected, allowing for more robust performance estimates. Performance on the testing sets was summarized with RMSE, R<sup>2</sup>, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.</p>
+<p>Finally, a protein-specific model was developed in order to investigate the biological basis for prediction differences. Variable importance scores were calculated across wavelengths.</p>
 </section>
 </section>
 <section id="results-and-discussion" class="level2" data-number="3">
@@ -744,59 +747,59 @@ Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">SNV + Savitzky-Golay</td>
-<td style="text-align: left;">10.4 ± 1.2</td>
-<td style="text-align: left;">0.825 ± 0.051</td>
-<td style="text-align: left;">2.37 ± 0.35</td>
-<td style="text-align: left;">3.94 ± 0.61</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">First derivative</td>
-<td style="text-align: left;">10.5 ± 1.0</td>
-<td style="text-align: left;">0.822 ± 0.041</td>
-<td style="text-align: left;">2.32 ± 0.29</td>
-<td style="text-align: left;">3.85 ± 0.47</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Savitzky-Golay smoothing</td>
-<td style="text-align: left;">10.8 ± 1.2</td>
-<td style="text-align: left;">0.819 ± 0.054</td>
-<td style="text-align: left;">2.26 ± 0.28</td>
-<td style="text-align: left;">3.76 ± 0.53</td>
+<td style="text-align: left;">10.4 ± 1.0</td>
+<td style="text-align: left;">0.822 ± 0.068</td>
+<td style="text-align: left;">2.43 ± 0.44</td>
+<td style="text-align: left;">3.91 ± 0.99</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Raw spectra</td>
-<td style="text-align: left;">10.9 ± 1.1</td>
-<td style="text-align: left;">0.818 ± 0.053</td>
-<td style="text-align: left;">2.25 ± 0.27</td>
-<td style="text-align: left;">3.74 ± 0.51</td>
+<td style="text-align: left;">10.5 ± 1.6</td>
+<td style="text-align: left;">0.824 ± 0.078</td>
+<td style="text-align: left;">2.44 ± 0.57</td>
+<td style="text-align: left;">3.93 ± 1.16</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Gap-segment derivative</td>
-<td style="text-align: left;">11.3 ± 1.8</td>
-<td style="text-align: left;">0.794 ± 0.068</td>
-<td style="text-align: left;">2.21 ± 0.41</td>
-<td style="text-align: left;">3.65 ± 0.64</td>
+<td style="text-align: left;">First derivative</td>
+<td style="text-align: left;">10.6 ± 1.5</td>
+<td style="text-align: left;">0.814 ± 0.084</td>
+<td style="text-align: left;">2.43 ± 0.56</td>
+<td style="text-align: left;">3.91 ± 1.18</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Standard normal variate (SNV)</td>
-<td style="text-align: left;">11.3 ± 2.0</td>
-<td style="text-align: left;">0.792 ± 0.080</td>
-<td style="text-align: left;">2.22 ± 0.49</td>
-<td style="text-align: left;">3.67 ± 0.78</td>
+<td style="text-align: left;">Savitzky-Golay smoothing</td>
+<td style="text-align: left;">10.6 ± 1.8</td>
+<td style="text-align: left;">0.820 ± 0.086</td>
+<td style="text-align: left;">2.44 ± 0.58</td>
+<td style="text-align: left;">3.93 ± 1.18</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">SNV + detrending</td>
-<td style="text-align: left;">11.7 ± 2.7</td>
-<td style="text-align: left;">0.780 ± 0.097</td>
-<td style="text-align: left;">2.19 ± 0.58</td>
-<td style="text-align: left;">3.64 ± 0.95</td>
+<td style="text-align: left;">10.9 ± 1.6</td>
+<td style="text-align: left;">0.817 ± 0.080</td>
+<td style="text-align: left;">2.33 ± 0.43</td>
+<td style="text-align: left;">3.75 ± 0.89</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Gap-segment derivative</td>
+<td style="text-align: left;">11.1 ± 1.4</td>
+<td style="text-align: left;">0.814 ± 0.076</td>
+<td style="text-align: left;">2.28 ± 0.38</td>
+<td style="text-align: left;">3.66 ± 0.82</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Standard normal variate (SNV)</td>
+<td style="text-align: left;">11.4 ± 2.4</td>
+<td style="text-align: left;">0.796 ± 0.114</td>
+<td style="text-align: left;">2.29 ± 0.54</td>
+<td style="text-align: left;">3.69 ± 1.05</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Multiplicative scatter correction</td>
-<td style="text-align: left;">11.8 ± 2.5</td>
-<td style="text-align: left;">0.773 ± 0.094</td>
-<td style="text-align: left;">2.16 ± 0.57</td>
-<td style="text-align: left;">3.59 ± 0.95</td>
+<td style="text-align: left;">11.7 ± 2.2</td>
+<td style="text-align: left;">0.785 ± 0.111</td>
+<td style="text-align: left;">2.21 ± 0.47</td>
+<td style="text-align: left;">3.56 ± 0.96</td>
 </tr>
 </tbody>
 </table>
@@ -851,28 +854,28 @@ Figure&nbsp;1: Comparing algorithms
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Partial Least Squares</td>
-<td style="text-align: center;">10.321 (±1.399)</td>
-<td style="text-align: center;">0.827 (±0.054)</td>
-<td style="text-align: center;">2.37 (±0.34)</td>
-<td style="text-align: center;">3.95 (±0.65)</td>
+<td style="text-align: center;">10.243 (±1.122)</td>
+<td style="text-align: center;">0.832 (±0.045)</td>
+<td style="text-align: center;">2.42 (±0.39)</td>
+<td style="text-align: center;">3.99 (±1.02)</td>
 <td style="text-align: center;">83.3%</td>
 <td style="text-align: center;">100%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Random Forest</td>
-<td style="text-align: center;">13.743 (±1.223)</td>
-<td style="text-align: center;">0.669 (±0.066)</td>
-<td style="text-align: center;">1.76 (±0.18)</td>
-<td style="text-align: center;">2.94 (±0.39)</td>
-<td style="text-align: center;">16.7%</td>
+<td style="text-align: center;">12.994 (±1.821)</td>
+<td style="text-align: center;">0.722 (±0.075)</td>
+<td style="text-align: center;">1.9 (±0.21)</td>
+<td style="text-align: center;">3.11 (±0.61)</td>
+<td style="text-align: center;">33.3%</td>
 <td style="text-align: center;">100%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Support Vector Machine</td>
-<td style="text-align: center;">12.715 (±2.192)</td>
-<td style="text-align: center;">0.712 (±0.102)</td>
-<td style="text-align: center;">1.95 (±0.39)</td>
-<td style="text-align: center;">3.26 (±0.74)</td>
+<td style="text-align: center;">11.805 (±1.566)</td>
+<td style="text-align: center;">0.765 (±0.069)</td>
+<td style="text-align: center;">2.11 (±0.33)</td>
+<td style="text-align: center;">3.46 (±0.87)</td>
 <td style="text-align: center;">50%</td>
 <td style="text-align: center;">100%</td>
 </tr>
@@ -886,6 +889,9 @@ Figure&nbsp;1: Comparing algorithms
 <h2 data-number="5" class="anchored" data-anchor-id="final-model-development-and-summary"><span class="header-section-number">5</span> Final model development and summary</h2>
 <p>The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (<a href="#fig-model-calibration" class="quarto-xref">Figure&nbsp;2</a>).</p>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
 <div class="cell-output-display">
 <div id="fig-model-calibration" class="quarto-figure quarto-figure-center quarto-float anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -914,19 +920,10 @@ Figure&nbsp;3: Final model testing set performance over 1000 iterations
 </div>
 </div>
 </div>
-<p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<a href="#fig-validation-errors" class="quarto-xref">Figure&nbsp;4</a>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
+<p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<strong>?@fig-validation-errors</strong>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
 <div class="cell">
-<div class="cell-output-display">
-<div id="fig-validation-errors" class="quarto-figure quarto-figure-center quarto-float anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-validation-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="hemp_nir_paper_files/figure-html/fig-validation-errors-1.png" class="img-fluid figure-img" width="672">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value
-</figcaption>
-</figure>
-</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>NULL</code></pre>
 </div>
 </div>
 <p>The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.</p>
@@ -960,17 +957,17 @@ Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sampl
 <tr class="odd">
 <td style="text-align: left;">Full Spectrum</td>
 <td style="text-align: right;">700</td>
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">10.57470</td>
-<td style="text-align: right;">0.8105681</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">10.02667</td>
+<td style="text-align: right;">0.8411829</td>
 <td style="text-align: left;">Baseline</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Protein-Focused</td>
 <td style="text-align: right;">110</td>
 <td style="text-align: right;">7</td>
-<td style="text-align: right;">11.35822</td>
-<td style="text-align: right;">0.7953493</td>
+<td style="text-align: right;">11.45580</td>
+<td style="text-align: right;">0.7966469</td>
 <td style="text-align: left;">15.7% of variables</td>
 </tr>
 </tbody>
@@ -985,7 +982,7 @@ Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sampl
 <img src="hemp_nir_paper_files/figure-html/fig-model-comparison-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Comparing models developed using full and protein-specific spectra
+Figure&nbsp;4: Comparing models developed using full and protein-specific spectra
 </figcaption>
 </figure>
 </div>
@@ -999,7 +996,7 @@ Figure&nbsp;5: Comparing models developed using full and protein-specific spectr
 <section id="conflict-of-interest" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-01 12:51:46<br>
+<p><strong>Generated:</strong> 2025-07-01 13:49:08<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

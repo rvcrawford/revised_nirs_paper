@@ -53,7 +53,7 @@ my_preprocess <- function(spectra_train, spectra_test) {
 split_spectra <- function(y, p = 0.75) {
   # Legacy function for creating train/test splits
   # Returns logical indices for training set
-  train_indices <- createDataPartition(y, p = p, list = FALSE)[,1]
+  train_indices <- createDataPartition(y, p = p, list = FALSE, groups = 3)[,1]
   return(train_indices)
 }
 

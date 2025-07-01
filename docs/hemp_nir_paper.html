@@ -920,10 +920,22 @@ Figure&nbsp;3: Final model testing set performance over 1000 iterations
 </div>
 </div>
 </div>
-<p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<strong>?@fig-validation-errors</strong>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
+<p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<a href="#fig-validation-errors" class="quarto-xref">Figure&nbsp;4</a>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>NULL</code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-validation-errors" class="quarto-figure quarto-figure-center quarto-float anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-validation-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="hemp_nir_paper_files/figure-html/fig-validation-errors-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value
+</figcaption>
+</figure>
+</div>
 </div>
 </div>
 <p>The research showed the promise of the use of NIRS in order to make predictions concerning CP concentration in hemp grain using PLS. Promising preprocessing methods were identified and a model was validated. Further research could refine the model by including more samples, particularly by rectifying the class imbalance between Geneva and Ithaca, identifying promising spectral regions, or by examining other predictive methods.</p>
@@ -982,7 +994,7 @@ Figure&nbsp;3: Final model testing set performance over 1000 iterations
 <img src="hemp_nir_paper_files/figure-html/fig-model-comparison-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Comparing models developed using full and protein-specific spectra
+Figure&nbsp;5: Comparing models developed using full and protein-specific spectra
 </figcaption>
 </figure>
 </div>
@@ -996,7 +1008,7 @@ Figure&nbsp;4: Comparing models developed using full and protein-specific spectr
 <section id="conflict-of-interest" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-01 13:49:08<br>
+<p><strong>Generated:</strong> 2025-07-01 14:41:11<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

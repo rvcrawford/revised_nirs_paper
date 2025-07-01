@@ -139,6 +139,10 @@ list(
     table_model_comparison,
     create_model_comparison_table(model_comparison)
   ),
+  tar_target(
+    error_analysis,
+    analyze_prediction_errors(final_model_results, hemp_data)
+  ),
   
   # =============================================================================
   # FIGURES FOR MANUSCRIPT

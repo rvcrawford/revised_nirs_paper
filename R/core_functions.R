@@ -453,6 +453,160 @@ analyze_final_model <- function(final_model_results) {
   ))
 }
 
+analyze_prediction_errors <- function(final_model_results, hemp_data) {
+  cat("=== ANALYZING REAL PREDICTION ERRORS ===\n")
+  
+  # Check that we have the predictions component
+  if (!"predictions" %in% names(final_model_results)) {
+    cat("❌ No predictions component found in final_model_results\n")
+    cat("Available components:", names(final_model_results), "\n")
+    return(list(
+      sample_errors = data.table::data.table(),
+      systematic_bias = "No predictions data available",
+      raw_predictions = data.table::data.table()
+    ))
+  }
+  
+  predictions_data <- data.table::copy(final_model_results$predictions)
+  cat("Found predictions data with", nrow(predictions_data), "observations\n")
+  
+  # DEBUG: Show actual column names
+  cat("Actual columns in predictions data:", paste(names(predictions_data), collapse = ", "), "\n")
+  
+  # FLEXIBLE COLUMN DETECTION: Handle both sample_id and ith_in_data_set
+  sample_id_col <- NULL
+  if ("ith_in_data_set" %in% names(predictions_data)) {
+    sample_id_col <- "ith_in_data_set"
+  } else if ("sample_id" %in% names(predictions_data)) {
+    sample_id_col <- "sample_id"
+  } else {
+    # Look for any column that might be sample ID
+    possible_cols <- names(predictions_data)[grepl("sample|id", names(predictions_data), ignore.case = TRUE)]
+    if (length(possible_cols) > 0) {
+      sample_id_col <- possible_cols[1]
+      cat("Using", sample_id_col, "as sample identifier\n")
+    }
+  }
+  
+  # Check for required columns with flexible sample ID
+  required_cols <- c(sample_id_col, "actual", "predicted", "iteration")
+  missing_cols <- setdiff(required_cols, names(predictions_data))
+  
+  if (length(missing_cols) > 0 || is.null(sample_id_col)) {
+    cat("❌ Missing required columns:", paste(missing_cols, collapse = ", "), "\n")
+    if (is.null(sample_id_col)) {
+      cat("❌ No sample ID column found. Looking for: ith_in_data_set, sample_id\n")
+    }
+    return(list(
+      sample_errors = data.table::data.table(),
+      systematic_bias = "Required columns missing from predictions data",
+      raw_predictions = data.table::data.table()
+    ))
+  }
+  
+  # Standardize column name to ith_in_data_set for consistency
+  if (sample_id_col != "ith_in_data_set") {
+    data.table::setnames(predictions_data, sample_id_col, "ith_in_data_set")
+  }
+  
+  cat("Covering", length(unique(predictions_data$ith_in_data_set)), "unique samples\n")
+  cat("Across", length(unique(predictions_data$iteration)), "iterations\n")
+  
+  # Calculate additional error metrics if not present
+  if (!"error_raw" %in% names(predictions_data)) {
+    predictions_data[, error_raw := predicted - actual]
+  }
+  if (!"error_pct" %in% names(predictions_data)) {
+    predictions_data[, error_pct := (predicted - actual) / actual * 100]
+  }
+  if (!"abs_residual" %in% names(predictions_data)) {
+    predictions_data[, abs_residual := abs(error_raw)]
+  }
+  
+  # Remove any missing values
+  clean_data <- predictions_data[!is.na(actual) & !is.na(predicted)]
+  cat("Clean observations after removing missing values:", nrow(clean_data), "\n")
+  
+  if (nrow(clean_data) == 0) {
+    cat("❌ No valid observations after cleaning\n")
+    return(list(
+      sample_errors = data.table::data.table(),
+      systematic_bias = "No valid observations after data cleaning",
+      raw_predictions = data.table::data.table()
+    ))
+  }
+  
+  # Create sample-level ordering using TRUE sample identity
+  sample_order <- clean_data[, .(
+    mean_actual = mean(actual, na.rm = TRUE)
+  ), by = ith_in_data_set][order(mean_actual)]
+  sample_order[, plot_order := 1:.N]
+  
+  cat("Number of unique samples:", nrow(sample_order), "\n")
+  
+  # Add plot_order to all predictions using true sample identity
+  clean_data <- merge(clean_data, sample_order[, .(ith_in_data_set, plot_order)], by = "ith_in_data_set")
+  
+  # Create tertiles based on actual CP values for tertile analysis
+  clean_data[, cp_tertile := cut(actual, 3, labels = c("Low", "Medium", "High"))]
+  
+  cat("Raw predictions now has plot_order and error_raw columns\n")
+  cat("Columns:", names(clean_data), "\n")
+  
+  # Calculate sample-level means using TRUE sample identity
+  error_by_sample <- clean_data[, .(
+    mean_error = mean(error_raw, na.rm = TRUE),
+    sd_error = sd(error_raw, na.rm = TRUE),
+    actual_cp = mean(actual, na.rm = TRUE),
+    n_predictions = .N,
+    plot_order = plot_order[1]  # Should be same for all rows of same sample
+  ), by = ith_in_data_set]
+  
+  error_by_sample[, cp_tertile := cut(actual_cp, 3, labels = c("Low", "Medium", "High"))]
+  error_by_sample <- error_by_sample[order(actual_cp)]
+  error_by_sample[, rank_order := 1:.N]
+  
+  cat("Number of samples in error_by_sample:", nrow(error_by_sample), "\n")
+  
+  # Calculate bias by tertile
+  tertile_means <- clean_data[, .(
+    mean_error = mean(error_raw, na.rm = TRUE),
+    mean_actual = mean(actual, na.rm = TRUE),
+    n_obs = .N
+  ), by = cp_tertile]
+  
+  cat("Tertile bias analysis:\n")
+  print(tertile_means)
+  
+  # Calculate systematic bias using linear model
+  lm_bias <- lm(mean_error ~ actual_cp, data = error_by_sample)
+  bias_summary <- list(
+    slope = coef(lm_bias)[2],
+    intercept = coef(lm_bias)[1],
+    r_squared = summary(lm_bias)$r.squared,
+    tertile_biases = tertile_means
+  )
+  
+  cat("Systematic bias analysis complete\n")
+  cat("- Linear slope:", round(bias_summary$slope, 4), "\n")
+  cat("- R-squared:", round(bias_summary$r_squared, 3), "\n")
+  
+  # Return comprehensive error analysis
+  return(list(
+    raw_predictions = clean_data,
+    sample_errors = error_by_sample,
+    systematic_bias = bias_summary,
+    tertile_analysis = tertile_means,
+    summary = list(
+      total_predictions = nrow(clean_data),
+      unique_samples = length(unique(clean_data$ith_in_data_set)),
+      iterations = length(unique(clean_data$iteration)),
+      mean_absolute_error = mean(abs(clean_data$error_raw)),
+      rmse = sqrt(mean(clean_data$error_raw^2))
+    )
+  ))
+}
+
 # =============================================================================
 # MULTI-ALGORITHM COMPARISON FUNCTIONS
 # =============================================================================
@@ -1142,41 +1296,79 @@ create_performance_boxplot <- function(analysis) {
 create_validation_error_plot <- function(error_analysis) {
   if ("raw_predictions" %in% names(error_analysis)) {
     
-    raw_data <- data.table::copy(error_analysis$raw_predictions)
+    # Use the raw_predictions data which should already have plot_order
+    plot_data <- data.table::copy(error_analysis$raw_predictions)
     
-    # Check if error_raw already exists, if not create it
-    if (!"error_raw" %in% names(raw_data)) {
-      raw_data[, error_raw := predicted - actual]
+    # Verify that plot_order exists, if not create it
+    if (!"plot_order" %in% names(plot_data)) {
+      cat("⚠️ plot_order missing, creating it...\n")
+      
+      # Create sample ordering based on actual values
+      sample_order <- plot_data[, .(
+        mean_actual = mean(actual, na.rm = TRUE)
+      ), by = ith_in_data_set][order(mean_actual)]
+      sample_order[, plot_order := 1:.N]
+      
+      # Merge back to plot_data
+      plot_data <- merge(plot_data, sample_order[, .(ith_in_data_set, plot_order)], 
+                         by = "ith_in_data_set")
     }
     
-    # Create sample-level data first, then assign plot_order
-    # Aggregate to one row per sample
-    sample_data <- raw_data[, .(
-      mean_actual = mean(actual, na.rm = TRUE),
-      mean_error = mean(error_raw, na.rm = TRUE)
-    ), by = ith_in_data_set]
+    # Verify error_raw exists
+    if (!"error_raw" %in% names(plot_data)) {
+      plot_data[, error_raw := predicted - actual]
+    }
     
-    # Create plot order based on sample ranking
-    sample_data[, plot_order := rank(mean_actual)]
+    # Create tertiles for faceting if not already present
+    if (!"cutpoints" %in% names(plot_data)) {
+      # Create sample-level data for tertile calculation
+      sample_data <- plot_data[, .(
+        mean_actual = mean(actual, na.rm = TRUE),
+        mean_error = mean(error_raw, na.rm = TRUE)
+      ), by = ith_in_data_set]
+      
+      # Create tertiles
+      cutpoints <- quantile(sample_data$mean_actual, probs = c(0, 1/3, 2/3, 1))
+      sample_data[, cutpoints := cut(mean_actual, breaks = cutpoints, include.lowest = TRUE)]
+      levels(sample_data$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
+      
+      # Merge tertiles back to plot_data
+      plot_data <- merge(plot_data, sample_data[, .(ith_in_data_set, cutpoints)], 
+                         by = "ith_in_data_set")
+    }
     
-    # Create tertiles for faceting
-    cutpoints <- quantile(sample_data$mean_actual, probs = c(0, 1/3, 2/3, 1))
-    sample_data[, cutpoints := cut(mean_actual, breaks = cutpoints, include.lowest = TRUE)]
-    levels(sample_data$cutpoints) <- c("Lowest~Tertile", "Middle~Tertile", "Highest~Tertile")
+    # Create systematic bias trend if not present
+    if (!"systematic_bias" %in% names(plot_data)) {
+      # Create sample-level data for bias calculation
+      sample_data <- plot_data[, .(
+        mean_actual = mean(actual, na.rm = TRUE),
+        mean_error = mean(error_raw, na.rm = TRUE)
+      ), by = ith_in_data_set]
+      
+      # Fit linear model for systematic bias
+      lm_mod <- lm(mean_error ~ mean_actual, data = sample_data)
+      sample_data[, systematic_bias := predict(lm_mod, newdata = sample_data)]
+      
+      # Merge back to plot_data
+      plot_data <- merge(plot_data, sample_data[, .(ith_in_data_set, systematic_bias)], 
+                         by = "ith_in_data_set")
+    }
     
-    # Add plot_order back to raw_data for the scatter points
-    raw_data <- merge(raw_data, sample_data[, .(ith_in_data_set, plot_order, cutpoints)], 
-                      by = "ith_in_data_set")
+    # DEBUG: Show what we have
+    cat("Plot data columns:", paste(names(plot_data), collapse = ", "), "\n")
+    cat("Plot data rows:", nrow(plot_data), "\n")
+    cat("Unique samples:", length(unique(plot_data$ith_in_data_set)), "\n")
     
-    # Fit linear model for systematic bias using sample-level data
-    lm_mod <- lm(mean_error ~ mean_actual, data = sample_data)
-    sample_data[, systematic_bias := predict(lm_mod, newdata = sample_data)]
+    # Verify all required columns exist
+    required_cols <- c("plot_order", "error_raw", "cutpoints", "systematic_bias")
+    missing_cols <- setdiff(required_cols, names(plot_data))
     
-    # Merge systematic bias back using sample data
-    plot_data <- merge(raw_data, sample_data[, .(ith_in_data_set, systematic_bias)], 
-                       by = "ith_in_data_set")
+    if (length(missing_cols) > 0) {
+      cat("❌ Still missing columns:", paste(missing_cols, collapse = ", "), "\n")
+      return(create_error_placeholder())
+    }
     
-    # Create the plot
+    # Create the plot - EXACTLY LIKE YOUR PUBLISHED FIGURE 3
     p <- ggplot(plot_data, aes(x = plot_order, y = error_raw)) +
       geom_point(alpha = 0.3, size = 0.8, color = "gray60") +
       geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.7) +
@@ -1191,7 +1383,7 @@ create_validation_error_plot <- function(error_analysis) {
       theme_classic() +
       labs(
         title = "Testing Set Prediction Errors by Sample",
-        subtitle = "Samples ranked from lowest to highest actual CP concentration",
+        subtitle = "Actual sample value set to zero and samples ranked from least to greatest actual CP concentration value",
         x = "Sample Rank Order",
         y = "Prediction Error (g/kg)",
         caption = "Orange line shows systematic bias trend"
@@ -1206,7 +1398,8 @@ create_validation_error_plot <- function(error_analysis) {
     return(p)
     
   } else {
-    # Fallback to placeholder if data structure doesn't match
+    cat("❌ raw_predictions not found in error_analysis\n")
+    cat("Available components:", paste(names(error_analysis), collapse = ", "), "\n")
     return(create_error_placeholder())
   }
 }

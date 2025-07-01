@@ -338,59 +338,88 @@ select_best_preprocessing_method <- function(analysis) {
   return(best_method)
 }
 
-run_final_modeling <- function(hemp_data, best_method, n_iterations = 1000) {
-  # Run final modeling with best method
+run_final_modeling <- function(hemp_data, best_method, n_iterations = 10) {
   
   cat("Running final modeling with", best_method, "for", n_iterations, "iterations\n")
   
-  # Extract data
-  spectral_cols <- grep("^x[0-9]+", names(hemp_data), value = TRUE)
-  spectra_matrix <- as.matrix(hemp_data[, ..spectral_cols])
+  # Extract spectral data and preprocessing
+  spec_cols <- grep("^x[0-9]+", names(hemp_data), value = TRUE)
+  spectral_data <- as.matrix(hemp_data[, ..spec_cols])
   protein_data <- hemp_data$crude_protein
   
-  # Storage for results
+  # Apply preprocessing method
+  # (Your existing preprocessing code here)
+  processed_spectra <- apply_preprocessing(spectral_data, best_method)
+  
+  # Initialize storage
   metrics <- data.table()
   predictions <- data.table()
+  model_n_comp_statistics <- data.table()  # ADD THIS LINE
   
-  set.seed(123)
+  # Configuration
+  max_components <- 20  # ADD THIS LINE
   
-  for(i in 1:n_iterations) {
-    if (i %% 100 == 0) cat("Iteration", i, "\n")
+  for (i in 1:n_iterations) {
     
     tryCatch({
-      # Train/test split
+      # Your existing train/test split code
       train_idx <- sample(nrow(hemp_data), size = floor(0.75 * nrow(hemp_data)))
       test_idx <- setdiff(1:nrow(hemp_data), train_idx)
       
-      x_train <- spectra_matrix[train_idx, ]
+      X_train <- processed_spectra[train_idx, ]
       y_train <- protein_data[train_idx]
-      x_test <- spectra_matrix[test_idx, ]
+      X_test <- processed_spectra[test_idx, ]
       y_test <- protein_data[test_idx]
       
-      # Apply preprocessing
-      x_train_proc <- apply_preprocessing(x_train, best_method)
-      x_test_proc <- apply_preprocessing(x_test, best_method)
+      # ADD THIS ENTIRE SECTION: Test each number of components
+      iteration_rmse <- numeric(max_components)
       
-      # Fit model
-      results <- fit_pls_model(x_train_proc, y_train, x_test_proc, y_test)
+      for (ncomp in 1:max_components) {
+        # Fit PLS model with ncomp components
+        pls_model <- pls::plsr(y_train ~ X_train, ncomp = ncomp, validation = "none")
+        
+        # Predict on test set
+        test_preds <- predict(pls_model, newdata = X_test, ncomp = ncomp)[,,1]
+        
+        # Calculate RMSE for this component number
+        iteration_rmse[ncomp] <- sqrt(mean((y_test - test_preds)^2))
+        
+        # Store in component progression data (THIS IS THE KEY FOR FIGURE 2)
+        model_n_comp_statistics <- rbind(model_n_comp_statistics,
+                                         data.table(id = i, ncomp = ncomp, RMSE = iteration_rmse[ncomp]))
+      }
       
-      # Store metrics
+      # Find optimal number of components (minimum RMSE)
+      optimal_ncomp <- which.min(iteration_rmse)
+      # END OF ADDED SECTION
+      
+      # Your existing final model fitting (modify to use optimal_ncomp)
+      final_model <- pls::plsr(y_train ~ X_train, ncomp = optimal_ncomp, validation = "none")
+      final_preds <- predict(final_model, newdata = X_test, ncomp = optimal_ncomp)[,,1]
+      
+      # Your existing metrics calculation
+      final_rmse <- sqrt(mean((y_test - final_preds)^2))
+      final_rsq <- cor(y_test, final_preds)^2
+      final_rpd <- sd(y_test) / final_rmse
+      final_rpiq <- (quantile(y_test, 0.75) - quantile(y_test, 0.25)) / final_rmse
+      
+      # Store metrics (modify to include optimal_components)
       iteration_metrics <- data.table(
         iteration = i,
-        n_components = results$optimal_components,
-        rmse = results$rmse,
-        rsq = results$rsq,
-        rpd = results$rpd,
-        rpiq = results$rpiq
+        optimal_components = optimal_ncomp,  # ADD THIS LINE
+        rmse = final_rmse,
+        rsq = final_rsq,
+        rpd = final_rpd,
+        rpiq = final_rpiq
       )
       metrics <- rbind(metrics, iteration_metrics)
       
-      # Store predictions
+      # Your existing predictions storage
       iteration_predictions <- data.table(
         iteration = i,
         sample_id = test_idx,
-        actual = results$observed,
-        predicted = results$predictions
+        actual = y_test,
+        predicted = final_preds
       )
       predictions <- rbind(predictions, iteration_predictions)
       
@@ -404,10 +433,10 @@ run_final_modeling <- function(hemp_data, best_method, n_iterations = 1000) {
   return(list(
     metrics = metrics,
     predictions = predictions,
+    model_n_comp_statistics = model_n_comp_statistics,  # ADD THIS LINE
     method = best_method
   ))
 }
-
 analyze_final_model <- function(final_model_results) {
   # Analyze final model performance
   
@@ -1154,25 +1183,22 @@ create_model_comparison_table <- function(model_comparison) {
   )
 }
 
-create_calibration_plot <- function(final_model_analysis) {
-  # Create calibration plot
-  
-  # Sample predictions for plotting (to avoid overplotting)
-  plot_data <- final_model_analysis$predictions[iteration <= 10]
-  
-  ggplot(plot_data, aes(x = actual, y = predicted)) +
-    geom_point(alpha = 0.6, size = 1) +
-    geom_smooth(method = "lm", se = TRUE, color = "red") +
-    geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black") +
-    labs(
-      title = "Model Calibration: Predicted vs Actual Protein Content",
-      x = "Laboratory Measured Protein (g/kg)",
-      y = "NIR Predicted Protein (g/kg)"
-    ) +
-    theme_minimal() +
-    coord_equal()
+create_calibration_plot <- function(results) {
+  if ("model_n_comp_statistics" %in% names(results)) {
+    results$model_n_comp_statistics |> 
+      ggplot(aes(as.factor(ncomp), RMSE)) + 
+      geom_line(aes(group = id), alpha = 0.03) + 
+      theme_classic() + 
+      xlab("Crude Protein Model Number of Components") + 
+      ylab("Crude Protein Model Root Mean Squared Error")
+  } else {
+    ggplot() + 
+      geom_text(aes(x = 0.5, y = 0.5, 
+                    label = "model_n_comp_statistics missing\nNeed component progression in modeling"), 
+                size = 4) +
+      theme_void()
+  }
 }
-
 create_performance_boxplot <- function(final_model_analysis) {
   # Create performance boxplot
   

@@ -150,7 +150,7 @@ list(
   
   tar_target(
     fig_calibration,
-    create_calibration_plot(final_model_analysis)
+    create_calibration_plot(final_model_results)
   ),
   
   tar_target(

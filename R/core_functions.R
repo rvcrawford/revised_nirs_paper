@@ -236,7 +236,7 @@ run_single_iteration <- function(hemp_data, preprocessing_method_id, iteration) 
   
   # Train/test split
   set.seed(iteration)
-  train_indices <- createDataPartition(y, p = 0.8, list = FALSE)[,1]
+  train_indices <- createDataPartition(y, p = 0.8, list = FALSE, groups = 3)[,1]
   
   x_train <- spectra_matrix[train_indices, ]
   y_train <- y[train_indices]
@@ -497,7 +497,7 @@ run_multi_algorithm_comparison <- function(data, best_method, n_iterations = 100
     tryCatch({
       # Same train/test split for fair comparison
       set.seed(i)
-      train_indices <- createDataPartition(y, p = 0.75, list = FALSE)[,1]
+      train_indices <- createDataPartition(y, p = 0.75, list = FALSE, groups = 3)[,1]
       
       x_train <- spectra_matrix[train_indices, ]
       y_train <- y[train_indices]
@@ -676,7 +676,7 @@ fit_pls_for_spectral_analysis <- function(data, best_method) {
   
   # Create train/test split
   set.seed(123)
-  train_indices <- createDataPartition(y, p = 0.75, list = FALSE)[,1]
+  train_indices <- createDataPartition(y, p = 0.75, list = FALSE, groups = 3)[,1]
   
   x_train <- spectra_matrix[train_indices, ]
   y_train <- y[train_indices]
@@ -812,7 +812,7 @@ run_protein_focused_analysis <- function(data, best_method) {
   
   # Train/test split
   set.seed(123)
-  train_indices <- createDataPartition(y, p = 0.75, list = FALSE)[,1]
+  train_indices <- createDataPartition(y, p = 0.75, list = FALSE, groups = 3)[,1]
   
   x_train <- spectra_matrix[train_indices, ]
   y_train <- y[train_indices]

@@ -60,8 +60,23 @@ list(
     best_method,
     select_best_preprocessing_method(preprocessing_analysis)
   ),
-  tar_target(protein_focused_analysis, run_protein_focused_analysis(hemp_data, best_preprocessing_method)),
-  tar_target(model_comparison, compare_full_vs_protein_models(spectral_analysis, protein_focused_analysis)),
+  
+  # ADD THIS TARGET (missing in your current _targets.R):
+  tar_target(
+    spectral_analysis,
+    run_spectral_analysis(hemp_data, best_method)
+  ),
+  
+  # Your existing targets:
+  tar_target(
+    protein_focused_analysis, 
+    run_protein_focused_analysis(hemp_data, best_method)
+  ),
+  
+  tar_target(
+    model_comparison, 
+    compare_full_vs_protein_models(spectral_analysis, protein_focused_analysis)
+  ),
   
   
   # Final modeling with best method

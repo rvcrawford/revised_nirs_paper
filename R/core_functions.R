@@ -401,16 +401,40 @@ run_protein_focused_analysis <- function(data, best_method = "snv_sg") {
   # Apply preprocessing
   spectra_processed <- my_preprocess(spectra_matrix[inTrain, ], spectra_matrix[-inTrain, ])
   
-  # Get preprocessed data for the best method
-  method_train_name <- paste0(best_method, "_train")
-  method_test_name <- paste0(best_method, "_test")
+  # FIXED: Convert readable method name to abbreviated name
+  method_short_name <- convert_method_name(best_method)
+  method_train_name <- paste0(method_short_name, "_train")
+  method_test_name <- paste0(method_short_name, "_test")
+  
+  # Debug output (remove after it works)
+  cat("DEBUG: best_method:", best_method, "\n")
+  cat("DEBUG: method_short_name:", method_short_name, "\n")
+  cat("DEBUG: method_train_name:", method_train_name, "\n")
+  cat("DEBUG: method_test_name:", method_test_name, "\n")
+  
+  # Check if methods exist and extract data
+  if (!method_train_name %in% names(spectra_processed[[1]])) {
+    cat("Available training methods:", names(spectra_processed[[1]]), "\n")
+    stop("Training method '", method_train_name, "' not found")
+  }
+  
+  if (!method_test_name %in% names(spectra_processed[[2]])) {
+    cat("Available test methods:", names(spectra_processed[[2]]), "\n") 
+    stop("Test method '", method_test_name, "' not found")
+  }
   
   X_train <- spectra_processed[[1]][[method_train_name]]
-  X_test <- spectra_processed[[1]][[method_test_name]]
+  X_test <- spectra_processed[[2]][[method_test_name]]
   
   # Convert to data frame (required by caret)
   X_train_df <- as.data.frame(X_train)
   X_test_df <- as.data.frame(X_test)
+  
+  # Add proper column names if missing
+  if (is.null(names(X_train_df))) {
+    names(X_train_df) <- paste0("X", 1:ncol(X_train_df))
+    names(X_test_df) <- paste0("X", 1:ncol(X_test_df))
+  }
   
   # Set up caret training control
   train_control <- trainControl(
@@ -434,6 +458,14 @@ run_protein_focused_analysis <- function(data, best_method = "snv_sg") {
   cat("Optimal components:", model$bestTune$ncomp, "\n")
   cat("Training RMSE:", min(model$results$RMSE), "\n")
   
+  # Test set evaluation
+  test_predictions <- predict(model, X_test_df)
+  test_rmse <- sqrt(mean((y_test - test_predictions)^2))
+  test_rsq <- cor(y_test, test_predictions)^2
+  
+  cat("Test RMSE:", round(test_rmse, 3), "\n")
+  cat("Test R²:", round(test_rsq, 3), "\n")
+  
   # Create spectral fit object for coefficient extraction
   spectral_fit <- list(
     model = model,
@@ -454,17 +486,15 @@ run_protein_focused_analysis <- function(data, best_method = "snv_sg") {
   n_important_vip <- sum(vip_data$vip_score > 1.0)
   n_protein_related <- sum(protein_bands_data$likely_protein_related)
   
-  # Test set evaluation
-  test_predictions <- predict(model, X_test_df)
-  test_rmse <- sqrt(mean((y_test - test_predictions)^2))
-  test_rsq <- cor(y_test, test_predictions)^2
-  
   cat("Protein-focused analysis complete:\n")
   cat("- Wavelengths with VIP > 1.0:", n_important_vip, "\n")
   cat("- Wavelengths near protein bands:", n_protein_related, "\n")
   cat("- Model used", model$bestTune$ncomp, "components\n")
   cat("- Test RMSE:", round(test_rmse, 3), "\n")
   cat("- Test R²:", round(test_rsq, 3), "\n")
+  
+  # FIXED: Create test indices properly
+  test_indices <- setdiff(1:length(y), inTrain)
   
   list(
     spectral_fit = spectral_fit,
@@ -484,11 +514,11 @@ run_protein_focused_analysis <- function(data, best_method = "snv_sg") {
     test_predictions = data.frame(
       actual = y_test,
       predicted = test_predictions,
-      sample_id = which(!inTrain)
+      sample_id = test_indices  # FIXED: Use proper test indices
     )
   )
-}
-
+  
+  }
 run_preprocessing_comparison <- function(data, n_iterations = NULL) {
   # Compare 8 preprocessing methods - core analysis for paper
   
@@ -1587,4 +1617,567 @@ create_overlay_comparison_plot <- function(full_analysis, protein_analysis) {
     scale_color_manual(values = c("Full Spectrum" = "gray40", "Protein-Focused" = "red"))
   
   return(p)
+}
+
+# =============================================================================
+# MISSING FUNCTIONS TO ADD TO R/core_functions.R
+# =============================================================================
+
+# 1. extract_wavelengths() - THE IMMEDIATE ERROR
+extract_wavelengths <- function(spectral_data) {
+  cat("Extracting wavelength information...\n")
+  
+  # Your spectral columns are named like "x1100", "x1102", etc.
+  spectral_cols <- names(spectral_data)[grepl("^x[0-9]+$", names(spectral_data))]
+  
+  if (length(spectral_cols) == 0) {
+    cat("ERROR: No spectral columns found with pattern '^x[0-9]+$'\n")
+    cat("Available columns (first 10):", paste(head(names(spectral_data), 10), collapse = ", "), "\n")
+    stop("No spectral columns detected")
+  }
+  
+  wavelengths <- as.numeric(gsub("x", "", spectral_cols))
+  
+  cat("- Found", length(spectral_cols), "spectral columns\n")
+  cat("- Wavelength range:", range(wavelengths), "nm\n")
+  
+  list(
+    wavelengths = wavelengths,
+    spectral_cols = spectral_cols,
+    n_wavelengths = length(wavelengths),
+    range = range(wavelengths)
+  )
+}
+
+# 2. split_spectra()
+split_spectra <- function(y) {
+  inTrain <- createDataPartition(
+    y = y,
+    p = .75,
+    list = FALSE,
+    groups = 3
+  )
+  return(as.vector(inTrain))
+}
+
+my_preprocess <- function(spectra_train, spectra_test) {
+  library(prospectr)
+  
+  cat("Applying preprocessing methods...\n")
+  cat("Training data dimensions:", dim(spectra_train), "\n")
+  cat("Test data dimensions:", dim(spectra_test), "\n")
+  
+  # 1. Raw spectra (no preprocessing)
+  raw_train <- spectra_train
+  raw_test <- spectra_test
+  
+  # 2. First derivative
+  first_deriv_train <- t(diff(t(spectra_train), differences = 1))
+  first_deriv_test <- t(diff(t(spectra_test), differences = 1))
+  
+  # 3. Savitzky-Golay smoothing
+  sg_train <- savitzkyGolay(spectra_train, m = 1, p = 3, w = 5)
+  sg_test <- savitzkyGolay(spectra_test, m = 1, p = 3, w = 5)
+  
+  # 4. Gap-segment derivative
+  gap_der_train <- gapDer(spectra_train, m = 1, w = 5)
+  gap_der_test <- gapDer(spectra_test, m = 1, w = 5)
+  
+  # 5. Standard Normal Variate (SNV)
+  snv_train <- standardNormalVariate(spectra_train)
+  snv_test <- standardNormalVariate(spectra_test)
+  
+  # 6. SNV + Savitzky-Golay
+  snv_sg_train <- savitzkyGolay(standardNormalVariate(spectra_train), m = 1, p = 3, w = 5)
+  snv_sg_test <- savitzkyGolay(standardNormalVariate(spectra_test), m = 1, p = 3, w = 5)
+  
+  # 7. SNV + detrending
+  snv_detrend_train <- detrend(standardNormalVariate(spectra_train), wav = 1:ncol(spectra_train))
+  snv_detrend_test <- detrend(standardNormalVariate(spectra_test), wav = 1:ncol(spectra_test))
+  
+  # 8. Multiplicative Scatter Correction (MSC) - FIXED
+  msc_result_train <- msc(spectra_train)
+  msc_train <- as.matrix(msc_result_train)  # FIXED: msc() returns the corrected matrix directly
+  msc_test <- predict(msc_result_train, spectra_test)
+  
+  # Organize outputs
+  output_train <- list(
+    raw_train = raw_train,
+    first_derivative_train = first_deriv_train,
+    sav_gol_train = sg_train,
+    gap_der_train = gap_der_train,
+    snv_train = snv_train,
+    snv_sg_train = snv_sg_train,
+    snv_detrend_train = snv_detrend_train,
+    msc_train = msc_train
+  )
+  
+  output_test <- list(
+    raw_test = raw_test,
+    first_derivative_test = first_deriv_test,
+    sav_gol_test = sg_test,
+    gap_der_test = gap_der_test,
+    snv_test = snv_test,
+    snv_sg_test = snv_sg_test,
+    snv_detrend_test = snv_detrend_test,
+    msc_test = msc_test
+  )
+  
+  cat("Preprocessing complete. Methods available:\n")
+  cat("- Training methods:", paste(names(output_train), collapse = ", "), "\n")
+  cat("- Test methods:", paste(names(output_test), collapse = ", "), "\n")
+  
+  return(list(output_train, output_test))
+}
+
+# Add this function to convert human-readable names to method names
+convert_method_name <- function(readable_name) {
+  method_mapping <- c(
+    "Raw spectra" = "raw",
+    "First derivative" = "first_derivative", 
+    "Savitzky-Golay smoothing" = "sav_gol",
+    "Gap-segment derivative" = "gap_der",
+    "Standard normal variate (SNV)" = "snv",
+    "SNV + Savitzky-Golay" = "snv_sg", 
+    "SNV + detrending" = "snv_detrend",
+    "Multiplicative scatter correction" = "msc"
+  )
+  
+  if (readable_name %in% names(method_mapping)) {
+    return(method_mapping[[readable_name]])
+  } else {
+    # If it's already an abbreviated name, return as-is
+    return(readable_name)
+  }
+}
+# 4. extract_pls_coefficients()
+extract_pls_coefficients <- function(spectral_fit) {
+  model <- spectral_fit$model
+  wavelengths <- spectral_fit$wavelengths
+  
+  # Get optimal number of components
+  optimal_ncomp <- model$bestTune$ncomp
+  
+  # Extract coefficients from the final PLS model
+  pls_object <- model$finalModel
+  coeffs <- coef(pls_object, ncomp = optimal_ncomp, intercept = FALSE)
+  
+  cat("Coefficient extraction:\n")
+  cat("- Optimal components:", optimal_ncomp, "\n")
+  cat("- Coefficient matrix dimensions:", dim(coeffs), "\n")
+  
+  # Handle case where preprocessing changed the number of wavelengths
+  n_coeffs <- length(as.vector(coeffs))
+  n_wavelengths <- length(wavelengths)
+  
+  if (n_coeffs == n_wavelengths) {
+    # Perfect match - use original wavelengths
+    used_wavelengths <- wavelengths
+  } else {
+    cat("Warning: Number of coefficients (", n_coeffs, ") != number of wavelengths (", n_wavelengths, ")\n")
+    cat("This is normal for derivative preprocessing. Creating sequential wavelength labels.\n")
+    # Create sequential wavelengths for the available coefficients
+    used_wavelengths <- wavelengths[1:n_coeffs]
+  }
+  
+  # Create coefficient data frame
+  coeff_data <- data.frame(
+    wavelength = used_wavelengths,
+    coefficient = as.vector(coeffs),
+    abs_coefficient = abs(as.vector(coeffs))
+  )
+  
+  # Add ranking by importance
+  coeff_data$rank <- rank(-coeff_data$abs_coefficient)
+  
+  cat("Extracted coefficients for", optimal_ncomp, "components\n")
+  cat("Coefficient range:", round(range(coeff_data$coefficient), 4), "\n")
+  cat("Using", nrow(coeff_data), "wavelength points\n")
+  
+  return(coeff_data)
+}
+
+# 5. calculate_vip_scores()
+calculate_vip_scores <- function(spectral_fit) {
+  model <- spectral_fit$model
+  wavelengths <- spectral_fit$wavelengths
+  
+  # Get optimal number of components
+  optimal_ncomp <- model$bestTune$ncomp
+  
+  # Extract VIP scores from PLS model
+  pls_object <- model$finalModel
+  
+  # Manual VIP calculation if not available directly
+  X <- spectral_fit$X_train
+  y <- spectral_fit$y_train
+  
+  # Get loadings and weights
+  loadings <- pls_object$loadings[, 1:optimal_ncomp, drop = FALSE]
+  weights <- pls_object$loading.weights[, 1:optimal_ncomp, drop = FALSE]
+  
+  # Calculate explained variance for each component
+  tss <- sum((y - mean(y))^2)
+  explained_var <- numeric(optimal_ncomp)
+  
+  for (i in 1:optimal_ncomp) {
+    scores <- pls_object$scores[, i]
+    pred <- mean(y) + scores * pls_object$Yloadings[i]
+    explained_var[i] <- 1 - sum((y - pred)^2) / tss
+  }
+  
+  # Calculate VIP scores
+  p <- ncol(X)
+  vip_scores <- numeric(p)
+  
+  for (j in 1:p) {
+    sum_sq <- sum((weights[j, 1:optimal_ncomp]^2) * explained_var[1:optimal_ncomp])
+    vip_scores[j] <- sqrt(p * sum_sq / sum(explained_var[1:optimal_ncomp]))
+  }
+  
+  # Handle case where wavelengths don't match exactly
+  n_vip <- length(vip_scores)
+  n_wavelengths <- length(wavelengths)
+  
+  if (n_vip == n_wavelengths) {
+    used_wavelengths <- wavelengths
+  } else {
+    cat("VIP: Using", n_vip, "scores for", n_wavelengths, "wavelengths\n")
+    used_wavelengths <- wavelengths[1:n_vip]
+  }
+  
+  # Create VIP data frame
+  vip_data <- data.frame(
+    wavelength = used_wavelengths,
+    vip_score = vip_scores,
+    important = vip_scores > 1.0
+  )
+  
+  cat("VIP calculation complete\n")
+  cat("- Important wavelengths (VIP > 1):", sum(vip_data$important), "\n")
+  cat("- VIP range:", round(range(vip_data$vip_score), 3), "\n")
+  
+  return(vip_data)
+}
+
+# 6. identify_protein_bands()
+identify_protein_bands <- function(coeff_data, vip_data) {
+  # Known protein absorption bands in NIR
+  protein_bands <- data.frame(
+    band_center = c(1190, 1215, 1395, 1440, 1500, 1515, 1680, 1725, 1765, 1940, 2055, 2180, 2290, 2350),
+    band_range_low = c(1180, 1200, 1380, 1420, 1480, 1500, 1660, 1710, 1750, 1920, 2040, 2160, 2270, 2330),
+    band_range_high = c(1200, 1230, 1410, 1460, 1520, 1530, 1700, 1740, 1780, 1960, 2070, 2200, 2310, 2370),
+    assignment = c(
+      "C-H stretch 2nd overtone",
+      "C-H stretch 2nd overtone", 
+      "O-H stretch 1st overtone",
+      "O-H stretch + C-H deformation",
+      "N-H stretch 1st overtone",
+      "N-H stretch 1st overtone",
+      "C-H stretch 1st overtone",
+      "C-H stretch 1st overtone",
+      "C-H stretch 1st overtone",
+      "O-H stretch + C-H deformation combination",
+      "N-H stretch + C-N stretch combination",
+      "C-H stretch + C-C stretch combination",
+      "C-H stretch + C-H deformation combination",
+      "C-H stretch + C-H deformation combination"
+    ),
+    protein_relevance = c(
+      "Amino acid side chains",
+      "Amino acid side chains",
+      "Hydroxyl groups in amino acids",
+      "Mixed amino acid vibrations",
+      "Peptide bonds, amino groups",
+      "Peptide bonds, amino groups", 
+      "Aliphatic amino acids",
+      "Aliphatic amino acids",
+      "Aliphatic amino acids",
+      "Protein-water interactions",
+      "Protein backbone structure",
+      "Amino acid structural vibrations",
+      "Complex amino acid interactions",
+      "Complex amino acid interactions"
+    )
+  )
+  
+  # Combine coefficient and VIP data
+  combined_data <- merge(coeff_data, vip_data, by = "wavelength")
+  
+  # Map to protein bands
+  combined_data$closest_band <- sapply(combined_data$wavelength, function(w) {
+    distances <- abs(protein_bands$band_center - w)
+    protein_bands$band_center[which.min(distances)]
+  })
+  
+  combined_data$assignment <- sapply(combined_data$wavelength, function(w) {
+    distances <- abs(protein_bands$band_center - w)
+    protein_bands$assignment[which.min(distances)]
+  })
+  
+  combined_data$protein_relevance <- sapply(combined_data$wavelength, function(w) {
+    distances <- abs(protein_bands$band_center - w)
+    protein_bands$protein_relevance[which.min(distances)]
+  })
+  
+  combined_data$distance_to_band <- sapply(combined_data$wavelength, function(w) {
+    distances <- abs(protein_bands$band_center - w)
+    min(distances)
+  })
+  
+  # Flag wavelengths as protein-related if within 20 nm of known bands
+  combined_data$likely_protein_related <- combined_data$distance_to_band <= 20
+  
+  return(combined_data)
+}
+
+# 7. create_wavelength_summary_table()
+create_wavelength_summary_table <- function(protein_bands_data, n_top = 15) {
+  
+  cat("Creating wavelength summary table...\n")
+  cat("- Input data dimensions:", dim(protein_bands_data), "\n")
+  cat("- Protein-related wavelengths:", sum(protein_bands_data$likely_protein_related, na.rm = TRUE), "\n")
+  
+  # Get top wavelengths by coefficient magnitude or VIP score
+  # Use a more robust approach for the filtering and selection
+  
+  # First, create the filtered dataset
+  candidate_wavelengths <- protein_bands_data %>%
+    filter(likely_protein_related == TRUE | rank <= 10) %>%
+    arrange(rank)
+  
+  cat("- Candidate wavelengths after filtering:", nrow(candidate_wavelengths), "\n")
+  
+  # Take the top n_top
+  if (nrow(candidate_wavelengths) == 0) {
+    cat("WARNING: No wavelengths found meeting criteria. Using top 10 by rank.\n")
+    candidate_wavelengths <- protein_bands_data %>%
+      arrange(rank) %>%
+      slice_head(n = min(10, nrow(protein_bands_data)))
+  }
+  
+  top_wavelengths <- candidate_wavelengths %>%
+    slice_head(n = n_top)
+  
+  cat("- Final wavelengths selected:", nrow(top_wavelengths), "\n")
+  
+  # Create the formatted table with simpler column creation
+  # Avoid the select() issue by creating columns step by step
+  formatted_table <- top_wavelengths %>%
+    mutate(
+      wavelength_nm = wavelength,
+      pls_coefficient = sprintf("%.4f", coefficient),
+      vip_score_formatted = sprintf("%.2f", vip_score),
+      chemical_assignment = assignment,
+      protein_relevance_text = protein_relevance,
+      distance_to_band = round(distance_to_band, 0)
+    )
+  
+  # Create final data frame with desired column names
+  final_table <- data.frame(
+    "Wavelength (nm)" = formatted_table$wavelength_nm,
+    "PLS Coefficient" = formatted_table$pls_coefficient,
+    "VIP Score" = formatted_table$vip_score_formatted,
+    "Chemical Assignment" = formatted_table$chemical_assignment,
+    "Protein Relevance" = formatted_table$protein_relevance_text,
+    "Distance to Known Band (nm)" = formatted_table$distance_to_band,
+    check.names = FALSE  # Keep the column names with spaces
+  )
+  
+  cat("- Final table dimensions:", dim(final_table), "\n")
+  cat("- Column names:", names(final_table), "\n")
+  
+  return(final_table)
+}
+
+# 8. fit_pls_for_spectral_analysis()
+fit_pls_for_spectral_analysis <- function(data, best_method = "snv_sg") {
+  cat("Fitting PLS model for spectral analysis using", best_method, "\n")
+  
+  # Extract spectral data with better error checking
+  wavelength_info <- extract_wavelengths(data)
+  
+  # Use proper data.table column selection
+  if (inherits(data, "data.table")) {
+    # For data.table, use this syntax
+    spectral_matrix <- as.matrix(data[, wavelength_info$spectral_cols, with = FALSE])
+  } else {
+    # For regular data.frame
+    spectral_matrix <- as.matrix(data[, wavelength_info$spectral_cols])
+  }
+  
+  y <- data$crude_protein
+  
+  cat("Spectral matrix dimensions:", dim(spectral_matrix), "\n")
+  cat("Response variable range:", range(y, na.rm = TRUE), "\n")
+  
+  # Verify dimensions are correct (should be samples x wavelengths)
+  expected_samples <- length(y)
+  expected_wavelengths <- length(wavelength_info$wavelengths)
+  
+  if (nrow(spectral_matrix) != expected_samples) {
+    stop("Dimension ERROR: spectral matrix has ", nrow(spectral_matrix), 
+         " rows but expected ", expected_samples, " samples")
+  }
+  
+  if (ncol(spectral_matrix) != expected_wavelengths) {
+    stop("Dimension ERROR: spectral matrix has ", ncol(spectral_matrix), 
+         " columns but expected ", expected_wavelengths, " wavelengths")
+  }
+  
+  cat("✓ Dimensions correct:", nrow(spectral_matrix), "samples x", ncol(spectral_matrix), "wavelengths\n")
+  
+  # Create train/test split (consistent with your existing approach)
+  set.seed(123)  # For reproducibility of wavelength analysis
+  train_indices <- split_spectra(y)
+  
+  cat("Train/test split: ", length(train_indices), "/", nrow(spectral_matrix) - length(train_indices), "\n")
+  
+  # Apply preprocessing using your existing function
+  processed_data <- my_preprocess(
+    spectral_matrix[train_indices, ], 
+    spectral_matrix[-train_indices, ]
+  )
+  
+  # Get the best method's training data
+  method_short_name <- convert_method_name(best_method)
+  method_name <- paste0(method_short_name, "_train")
+  if (!method_name %in% names(processed_data[[1]])) {
+    cat("Available methods:", names(processed_data[[1]]), "\n")
+    stop("Method ", method_name, " not found. Available methods: ", 
+         paste(names(processed_data[[1]]), collapse = ", "))
+  }
+  
+  X_train <- processed_data[[1]][[method_name]]
+  y_train <- y[train_indices]
+  
+  cat("Training data dimensions:", dim(X_train), "\n")
+  
+  # Convert to data frame for caret
+  X_train_df <- as.data.frame(X_train)
+  
+  # Add proper column names if missing
+  if (is.null(names(X_train_df))) {
+    names(X_train_df) <- paste0("X", 1:ncol(X_train_df))
+  }
+  
+  # Set up training control
+  train_control <- trainControl(
+    method = "cv",
+    number = 10,
+    savePredictions = "final"
+  )
+  
+  cat("Training PLS model for spectral analysis...\n")
+  
+  # Train PLS model
+  model <- train(
+    x = X_train_df,
+    y = y_train,
+    method = "pls",
+    trControl = train_control,
+    tuneLength = 20,
+    preProcess = NULL  # Already preprocessed
+  )
+  
+  cat("Model fitted with", model$bestTune$ncomp, "components\n")
+  cat("Training RMSE:", round(min(model$results$RMSE), 3), "\n")
+  
+  # Return spectral fit object
+  list(
+    model = model,
+    wavelengths = wavelength_info$wavelengths,
+    X_train = X_train_df,
+    y_train = y_train,
+    train_indices = train_indices,
+    preprocessing_method = best_method
+  )
+}
+
+# 9. run_spectral_analysis()
+run_spectral_analysis <- function(data, best_method = "snv_sg") {
+  cat("Running full spectrum spectral feature analysis...\n")
+  
+  # Fit PLS model for spectral analysis
+  spectral_fit <- fit_pls_for_spectral_analysis(data, best_method)
+  
+  # Extract coefficients and VIP scores
+  coeff_data <- extract_pls_coefficients(spectral_fit)
+  vip_data <- calculate_vip_scores(spectral_fit)
+  
+  # Identify protein-relevant bands
+  protein_bands_data <- identify_protein_bands(coeff_data, vip_data)
+  
+  # Create summary table
+  summary_table <- create_wavelength_summary_table(protein_bands_data)
+  
+  # Calculate summary statistics
+  n_important_vip <- sum(vip_data$vip_score > 1.0)
+  n_protein_related <- sum(protein_bands_data$likely_protein_related)
+  
+  cat("Full spectrum analysis complete:\n")
+  cat("- Wavelengths with VIP > 1.0:", n_important_vip, "\n")
+  cat("- Wavelengths near protein bands:", n_protein_related, "\n")
+  cat("- Model used", spectral_fit$model$bestTune$ncomp, "components\n")
+  
+  list(
+    spectral_fit = spectral_fit,
+    coefficients = coeff_data,
+    vip_scores = vip_data,
+    protein_bands = protein_bands_data,
+    summary_table = summary_table,
+    analysis_stats = list(
+      n_important_vip = n_important_vip,
+      n_protein_related = n_protein_related,
+      optimal_components = spectral_fit$model$bestTune$ncomp,
+      training_rmse = min(spectral_fit$model$results$RMSE)
+    )
+  )
+}
+
+# Create performance comparison table
+# Debug version to see what's causing the error
+# FIXED: Use the existing comparison_table from model_comparison
+create_performance_comparison_table <- function(model_comparison) {
+  
+  cat("=== CREATING MODEL COMPARISON TABLE ===\n")
+  
+  # The model_comparison object already has a comparison_table!
+  if ("comparison_table" %in% names(model_comparison)) {
+    cat("✅ Using existing comparison_table\n")
+    return(model_comparison$comparison_table)
+  }
+  
+  # If for some reason it doesn't exist, create it from the nested data
+  cat("Creating new comparison table from nested data\n")
+  
+  comparison_df <- data.frame(
+    Metric = c(
+      "Training RMSE (g/kg)", 
+      "Number of Wavelengths", 
+      "PLS Components", 
+      "Complexity Reduction (%)",
+      "Performance Change (%)"
+    ),
+    `Full Spectrum` = c(
+      round(model_comparison$performance_metrics$full_rmse, 3),
+      model_comparison$complexity_metrics$full_wavelengths,
+      model_comparison$complexity_metrics$full_components,
+      "0%",
+      "0%"
+    ),
+    `Protein-Focused` = c(
+      round(model_comparison$performance_metrics$protein_rmse, 3),
+      model_comparison$complexity_metrics$protein_wavelengths,
+      model_comparison$complexity_metrics$protein_components,
+      paste0(round(model_comparison$complexity_metrics$complexity_reduction, 1), "%"),
+      paste0(ifelse(model_comparison$performance_metrics$rmse_percent_change > 0, "+", ""), 
+             round(model_comparison$performance_metrics$rmse_percent_change, 1), "%")
+    ),
+    stringsAsFactors = FALSE
+  )
+  
+  names(comparison_df) <- c("Metric", "Full Spectrum", "Protein-Focused")
+  
+  return(comparison_df)
 }

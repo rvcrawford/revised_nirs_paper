@@ -266,7 +266,7 @@ The biological basis of the NIRS predictions was validated by developing a prote
 #| label: tbl_mod_compare
 #| tbl-cap: "Enhanced performance comparison demonstrating biological validation through protein-specific wavelength selection"
 
-table_model_comparison |> slice(1:4)
+table_model_comparison
 ```
 
 ```{r}

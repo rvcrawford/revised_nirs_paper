@@ -92,8 +92,6 @@ div.csl-indent {
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
-<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -251,7 +249,7 @@ The following object is masked from 'package:dplyr':
 <pre><code>- Hemp data: 149 samples </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>- Best method: Savitzky-Golay smoothing </code></pre>
+<pre><code>- Best method: SNV + Savitzky-Golay </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>- Final analysis: Available </code></pre>
@@ -681,19 +679,8 @@ Table&nbsp;2: Summary of laboratory-assayed CP values
 <div class="cell-output-display">
 <table class="do-not-create-environment cell table table-sm table-striped small">
 <caption>Summary of Laboratory Assayed CP Values (g kg<sup>-1</sup>)</caption>
-<colgroup>
-<col style="width: 6%">
-<col style="width: 7%">
-<col style="width: 4%">
-<col style="width: 12%">
-<col style="width: 23%">
-<col style="width: 10%">
-<col style="width: 23%">
-<col style="width: 12%">
-</colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;"></th>
 <th style="text-align: right;">Mean</th>
 <th style="text-align: right;">SD</th>
 <th style="text-align: right;">Minimum</th>
@@ -705,7 +692,6 @@ Table&nbsp;2: Summary of laboratory-assayed CP values
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">25%</td>
 <td style="text-align: right;">261</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: right;">208</td>
@@ -737,80 +723,83 @@ Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 </figcaption>
 <div aria-describedby="tbl-preproc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div>
-<table class="table table-striped table-hover do-not-create-environment cell table-sm small" data-quarto-postprocess="true">
-<caption>Preprocessing method comparison (mean ± SD)</caption>
+<table class="do-not-create-environment cell table table-sm table-striped small">
+<caption>Preprocessing Method Comparison (Mean ± SD)</caption>
+<colgroup>
+<col style="width: 40%">
+<col style="width: 14%">
+<col style="width: 16%">
+<col style="width: 14%">
+<col style="width: 14%">
+</colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;" data-quarto-table-cell-role="th">Method</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">RMSE (g/kg)</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">R²</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">RPD</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">RPIQ</th>
+<th style="text-align: left;">Preprocessing Method</th>
+<th style="text-align: left;">RMSE (g/kg)</th>
+<th style="text-align: left;">R²</th>
+<th style="text-align: left;">RPD</th>
+<th style="text-align: left;">RPIQ</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Raw spectra</td>
-<td style="text-align: left;">11.8 ± 0.7</td>
-<td style="text-align: left;">0.778 ± 0.042</td>
-<td style="text-align: left;">2.1 ± 0.26</td>
-<td style="text-align: left;">3.37 ± 0.2</td>
+<td style="text-align: left;">SNV + Savitzky-Golay</td>
+<td style="text-align: left;">10.4 ± 1.2</td>
+<td style="text-align: left;">0.825 ± 0.051</td>
+<td style="text-align: left;">2.37 ± 0.35</td>
+<td style="text-align: left;">3.94 ± 0.61</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">First derivative</td>
-<td style="text-align: left;">11.1 ± 2.1</td>
-<td style="text-align: left;">0.794 ± 0.081</td>
-<td style="text-align: left;">2.27 ± 0.41</td>
-<td style="text-align: left;">3.68 ± 0.78</td>
+<td style="text-align: left;">10.5 ± 1.0</td>
+<td style="text-align: left;">0.822 ± 0.041</td>
+<td style="text-align: left;">2.32 ± 0.29</td>
+<td style="text-align: left;">3.85 ± 0.47</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Savitzky-Golay smoothing</td>
-<td style="text-align: left;">10.6 ± 1.6</td>
-<td style="text-align: left;">0.818 ± 0.055</td>
-<td style="text-align: left;">2.37 ± 0.43</td>
-<td style="text-align: left;">3.83 ± 0.58</td>
+<td style="text-align: left;">10.8 ± 1.2</td>
+<td style="text-align: left;">0.819 ± 0.054</td>
+<td style="text-align: left;">2.26 ± 0.28</td>
+<td style="text-align: left;">3.76 ± 0.53</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Gap-segment derivative</td>
-<td style="text-align: left;">11.2 ± 2.5</td>
-<td style="text-align: left;">0.782 ± 0.097</td>
-<td style="text-align: left;">2.29 ± 0.66</td>
-<td style="text-align: left;">3.67 ± 0.85</td>
+<td style="text-align: left;">Raw spectra</td>
+<td style="text-align: left;">10.9 ± 1.1</td>
+<td style="text-align: left;">0.818 ± 0.053</td>
+<td style="text-align: left;">2.25 ± 0.27</td>
+<td style="text-align: left;">3.74 ± 0.51</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Standard normal variate (SNV)</td>
-<td style="text-align: left;">11.7 ± 3.1</td>
-<td style="text-align: left;">0.77 ± 0.12</td>
-<td style="text-align: left;">2.25 ± 0.81</td>
-<td style="text-align: left;">3.58 ± 1.02</td>
+<td style="text-align: left;">Gap-segment derivative</td>
+<td style="text-align: left;">11.3 ± 1.8</td>
+<td style="text-align: left;">0.794 ± 0.068</td>
+<td style="text-align: left;">2.21 ± 0.41</td>
+<td style="text-align: left;">3.65 ± 0.64</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">SNV + Savitzky-Golay</td>
-<td style="text-align: left;">10.7 ± 1.8</td>
-<td style="text-align: left;">0.808 ± 0.069</td>
-<td style="text-align: left;">2.35 ± 0.48</td>
-<td style="text-align: left;">3.78 ± 0.64</td>
+<td style="text-align: left;">Standard normal variate (SNV)</td>
+<td style="text-align: left;">11.3 ± 2.0</td>
+<td style="text-align: left;">0.792 ± 0.080</td>
+<td style="text-align: left;">2.22 ± 0.49</td>
+<td style="text-align: left;">3.67 ± 0.78</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">SNV + detrending</td>
-<td style="text-align: left;">11.9 ± 3.2</td>
-<td style="text-align: left;">0.751 ± 0.128</td>
-<td style="text-align: left;">2.22 ± 0.84</td>
-<td style="text-align: left;">3.53 ± 1.08</td>
+<td style="text-align: left;">11.7 ± 2.7</td>
+<td style="text-align: left;">0.780 ± 0.097</td>
+<td style="text-align: left;">2.19 ± 0.58</td>
+<td style="text-align: left;">3.64 ± 0.95</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Multiplicative scatter correction</td>
-<td style="text-align: left;">11.9 ± 3.6</td>
-<td style="text-align: left;">0.752 ± 0.138</td>
-<td style="text-align: left;">2.27 ± 0.96</td>
-<td style="text-align: left;">3.6 ± 1.26</td>
+<td style="text-align: left;">11.8 ± 2.5</td>
+<td style="text-align: left;">0.773 ± 0.094</td>
+<td style="text-align: left;">2.16 ± 0.57</td>
+<td style="text-align: left;">3.59 ± 0.95</td>
 </tr>
 </tbody>
 </table>
-
-
-</div>
 </div>
 </div>
 </figure>
@@ -862,30 +851,30 @@ Figure&nbsp;1: Comparing algorithms
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Partial Least Squares</td>
-<td style="text-align: center;">10.309 (±1.159)</td>
-<td style="text-align: center;">0.831 (±0.042)</td>
-<td style="text-align: center;">2.45 (±0.37)</td>
-<td style="text-align: center;">3.93 (±0.87)</td>
-<td style="text-align: center;">60%</td>
-<td style="text-align: center;">70%</td>
+<td style="text-align: center;">10.321 (±1.399)</td>
+<td style="text-align: center;">0.827 (±0.054)</td>
+<td style="text-align: center;">2.37 (±0.34)</td>
+<td style="text-align: center;">3.95 (±0.65)</td>
+<td style="text-align: center;">83.3%</td>
+<td style="text-align: center;">100%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Random Forest</td>
-<td style="text-align: center;">13.248 (±1.677)</td>
-<td style="text-align: center;">0.725 (±0.072)</td>
-<td style="text-align: center;">1.9 (±0.23)</td>
-<td style="text-align: center;">3.05 (±0.6)</td>
-<td style="text-align: center;">30%</td>
+<td style="text-align: center;">13.743 (±1.223)</td>
+<td style="text-align: center;">0.669 (±0.066)</td>
+<td style="text-align: center;">1.76 (±0.18)</td>
+<td style="text-align: center;">2.94 (±0.39)</td>
+<td style="text-align: center;">16.7%</td>
 <td style="text-align: center;">100%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Support Vector Machine</td>
-<td style="text-align: center;">11.834 (±1.191)</td>
-<td style="text-align: center;">0.779 (±0.05)</td>
-<td style="text-align: center;">2.12 (±0.25)</td>
-<td style="text-align: center;">3.41 (±0.7)</td>
+<td style="text-align: center;">12.715 (±2.192)</td>
+<td style="text-align: center;">0.712 (±0.102)</td>
+<td style="text-align: center;">1.95 (±0.39)</td>
+<td style="text-align: center;">3.26 (±0.74)</td>
 <td style="text-align: center;">50%</td>
-<td style="text-align: center;">90%</td>
+<td style="text-align: center;">100%</td>
 </tr>
 </tbody>
 </table>
@@ -910,7 +899,7 @@ Figure&nbsp;2: Decreasing RMSE with increasing number of components for 1000 tra
 </div>
 </div>
 </div>
-<p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure&nbsp;3</a>. The means of the final models were: RMSE = 10.88, R<sup>2</sup> = 0.79, RPD = 2.11, and RPIQ = 3.18. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with 100% having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
+<p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure&nbsp;3</a>. The means of the final models were: RMSE = NA, R<sup>2</sup> = NA, RPD = NA, and RPIQ = NA. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with % having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-performance-boxplot" class="quarto-figure quarto-figure-center quarto-float anchored">
@@ -945,13 +934,47 @@ Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sampl
 <section id="protein-focused-model-validation" class="level2" data-number="6">
 <h2 data-number="6" class="anchored" data-anchor-id="protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</h2>
 <p>The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands. Five distinct absorption regions were selected based on established vibrational assignments: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 1660-1700 nm (C-H stretch 1st overtone from aliphatic amino acids), 2040-2070 nm (N-H + C-N combination bands from protein backbone), and 2270-2310 nm (C-H + C-H combination bands from amino acid structural features).</p>
-<div class="cell" data-tbl-cap="Enhanced performance comparison demonstrating biological validation through protein-specific wavelength selection">
-<div class="cell-output cell-output-stdout">
-<pre><code>                 Metric Full.Spectrum Protein.Focused Change
-1  Training RMSE (g/kg)         9.658          11.472 +1.814
-2      Test RMSE (g/kg)           N/A          11.496    N/A
-3 Number of Wavelengths           696             110   -586
-4        PLS Components            16               9     -7</code></pre>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<caption>Enhanced performance comparison demonstrating biological validation through protein-specific wavelength selection</caption>
+<colgroup>
+<col style="width: 20%">
+<col style="width: 15%">
+<col style="width: 14%">
+<col style="width: 11%">
+<col style="width: 12%">
+<col style="width: 24%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Model</th>
+<th style="text-align: right;">Wavelengths</th>
+<th style="text-align: right;">Components</th>
+<th style="text-align: right;">RMSE</th>
+<th style="text-align: right;">R_squared</th>
+<th style="text-align: left;">Efficiency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Full Spectrum</td>
+<td style="text-align: right;">700</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">10.57470</td>
+<td style="text-align: right;">0.8105681</td>
+<td style="text-align: left;">Baseline</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Protein-Focused</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">11.35822</td>
+<td style="text-align: right;">0.7953493</td>
+<td style="text-align: left;">15.7% of variables</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="cell">
@@ -976,7 +999,7 @@ Figure&nbsp;5: Comparing models developed using full and protein-specific spectr
 <section id="conflict-of-interest" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-01 10:35:29<br>
+<p><strong>Generated:</strong> 2025-07-01 12:51:46<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

@@ -181,7 +181,7 @@ All algorithms were evaluated using identical training and testing set splits an
 
 Using the optimal preprocessing method identified above, one thousand training and testing sets were generated and models were developed. The larger number of iterations was feasible once the preprocessing method was selected, allowing for more robust performance estimates. Performance on the testing sets was summarized with RMSE, R^2^, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.
 
-To validate the biological basis of spectroscopic predictions and ensure that models were responding to protein-related spectral features rather than spurious correlations, a protein-focused model was developed using only wavelengths corresponding to known protein absorption bands. The protein-focused model was developed using the same PLSR methodology as the full-spectrum model but restricted to these protein-relevant wavelengths. Performance was compared to the full-spectrum model to assess whether targeted wavelength selection could maintain prediction accuracy while providing greater biological interpretability.
+To validate the biological basis of spectroscopic predictions and ensure that models were responding to protein-related spectral features rather than spurious correlations, a protein-focused model was developed using the same PLSR methodology as the full-spectrum model but restricted to three protein-relevant bands wavelengths. Performance was compared to the full-spectrum model to assess whether targeted wavelength selection could maintain prediction accuracy while providing greater biological interpretability.
 
 ## RESULTS AND DISCUSSION
 

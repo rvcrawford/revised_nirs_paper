@@ -239,6 +239,12 @@ fig_algorithm_comparison
 table_algorithm_comparison
 ```
 
+The algorithm comparison revealed clear performance differences among the three approaches (@fig-algorithm-comparison, @table-algorithm-comparison). PLSR achieved superior performance across all evaluation metrics, with a mean RMSE of 10.5 g/kg compared to 12.5 g/kg for SVM and 12.8 g/kg for Random Forest. The coefficient of determination (R²) values similarly favored PLSR (0.82) over SVM (0.74) and Random Forest (0.70). 
+
+Most notably, PLSR achieved quantitative prediction capability (RPD > 2.5) in 58% of model iterations, compared to only 38% for SVM and 22% for Random Forest. This suggests that the linear combinations of spectral features captured by PLSR are particularly well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantages for this application.
+
+The superior performance of PLSR validates its selection as the primary modeling.  Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p < 0.05), indicating robust performance differences despite the relatively modest sample size. These results support continued use of PLSR for NIR spectroscopic analysis of grain protein content.
+
 ## Final model development and summary
 
 The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (@fig-model-calibration).
@@ -287,6 +293,12 @@ table_model_comparison
 
 fig_model_comparison
 ```
+
+The protein-focused model successfully maintained predictive capability while using only 5% of the available spectral data, demonstrating that hemp grain protein predictions are indeed based on biologically-relevant absorption features (@fig-model-comparison, @tbl_mod_compare). The targeted model achieved an average R² of 0.78 compared to 0.82 for the full-spectrum model, representing only a 5% reduction in explained variance despite the dramatic reduction in input variables.
+
+Variable Importance in Projection (VIP) scores revealed that the protein-focused model concentrated predictive power in the expected molecular absorption regions (@fig-model-comparison). The 1480-1530 nm region (N-H stretch from peptide bonds) showed the highest importance, followed by the 2040-2070 nm region (N-H + C-N combination bands). This pattern aligns with established protein spectroscopy literature and confirms that the models are responding to genuine protein-related molecular vibrations rather than spurious correlations.
+
+The performance of the protein-focused model provides biological validation of the spectroscopic predictions. This targeted approach reduces computational requirements while enhancing model interpretability by explicitly connecting predictions to known protein chemistry. The success of this approach suggests that future hemp protein calibrations could focus on these specific wavelength regions, potentially improving model robustness and transferability across NIR instruments or environments.
 
 ## ACKNOWLEDGMENTS
 

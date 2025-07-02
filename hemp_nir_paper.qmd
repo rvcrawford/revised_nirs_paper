@@ -300,6 +300,12 @@ Variable Importance in Projection (VIP) scores revealed that the protein-focused
 
 The performance of the protein-focused model provides biological validation of the spectroscopic predictions. This targeted approach reduces computational requirements while enhancing model interpretability by explicitly connecting predictions to known protein chemistry. The success of this approach suggests that future hemp protein calibrations could focus on these specific wavelength regions, potentially improving model robustness and transferability across NIR instruments or environments.
 
+### Breeding Applications and Genetic Improvement
+
+The biological validation of spectroscopic predictions opens new possibilities for accelerating hemp protein improvement through plant breeding. The non-destructive nature of NIRS allows breeders to analyze individual seeds while preserving their viability for planting, enabling selection decisions based on protein content before committing land and resources to field evaluation.
+
+For genomic selection programs, the reliable protein phenotyping enabled by NIRS provides the high-quality phenotypic data necessary for training genomic prediction models. The ability to phenotype large populations (thousands of individuals) cost-effectively using NIRS could substantially improve the accuracy of genomic selection for protein content, accelerating genetic gains compared to traditional phenotyping approaches limited by analytical cost and throughput. The heritability of grain protein content in related cereals (wheat, barley) ranges from 0.6-0.8, suggesting that genetic improvement in hemp protein content is achievable with adequate phenotyping. NIRS provides the phenotyping capability necessary to exploit this genetic variation, particularly in early generation selection where large numbers of low-protein genotypes can be efficiently eliminated before expensive field testing.
+
 ## ACKNOWLEDGMENTS
 
 This work would not have been possible without the efforts of the field staff, undergraduate, and graduate students who planted, maintained, monitored and harvested these trials. Funding was provided by New York State through a grant from Empire State Development (AC477). We are grateful to those who provided seed for this project, including: Uniseeds, Verve Seeds, Winterfox Farms, International Hemp, Fiacre Seeds, and KonopiUS.

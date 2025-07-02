@@ -154,7 +154,10 @@ window.Quarto = {
   </ul></li>
   <li><a href="#algorithm-comparison" id="toc-algorithm-comparison" class="nav-link" data-scroll-target="#algorithm-comparison"><span class="header-section-number">4</span> Algorithm comparison</a></li>
   <li><a href="#final-model-development-and-summary" id="toc-final-model-development-and-summary" class="nav-link" data-scroll-target="#final-model-development-and-summary"><span class="header-section-number">5</span> Final model development and summary</a></li>
-  <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</a></li>
+  <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</a>
+  <ul class="collapse">
+  <li><a href="#breeding-applications-and-genetic-improvement" id="toc-breeding-applications-and-genetic-improvement" class="nav-link" data-scroll-target="#breeding-applications-and-genetic-improvement"><span class="header-section-number">6.1</span> Breeding Applications and Genetic Improvement</a></li>
+  </ul></li>
   <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments"><span class="header-section-number">7</span> ACKNOWLEDGMENTS</a></li>
   <li><a href="#conflict-of-interest" id="toc-conflict-of-interest" class="nav-link" data-scroll-target="#conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</a></li>
   </ul>
@@ -1005,6 +1008,11 @@ Figure&nbsp;5: Comparing models developed using full and protein-specific spectr
 <p>The protein-focused model successfully maintained predictive capability while using only 5% of the available spectral data, demonstrating that hemp grain protein predictions are indeed based on biologically-relevant absorption features (<a href="#fig-model-comparison" class="quarto-xref">Figure&nbsp;5</a>, <span class="citation" data-cites="tbl_mod_compare">(<a href="#ref-tbl_mod_compare" role="doc-biblioref"><strong>tbl_mod_compare?</strong></a>)</span>). The targeted model achieved an average R² of 0.78 compared to 0.82 for the full-spectrum model, representing only a 5% reduction in explained variance despite the dramatic reduction in input variables.</p>
 <p>Variable Importance in Projection (VIP) scores revealed that the protein-focused model concentrated predictive power in the expected molecular absorption regions (<a href="#fig-model-comparison" class="quarto-xref">Figure&nbsp;5</a>). The 1480-1530 nm region (N-H stretch from peptide bonds) showed the highest importance, followed by the 2040-2070 nm region (N-H + C-N combination bands). This pattern aligns with established protein spectroscopy literature and confirms that the models are responding to genuine protein-related molecular vibrations rather than spurious correlations.</p>
 <p>The performance of the protein-focused model provides biological validation of the spectroscopic predictions. This targeted approach reduces computational requirements while enhancing model interpretability by explicitly connecting predictions to known protein chemistry. The success of this approach suggests that future hemp protein calibrations could focus on these specific wavelength regions, potentially improving model robustness and transferability across NIR instruments or environments.</p>
+<section id="breeding-applications-and-genetic-improvement" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="breeding-applications-and-genetic-improvement"><span class="header-section-number">6.1</span> Breeding Applications and Genetic Improvement</h3>
+<p>The biological validation of spectroscopic predictions opens new possibilities for accelerating hemp protein improvement through plant breeding. The non-destructive nature of NIRS allows breeders to analyze individual seeds while preserving their viability for planting, enabling selection decisions based on protein content before committing land and resources to field evaluation.</p>
+<p>For genomic selection programs, the reliable protein phenotyping enabled by NIRS provides the high-quality phenotypic data necessary for training genomic prediction models. The ability to phenotype large populations (thousands of individuals) cost-effectively using NIRS could substantially improve the accuracy of genomic selection for protein content, accelerating genetic gains compared to traditional phenotyping approaches limited by analytical cost and throughput. The heritability of grain protein content in related cereals (wheat, barley) ranges from 0.6-0.8, suggesting that genetic improvement in hemp protein content is achievable with adequate phenotyping. NIRS provides the phenotyping capability necessary to exploit this genetic variation, particularly in early generation selection where large numbers of low-protein genotypes can be efficiently eliminated before expensive field testing.</p>
+</section>
 </section>
 <section id="acknowledgments" class="level2" data-number="7">
 <h2 data-number="7" class="anchored" data-anchor-id="acknowledgments"><span class="header-section-number">7</span> ACKNOWLEDGMENTS</h2>
@@ -1013,7 +1021,7 @@ Figure&nbsp;5: Comparing models developed using full and protein-specific spectr
 <section id="conflict-of-interest" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-02 08:57:14<br>
+<p><strong>Generated:</strong> 2025-07-02 09:02:21<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

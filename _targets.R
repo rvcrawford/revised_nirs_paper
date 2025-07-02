@@ -47,7 +47,7 @@ list(
   
   tar_target(
     preprocessing_comparison,
-    run_preprocessing_comparison(hemp_data, n_iterations = 10)
+    run_preprocessing_comparison(hemp_data, n_iterations = 100)
   ),
   
   tar_target(
@@ -66,7 +66,7 @@ list(
   
   tar_target(
     final_model_results,
-    run_final_modeling(hemp_data, best_method, n_iterations = 10)
+    run_final_modeling(hemp_data, best_method, n_iterations = 1000)
   ),
   
   tar_target(
@@ -83,7 +83,7 @@ list(
     run_multi_algorithm_comparison(
       hemp_data, 
       best_method, 
-      n_iterations = 6,
+      n_iterations = 100,
       algorithms = c("pls", "svmRadial", "rf")
     )
   ),

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.551">
+<meta name="generator" content="quarto-1.6.42">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -61,10 +61,10 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-89fcdccb74fdb34afc0c513f024a54bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -93,7 +93,7 @@ div.csl-indent {
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -164,10 +164,10 @@ window.Quarto = {
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><h1 class="title display-7">Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain</h1></header>
 
 <header id="title-block-header">
-<h1 class="title display-7">Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp Grain</h1>
+
 <p class="author">Ryan V. Crawford</p>
 <p class="author">Jamie L. Crawford</p>
 <p class="author">Julie L. Hansen</p>
@@ -182,93 +182,14 @@ window.Quarto = {
 </header>
 
 
-<div class="cell">
-<div class="cell-output cell-output-stderr">
-<pre><code>Loading required package: lattice</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>[34mprospectr version 0.2.8 -- galo[39m</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>[34mcheck the package repository at: https://github.com/l-ramirez-lopez/prospectr[39m</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>
-Attaching package: 'pls'</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following object is masked from 'package:prospectr':
-
-    msc</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following object is masked from 'package:caret':
-
-    R2</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following object is masked from 'package:stats':
-
-    loadings</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-✔ dplyr     1.1.4     ✔ readr     2.1.5
-✔ forcats   1.0.0     ✔ stringr   1.5.1
-✔ lubridate 1.9.4     ✔ tibble    3.2.1
-✔ purrr     1.0.4     ✔ tidyr     1.3.1
-── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::between()     masks data.table::between()
-✖ dplyr::filter()      masks stats::filter()
-✖ dplyr::first()       masks data.table::first()
-✖ lubridate::hour()    masks data.table::hour()
-✖ lubridate::isoweek() masks data.table::isoweek()
-✖ dplyr::lag()         masks stats::lag()
-✖ dplyr::last()        masks data.table::last()
-✖ purrr::lift()        masks caret::lift()
-✖ lubridate::mday()    masks data.table::mday()
-✖ lubridate::minute()  masks data.table::minute()
-✖ lubridate::month()   masks data.table::month()
-✖ lubridate::quarter() masks data.table::quarter()
-✖ lubridate::second()  masks data.table::second()
-✖ purrr::transpose()   masks data.table::transpose()
-✖ lubridate::wday()    masks data.table::wday()
-✖ lubridate::week()    masks data.table::week()
-✖ lubridate::yday()    masks data.table::yday()
-✖ lubridate::year()    masks data.table::year()
-ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors
-
-Attaching package: 'kableExtra'
-
-
-The following object is masked from 'package:dplyr':
-
-    group_rows</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Simple check:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>- Hemp data: 149 samples </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>- Best method: SNV + Savitzky-Golay </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>- Final analysis: Available </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>- Preprocessing analysis: Available </code></pre>
-</div>
-</div>
-<p>CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RF, random forest; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay; SVM, support vector machines,</p>
+<p>CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RF, random forest; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay; SVM, support vector machines</p>
 <section id="introduction" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">1</span> INTRODUCTION</h2>
 <p>Hemp (<em>Cannabis sativa</em> L.) is an annual crop with potential uses as a source of food or feed, derived from the grain, and fiber (bast or hurd), derived from the stalk. Hemp cultivars are commonly grown for one or both purposes and a cultivar may be called a grain, fiber, or dual-purpose type. Because of its nutritional importance, the protein concentration of a grain crop is a prime consideration for researchers, producers, and consumers. Whole hemp grain typically contains approximately 200-300 g kg<sup>−1</sup> protein <span class="citation" data-cites="ely_industrial_2022 barta_proteomic_2024 callaway_hempseed_2004 liu2023">(<a href="#ref-barta_proteomic_2024" role="doc-biblioref">Bárta et al., 2024</a>; <a href="#ref-callaway_hempseed_2004" role="doc-biblioref">Callaway, 2004</a>; <a href="#ref-ely_industrial_2022" role="doc-biblioref">Ely &amp; Fike, 2022</a>; <a href="#ref-liu2023" role="doc-biblioref">Liu et al., 2023</a>)</span>. Crude protein is often used as a proxy for the direct measurement of protein concentration and consists of the multiplication of nitrogen concentration by a conversion factor, often 6.25 <span class="citation" data-cites="hayes_measuring_2020">(<a href="#ref-hayes_measuring_2020" role="doc-biblioref">Hayes, 2020</a>)</span>.</p>
-<p>Near-infrared (NIR) spectroscopy (NIRS) technology is rapid, non-destructive, and inexpensive. It consists of the measurement of NIR radiation reflected and absorbed from a sample (the spectra) and the relation of the spectra to primary analytical values, typically obtained using wet chemistry assays, for components such as moisture, protein, fat, or fiber <span class="citation" data-cites="roberts_near-infrared_2004">(<a href="#ref-roberts_near-infrared_2004" role="doc-biblioref">Roberts et al., 2004</a>)</span>. NIRS technology has been used since the 1970’s to assess forage CP concentration <span class="citation" data-cites="reeves_potential_2012 williams_application_1975">(<a href="#ref-reeves_potential_2012" role="doc-biblioref">Reeves, 2012</a>; <a href="#ref-williams_application_1975" role="doc-biblioref">Williams, 1975</a>)</span>. A NIRS calibration set often consists of samples from diverse genotypes of one species grown in many environments encompassing the range of expected values from the analyte or analytes <span class="citation" data-cites="chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>)</span>.</p>
+<p>Near-infrared (NIR) spectroscopy (NIRS) technology is rapid, non-destructive, and inexpensive. It consists of the measurement of NIR radiation reflected and absorbed from a sample (the spectra) and the relation of the spectra to primary analytical values, typically obtained using wet chemistry assays, for components such as moisture, protein, fat, or fiber <span class="citation" data-cites="roberts_near-infrared_2004">(<a href="#ref-roberts_near-infrared_2004" role="doc-biblioref">Roberts et al., 2004</a>)</span>. NIRS technology has been used since the 1970’s to assess forage CP concentration <span class="citation" data-cites="reeves_potential_2012 williams_application_1975">(<a href="#ref-reeves_potential_2012" role="doc-biblioref">Reeves, 2012</a>; <a href="#ref-williams_application_1975" role="doc-biblioref">Williams, 1975</a>)</span>. A NIRS calibration set often consists of samples from diverse genotypes of one species grown in many environments encompassing the range of expected values from the analyte or analytes <span class="citation" data-cites="chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022a</a>)</span>.</p>
 <p>Partial least squares regression (PLSR) is a typical method used in the agricultural and food sciences to relate spectra to analyte <span class="citation" data-cites="roberts_near-infrared_2004">(<a href="#ref-roberts_near-infrared_2004" role="doc-biblioref">Roberts et al., 2004</a>)</span>. Partial least squares regression calculates components that maximize covariance between predictor and response variables. Partial least squares regression uses some number of components, often selected via cross-validation, to fit the regression model and is commonly used in spectroscopy because it tends to work well with highly correlated, noisy spectral data <span class="citation" data-cites="wold_pls-regression_2001">(<a href="#ref-wold_pls-regression_2001" role="doc-biblioref">Wold et al., 2001</a>)</span>.</p>
-<p>While PLSR is commonly used in agricultural applications, other algorithms may offer comparable or improved prediction accuracy. Support vector machines (SVM) and random forest (RF) algorithms have been utilized in spectroscopic applications, particularly where non-linear relationships exist between spectral features and analyte concentrations <span class="citation" data-cites="chinilin2023">(<a href="#ref-chinilin2023" role="doc-biblioref">Chinilin et al., 2023</a>)</span>. Comparing multiple algorithms helps ensure that the best approach is chosen.</p>
-<p>The biological validity of spectroscopic predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. For protein analysis, specific NIR regions are associated with distinct molecular vibrations: C-H stretch overtones from amino acid side chains (1180-1230 nm), N-H stretch overtones from peptide bonds (1480-1530 nm), and combination bands from protein backbone structures (2040-2070 nm). Developing models using only these biologically-relevant wavelengths can validate that predictions are based on true protein-spectral relationships rather than spurious correlations with other grain components.”</p>
+<p>While PLSR is commonly used in agricultural applications, other algorithms may offer comparable or improved prediction accuracy. Support vector machines (SVM) and random forest (RF) algorithms have been utilized in spectroscopic applications, particularly where non-linear relationships exist between spectral features and analyte concentrations <span class="citation" data-cites="chinilin2023">(<a href="#ref-chinilin2023" role="doc-biblioref">Chinilin et al., 2023</a>)</span>. Support vector machines apply non-linear kernel functions to capture relationships between spectral data and analyte concentrations, with studies demonstrating competitive performance with PLSR for protein prediction in stored wheat grains, achieving R² values of 0.903-0.989<span class="citation" data-cites="kamboj2022">(<a href="#ref-kamboj2022" role="doc-biblioref">Kamboj et al., 2022</a>)</span>. Random forest (RF) algorithms use ensemble learning to combine multiple decision trees,and has also been used to predict protein content in grains <span class="citation" data-cites="haruna2022 chadalavada2022">(<a href="#ref-chadalavada2022" role="doc-biblioref">Chadalavada et al., 2022b</a>; <a href="#ref-haruna2022" role="doc-biblioref">Haruna et al., 2022</a>)</span>. Comparing multiple algorithms helps ensure that the best approach is chosen.</p>
+<p>The biological validity of spectroscopic predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. For protein analysis, specific NIR regions are associated with distinct molecular vibrations: C-H stretch overtones from amino acid side chains (1180-1230 nm), N-H stretch overtones from peptide bonds (1480-1530 nm), and combination bands from protein backbone structures (2040-2070 nm). Developing models using only these biologically-relevant wavelengths can validate that predictions are based on true protein-spectral relationships rather than spurious correlations with other grain components.</p>
 <p>Non-destructive sampling of grain is attractive for plant breeders. A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed. In wheat and corn, grain protein content has been shown to be heritable <span class="citation" data-cites="giancaspro_genetic_2019 geyer_genetics_2022">(<a href="#ref-geyer_genetics_2022" role="doc-biblioref">Geyer et al., 2022</a>; <a href="#ref-giancaspro_genetic_2019" role="doc-biblioref">Giancaspro et al., 2019</a>)</span>. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.</p>
 <p>For this study, a benchtop NIR spectrometer was used to develop a model to predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR.</p>
 </section>
@@ -278,14 +199,14 @@ The following object is masked from 'package:dplyr':
 <h3 data-number="2.1" class="anchored" data-anchor-id="hemp-grain-sample-background"><span class="header-section-number">2.1</span> Hemp Grain Sample Background</h3>
 <p>Spectral data were obtained from whole (unground) hemp grain samples, harvested at maturity, collected from 2017–2021 from 18 cultivar trials in New York (NY) (149 samples). Grain samples were obtained by hand sampling or mechanical harvest and were cleaned of chaff and dried at 30 C for six days in a forced-air dryer. All CP values were expressed as concentration dry matter. In total, 149 samples from 38 cultivars were represented in the data set. Cultivars were grain or dual-purpose types and included both commercially available and experimental material. Seventy-eight samples were scanned and assayed in 2017, 19 in 2018, 24 in 2019, and 28 in 2021. More information about hemp cultivars and locations is available in Supplemental Table S1.</p>
 <div class="cell">
-<div id="tbl-hemp-provenance" class="cell quarto-float anchored">
+<div id="tbl-hemp-provenance" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-hemp-provenance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;1: Sample distribution by location and type
 </figcaption>
 <div aria-describedby="tbl-hemp-provenance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<table class="do-not-create-environment cell table table-sm table-striped small">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <caption>Tally of hemp cultivars and locations. Private cultivars are labeled ‘Cultivar1’, ‘Cultivar2’, etc., while experimental cultivars are labeled ‘Experimental1’, ‘Experimental2’, etc.</caption>
 <thead>
 <tr class="header">
@@ -666,7 +587,7 @@ Table&nbsp;1: Sample distribution by location and type
 <h3 data-number="2.5" class="anchored" data-anchor-id="model-development"><span class="header-section-number">2.5</span> Model Development</h3>
 <p>Training and testing sets were created by dividing samples by their laboratory CP concentration values into tertiles to ensure that a representative range of values was present in both training and testing sets. Within each tertile, 75% of the samples were randomly assigned to the training set and the remaining 25% were assigned to the testing set. For each training set, models were developed in the caret package using PLSR. In fitting the model, the number of components was optimized over a grid search from 1-20. Model performance was evaluated with 25 iterations of bootstrapping and minimized RMSE in selecting the number of components in the final model.</p>
 <p>Initially a number of common spectral preprocessing methods were tested by creating 100 training and testing sets, as described above. Spectral data were transformed by each of the following methods: 1) first derivative; 2) Savitzky-Golay (SG) using the first derivative, third order polynomial, and a window of size five; 3) gap-segment derivative using the first derivative, a gap of 11, and a segment size of five; 4) SNV; 5) standard normal variate following Savitzky-Golay (SNV-SG) using the same SG parameters as above; 6) SNV-detrend with second order polynomial; and 7) multiplicative scatter correction. For comparison, models were also developed using untransformed spectra.</p>
-<p>For each of these preprocessing methods, models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R<sup>2</sup>, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a “good” model varies depending upon the reference consulted, but for simplicity’s sake the standard established for an acceptable model was R<sup>2</sup> &gt; 0.80, an RPD greater than 2.5 and ideally greater than 3 (“good” to “excellent” quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set <span class="citation" data-cites="rawal_visible_2024 luce_prediction_2017 chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>; <a href="#ref-luce_prediction_2017" role="doc-biblioref">Luce et al., 2017</a>; <a href="#ref-rawal_visible_2024" role="doc-biblioref">Rawal et al., 2024</a>)</span>.</p>
+<p>For each of these preprocessing methods, models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R<sup>2</sup>, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a “good” model varies depending upon the reference consulted, but for simplicity’s sake the standard established for an acceptable model was R<sup>2</sup> &gt; 0.80, an RPD greater than 2.5 and ideally greater than 3 (“good” to “excellent” quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set <span class="citation" data-cites="rawal_visible_2024 luce_prediction_2017 chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022a</a>; <a href="#ref-luce_prediction_2017" role="doc-biblioref">Luce et al., 2017</a>; <a href="#ref-rawal_visible_2024" role="doc-biblioref">Rawal et al., 2024</a>)</span>.</p>
 <p>Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, it was used in all subsequent analyses.</p>
 <p>To optimze the final model for these data, researchers compared three machine learning algorithms: PLSR, SVM (with radial basis function kernel), and random forest (RF). This comparison was conducted to validate the choice of PLSR through empirical evaluation against alternative algorithms and to assess whether more complex modeling approaches might improve predictive accuracy.</p>
 <p>All algorithms were evaluated using identical training and testing set splits and the optimal preprocessing method identified in the initial screening. Each algorithm was permitted optimal hyperparameter tuning using R’s caret package to ensure fair comparison. One hundred random splits into training testing sets were performed for each algorithm, with model performance evaluated using the same metrics as the preprocessing comparison (RMSE, R², RPD, and RPIQ). Statistical significance of performance differences between algorithms was assessed using analysis of variance.</p>
@@ -681,14 +602,14 @@ Table&nbsp;1: Sample distribution by location and type
 <h3 data-number="3.1" class="anchored" data-anchor-id="laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory assay CP values</h3>
 <p>Laboratory assay CP concentration values are summarized in <a href="#tbl-protein-summary" class="quarto-xref">Table&nbsp;2</a>. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of -0.29) and two thirds of the samples contained more than 250 g kg <sup>-1</sup> CP.</p>
 <div class="cell">
-<div id="tbl-protein-summary" class="cell quarto-float anchored">
+<div id="tbl-protein-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-protein-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;2: Summary of laboratory-assayed CP values
 </figcaption>
 <div aria-describedby="tbl-protein-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<table class="do-not-create-environment cell table table-sm table-striped small">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <caption>Summary of Laboratory Assayed CP Values (g kg<sup>-1</sup>)</caption>
 <thead>
 <tr class="header">
@@ -727,14 +648,14 @@ Table&nbsp;2: Summary of laboratory-assayed CP values
 <h3 data-number="3.3" class="anchored" data-anchor-id="preprocessing-methods-comparison-1"><span class="header-section-number">3.3</span> Preprocessing methods comparison</h3>
 <p>All preprocessing methods outperformed untransformed spectral data, as shown in <a href="#tbl-preproc" class="quarto-xref">Table&nbsp;3</a>. The SNV-SG method had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.</p>
 <div class="cell">
-<div id="tbl-preproc" class="cell quarto-float anchored">
+<div id="tbl-preproc" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-preproc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 </figcaption>
 <div aria-describedby="tbl-preproc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<table class="do-not-create-environment cell table table-sm table-striped small">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <caption>Preprocessing Method Comparison (Mean ± SD)</caption>
 <colgroup>
 <col style="width: 40%">
@@ -755,59 +676,59 @@ Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">SNV + Savitzky-Golay</td>
-<td style="text-align: left;">10.4 ± 1.0</td>
-<td style="text-align: left;">0.822 ± 0.068</td>
-<td style="text-align: left;">2.43 ± 0.44</td>
-<td style="text-align: left;">3.91 ± 0.99</td>
+<td style="text-align: left;">10.3 ± 1.3</td>
+<td style="text-align: left;">0.829 ± 0.062</td>
+<td style="text-align: left;">2.48 ± 0.40</td>
+<td style="text-align: left;">4.03 ± 0.87</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Raw spectra</td>
-<td style="text-align: left;">10.5 ± 1.6</td>
-<td style="text-align: left;">0.824 ± 0.078</td>
-<td style="text-align: left;">2.44 ± 0.57</td>
-<td style="text-align: left;">3.93 ± 1.16</td>
+<td style="text-align: left;">First derivative</td>
+<td style="text-align: left;">10.4 ± 1.2</td>
+<td style="text-align: left;">0.826 ± 0.056</td>
+<td style="text-align: left;">2.45 ± 0.39</td>
+<td style="text-align: left;">3.98 ± 0.86</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">First derivative</td>
-<td style="text-align: left;">10.6 ± 1.5</td>
-<td style="text-align: left;">0.814 ± 0.084</td>
-<td style="text-align: left;">2.43 ± 0.56</td>
-<td style="text-align: left;">3.91 ± 1.18</td>
+<td style="text-align: left;">Raw spectra</td>
+<td style="text-align: left;">10.8 ± 1.5</td>
+<td style="text-align: left;">0.816 ± 0.063</td>
+<td style="text-align: left;">2.35 ± 0.41</td>
+<td style="text-align: left;">3.83 ± 0.87</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Savitzky-Golay smoothing</td>
-<td style="text-align: left;">10.6 ± 1.8</td>
-<td style="text-align: left;">0.820 ± 0.086</td>
-<td style="text-align: left;">2.44 ± 0.58</td>
-<td style="text-align: left;">3.93 ± 1.18</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">SNV + detrending</td>
-<td style="text-align: left;">10.9 ± 1.6</td>
-<td style="text-align: left;">0.817 ± 0.080</td>
-<td style="text-align: left;">2.33 ± 0.43</td>
-<td style="text-align: left;">3.75 ± 0.89</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Gap-segment derivative</td>
-<td style="text-align: left;">11.1 ± 1.4</td>
-<td style="text-align: left;">0.814 ± 0.076</td>
-<td style="text-align: left;">2.28 ± 0.38</td>
-<td style="text-align: left;">3.66 ± 0.82</td>
+<td style="text-align: left;">10.8 ± 1.5</td>
+<td style="text-align: left;">0.817 ± 0.063</td>
+<td style="text-align: left;">2.36 ± 0.40</td>
+<td style="text-align: left;">3.84 ± 0.88</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Standard normal variate (SNV)</td>
-<td style="text-align: left;">11.4 ± 2.4</td>
-<td style="text-align: left;">0.796 ± 0.114</td>
-<td style="text-align: left;">2.29 ± 0.54</td>
-<td style="text-align: left;">3.69 ± 1.05</td>
+<td style="text-align: left;">11.1 ± 1.7</td>
+<td style="text-align: left;">0.804 ± 0.068</td>
+<td style="text-align: left;">2.30 ± 0.43</td>
+<td style="text-align: left;">3.75 ± 0.88</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SNV + detrending</td>
+<td style="text-align: left;">11.1 ± 1.5</td>
+<td style="text-align: left;">0.807 ± 0.062</td>
+<td style="text-align: left;">2.29 ± 0.39</td>
+<td style="text-align: left;">3.72 ± 0.81</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gap-segment derivative</td>
+<td style="text-align: left;">11.2 ± 1.7</td>
+<td style="text-align: left;">0.805 ± 0.063</td>
+<td style="text-align: left;">2.28 ± 0.40</td>
+<td style="text-align: left;">3.70 ± 0.83</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Multiplicative scatter correction</td>
-<td style="text-align: left;">11.7 ± 2.2</td>
-<td style="text-align: left;">0.785 ± 0.111</td>
-<td style="text-align: left;">2.21 ± 0.47</td>
-<td style="text-align: left;">3.56 ± 0.96</td>
+<td style="text-align: left;">11.3 ± 1.6</td>
+<td style="text-align: left;">0.801 ± 0.067</td>
+<td style="text-align: left;">2.26 ± 0.39</td>
+<td style="text-align: left;">3.68 ± 0.86</td>
 </tr>
 </tbody>
 </table>
@@ -823,7 +744,7 @@ Table&nbsp;3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <h2 data-number="4" class="anchored" data-anchor-id="algorithm-comparison"><span class="header-section-number">4</span> Algorithm comparison</h2>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-algorithm-comparison" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-algorithm-comparison" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-algorithm-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="hemp_nir_paper_files/figure-html/fig-algorithm-comparison-1.png" class="img-fluid figure-img" width="672">
@@ -837,7 +758,7 @@ Figure&nbsp;1: Comparing algorithms
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<table class="table table-sm table-striped small">
+<table class="caption-top table table-sm table-striped small">
 <caption>Performance comparison of machine learning algorithms for hemp grain protein prediction</caption>
 <colgroup>
 <col style="width: 17%">
@@ -862,30 +783,30 @@ Figure&nbsp;1: Comparing algorithms
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Partial Least Squares</td>
-<td style="text-align: center;">10.243 (±1.122)</td>
-<td style="text-align: center;">0.832 (±0.045)</td>
-<td style="text-align: center;">2.42 (±0.39)</td>
-<td style="text-align: center;">3.99 (±1.02)</td>
-<td style="text-align: center;">83.3%</td>
-<td style="text-align: center;">100%</td>
+<td style="text-align: center;">10.447 (±1.322)</td>
+<td style="text-align: center;">0.819 (±0.065)</td>
+<td style="text-align: center;">2.41 (±0.39)</td>
+<td style="text-align: center;">3.84 (±0.92)</td>
+<td style="text-align: center;">86%</td>
+<td style="text-align: center;">99%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Random Forest</td>
-<td style="text-align: center;">12.994 (±1.821)</td>
-<td style="text-align: center;">0.722 (±0.075)</td>
-<td style="text-align: center;">1.9 (±0.21)</td>
-<td style="text-align: center;">3.11 (±0.61)</td>
-<td style="text-align: center;">33.3%</td>
-<td style="text-align: center;">100%</td>
+<td style="text-align: center;">13.685 (±1.57)</td>
+<td style="text-align: center;">0.697 (±0.095)</td>
+<td style="text-align: center;">1.83 (±0.25)</td>
+<td style="text-align: center;">2.91 (±0.61)</td>
+<td style="text-align: center;">24%</td>
+<td style="text-align: center;">92%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Support Vector Machine</td>
-<td style="text-align: center;">11.805 (±1.566)</td>
-<td style="text-align: center;">0.765 (±0.069)</td>
-<td style="text-align: center;">2.11 (±0.33)</td>
-<td style="text-align: center;">3.46 (±0.87)</td>
-<td style="text-align: center;">50%</td>
-<td style="text-align: center;">100%</td>
+<td style="text-align: center;">12.501 (±1.555)</td>
+<td style="text-align: center;">0.743 (±0.08)</td>
+<td style="text-align: center;">2.01 (±0.3)</td>
+<td style="text-align: center;">3.19 (±0.71)</td>
+<td style="text-align: center;">45%</td>
+<td style="text-align: center;">97%</td>
 </tr>
 </tbody>
 </table>
@@ -901,7 +822,7 @@ Figure&nbsp;1: Comparing algorithms
 <p>The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (<a href="#fig-model-calibration" class="quarto-xref">Figure&nbsp;2</a>).</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-model-calibration" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-model-calibration" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-model-calibration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="hemp_nir_paper_files/figure-html/fig-model-calibration-1.png" class="img-fluid figure-img" width="672">
@@ -916,7 +837,7 @@ Figure&nbsp;2: Decreasing RMSE with increasing number of components for 1000 tra
 <p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure&nbsp;3</a>. The means of the final models were: RMSE = NA, R<sup>2</sup> = NA, RPD = NA, and RPIQ = NA. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with % having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-performance-boxplot" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-performance-boxplot" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-performance-boxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="hemp_nir_paper_files/figure-html/fig-performance-boxplot-1.png" class="img-fluid figure-img" width="672">
@@ -931,7 +852,7 @@ Figure&nbsp;3: Final model testing set performance over 1000 iterations
 <p>Finally, the pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (<a href="#fig-validation-errors" class="quarto-xref">Figure&nbsp;4</a>). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-validation-errors" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-validation-errors" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-validation-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="hemp_nir_paper_files/figure-html/fig-validation-errors-1.png" class="img-fluid figure-img" width="672">
@@ -950,7 +871,7 @@ Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sampl
 <p>The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands. Five distinct absorption regions were selected based on established vibrational assignments: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 1660-1700 nm (C-H stretch 1st overtone from aliphatic amino acids), 2040-2070 nm (N-H + C-N combination bands from protein backbone), and 2270-2310 nm (C-H + C-H combination bands from amino acid structural features).</p>
 <div class="cell">
 <div class="cell-output-display">
-<table class="table table-sm table-striped small">
+<table class="caption-top table table-sm table-striped small">
 <caption>Enhanced performance comparison demonstrating biological validation through protein-specific wavelength selection</caption>
 <colgroup>
 <col style="width: 20%">
@@ -993,7 +914,7 @@ Figure&nbsp;4: Testing set prediction errors on a per-sample basis. Actual sampl
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-model-comparison" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-model-comparison" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-model-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="hemp_nir_paper_files/figure-html/fig-model-comparison-1.png" class="img-fluid figure-img" width="672">
@@ -1021,7 +942,7 @@ Figure&nbsp;5: Comparing models developed using full and protein-specific spectr
 <section id="conflict-of-interest" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-02 09:27:02<br>
+<p><strong>Generated:</strong> 2025-07-02 12:12:16<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 
@@ -1039,7 +960,10 @@ Bárta, J., Roudnický, P., Jarošová, M., Zdráhal, Z., Stupková, A., Bártov
 Callaway, J. C. (2004). Hempseed as a nutritional resource: <span>An</span> overview. <em>Euphytica</em>, <em>140</em>(1), 65–72. <a href="https://doi.org/10.1007/s10681-004-4811-6">https://doi.org/10.1007/s10681-004-4811-6</a>
 </div>
 <div id="ref-chadalavada_nir_2022" class="csl-entry" role="listitem">
-Chadalavada, K., Anbazhagan, K., Ndour, A., Choudhary, S., Palmer, W., Flynn, J. R., Mallayee, S., Pothu, S., Prasad, K. V. S. V., Varijakshapanikar, P., Jones, C. S., &amp; Kholová, J. (2022). <span>NIR</span> <span>Instruments</span> and <span>Prediction</span> <span>Methods</span> for <span>Rapid</span> <span>Access</span> to <span>Grain</span> <span>Protein</span> <span>Content</span> in <span>Multiple</span> <span>Cereals</span>. <em>Sensors (Basel, Switzerland)</em>, <em>22</em>(10). <a href="https://doi.org/10.3390/s22103710">https://doi.org/10.3390/s22103710</a>
+Chadalavada, K., Anbazhagan, K., Ndour, A., Choudhary, S., Palmer, W., Flynn, J. R., Mallayee, S., Pothu, S., Prasad, K. V. S. V., Varijakshapanikar, P., Jones, C. S., &amp; Kholová, J. (2022a). <span>NIR</span> <span>Instruments</span> and <span>Prediction</span> <span>Methods</span> for <span>Rapid</span> <span>Access</span> to <span>Grain</span> <span>Protein</span> <span>Content</span> in <span>Multiple</span> <span>Cereals</span>. <em>Sensors (Basel, Switzerland)</em>, <em>22</em>(10). <a href="https://doi.org/10.3390/s22103710">https://doi.org/10.3390/s22103710</a>
+</div>
+<div id="ref-chadalavada2022" class="csl-entry" role="listitem">
+Chadalavada, K., Anbazhagan, K., Ndour, A., Choudhary, S., Palmer, W., Flynn, J. R., Mallayee, S., Pothu, S., Prasad, K. V. S. V., Varijakshapanikar, P., Jones, C. S., &amp; Kholová, J. (2022b). NIR Instruments and Prediction Methods for Rapid Access to Grain Protein Content in Multiple Cereals. <em>Sensors (Basel, Switzerland)</em>, <em>22</em>(10). <a href="https://doi.org/10.3390/s22103710">https://doi.org/10.3390/s22103710</a>
 </div>
 <div id="ref-chinilin2023" class="csl-entry" role="listitem">
 Chinilin, A. V., Vindeker, G. V., &amp; Savin, I. Yu. (2023). Vis-NIR Spectroscopy for Soil Organic Carbon Assessment: A Meta-Analysis. <em>Eurasian Soil Science</em>, <em>56</em>(11), 1605–1617. <a href="https://doi.org/10.1134/S1064229323601841">https://doi.org/10.1134/S1064229323601841</a>
@@ -1056,8 +980,14 @@ Geyer, M., Mohler, V., &amp; Hartl, L. (2022). Genetics of the <span>Inverse</sp
 <div id="ref-giancaspro_genetic_2019" class="csl-entry" role="listitem">
 Giancaspro, A., Giove, S. L., Blanco, A., &amp; Gadaleta, A. (2019). Genetic <span>Variation</span> for <span>Protein</span> <span>Content</span> and <span>Yield</span>-<span>Related</span> <span>Traits</span> in a <span>Durum</span> <span>Population</span> <span>Derived</span> <span>From</span> an <span>Inter</span>-<span>Specific</span> <span>Cross</span> <span>Between</span> <span>Hexaploid</span> and <span>Tetraploid</span> <span>Wheat</span> <span>Cultivars</span>. <em>Frontiers in Plant Science</em>, <em>10</em>. <a href="https://doi.org/10.3389/fpls.2019.01509">https://doi.org/10.3389/fpls.2019.01509</a>
 </div>
+<div id="ref-haruna2022" class="csl-entry" role="listitem">
+Haruna, S. A., Li, H., Wei, W., Geng, W., Yao-Say Solomon Adade, S., Zareef, M., Ivane, N. M. A., &amp; Chen, Q. (2022). Intelligent evaluation of free amino acid and crude protein content in raw peanut seed kernels using NIR spectroscopy paired with multivariable calibration. <em>Analytical methods</em>, <em>14</em>(31), 29992989. <a href="https://doi.org/10.1039/d2ay00875k">https://doi.org/10.1039/d2ay00875k</a>
+</div>
 <div id="ref-hayes_measuring_2020" class="csl-entry" role="listitem">
 Hayes, M. (2020). Measuring <span>Protein</span> <span>Content</span> in <span>Food</span>: <span>An</span> <span>Overview</span> of <span>Methods</span>. <em>Foods</em>, <em>9</em>(10), 1340. <a href="https://doi.org/10.3390/foods9101340">https://doi.org/10.3390/foods9101340</a>
+</div>
+<div id="ref-kamboj2022" class="csl-entry" role="listitem">
+Kamboj, U., Guha, P., &amp; Mishra, S. (2022). Comparison of PLSR, MLR, SVM regression methods for determination of crude protein and carbohydrate content in stored wheat using near infrared spectroscopy. <em>Materials Today: Proceedings</em>, <em>48</em>, 576582. <a href="https://doi.org/10.1016/j.matpr.2021.04.540">https://doi.org/10.1016/j.matpr.2021.04.540</a>
 </div>
 <div id="ref-li_quantitative_2020" class="csl-entry" role="listitem">
 Li, Y., Huang, Y., Xia, J., Xiong, Y., &amp; Min, S. (2020). Quantitative analysis of honey adulteration by spectrum analysis combined with several high-level data fusion strategies. <em>Vibrational Spectroscopy</em>, <em>108</em>, 103060. <a href="https://doi.org/10.1016/j.vibspec.2020.103060">https://doi.org/10.1016/j.vibspec.2020.103060</a>
@@ -1125,18 +1055,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -1168,7 +1087,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp('/' + window.location.host + '/');
@@ -1176,7 +1115,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
@@ -1273,7 +1212,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
-      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {

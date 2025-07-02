@@ -165,7 +165,7 @@ list(
   
   tar_target(
     fig_vip_scores,
-    create_vip_plot(spectral_analysis)
+    create_vip_plot(spectral_analysis, use_points = TRUE)
   ),
   
   tar_target(

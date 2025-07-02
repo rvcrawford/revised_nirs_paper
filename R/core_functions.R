@@ -813,9 +813,9 @@ select_protein_wavelengths <- function(data) {
   protein_ranges <- list(
     list(start = 1180, end = 1230, name = "C-H stretch 2nd overtone (amino acids)"),
     list(start = 1480, end = 1530, name = "N-H stretch 1st overtone (peptide bonds)"),
-    list(start = 1660, end = 1700, name = "C-H stretch 1st overtone (aliphatic amino acids)"),
-    list(start = 2040, end = 2070, name = "N-H + C-N combination (protein backbone)"),
-    list(start = 2270, end = 2310, name = "C-H + C-H combination (amino acid structure)")
+    # list(start = 1660, end = 1700, name = "C-H stretch 1st overtone (aliphatic amino acids)"),
+    list(start = 2040, end = 2070, name = "N-H + C-N combination (protein backbone)")
+    # list(start = 2270, end = 2310, name = "C-H + C-H combination (amino acid structure)")
   )
   
   wavelength_info <- extract_wavelengths(data)
@@ -1223,7 +1223,7 @@ create_algorithm_comparison_plot <- function(multi_algo_analysis) {
   
   plot_data <- multi_algo_analysis$raw_results
   
-  ggplot(plot_data, aes(x = algorithm, y = rmse, fill = algorithm)) +
+  ggplot(plot_data, aes(x = algorithm, y = rmse)) +
     geom_boxplot(alpha = 0.7) +
     labs(
       title = "Algorithm Performance Comparison",
@@ -1235,13 +1235,21 @@ create_algorithm_comparison_plot <- function(multi_algo_analysis) {
     theme(legend.position = "none")
 }
 
-create_vip_plot <- function(spectral_analysis, threshold = 1.0) {
-  # Create VIP scores plot
+create_vip_plot <- function(spectral_analysis, threshold = 1.0, use_points = FALSE) {
+  # Create VIP scores plot with option for points or lines
   
   vip_data <- spectral_analysis$vip_scores
   
-  ggplot(vip_data, aes(x = wavelength, y = vip_score)) +
-    geom_line(color = "steelblue", alpha = 0.7) +
+  p <- ggplot(vip_data, aes(x = wavelength, y = vip_score))
+  
+  # Use points or lines based on parameter
+  if (use_points) {
+    p <- p + geom_point(color = "steelblue", alpha = 0.7, size = 1.5)
+  } else {
+    p <- p + geom_line(color = "steelblue", alpha = 0.7)
+  }
+  
+  p <- p +
     geom_point(data = subset(vip_data, important), 
                aes(color = "VIP ≥ 1.0"), size = 2) +
     geom_hline(yintercept = threshold, linetype = "dashed", color = "red", alpha = 0.8) +
@@ -1254,10 +1262,11 @@ create_vip_plot <- function(spectral_analysis, threshold = 1.0) {
     ) +
     theme_minimal() +
     theme(legend.position = "bottom")
+  
+  return(p)
 }
-
 create_model_comparison_plot <- function(spectral_analysis, protein_focused_analysis) {
-  # Create side-by-side model comparison plot
+  # Create side-by-side model comparison plot with lines for full spectrum, points for protein-focused
   
   # Combine VIP data from both models
   full_vip <- spectral_analysis$vip_scores
@@ -1268,20 +1277,23 @@ create_model_comparison_plot <- function(spectral_analysis, protein_focused_anal
   
   combined_vip <- rbind(full_vip, protein_vip)
   
-  ggplot(combined_vip, aes(x = wavelength, y = vip_score, color = model)) +
-    geom_line(alpha = 0.7) +
+  ggplot(combined_vip, aes(x = wavelength, y = vip_score)) +
+    # Lines for full spectrum
+    geom_line(data = subset(combined_vip, model == "Full Spectrum"), 
+              color = "#FF6B6B", alpha = 0.7) +
+    # Points for protein-focused
+    geom_point(data = subset(combined_vip, model == "Protein-Focused"), 
+               color = "#4ECDC4", alpha = 0.8, size = 2) +
     geom_hline(yintercept = 1.0, linetype = "dashed", color = "red", alpha = 0.8) +
     facet_wrap(~model, scales = "free_x") +
     labs(
       title = "VIP Scores: Full Spectrum vs Protein-Focused Models",
       x = "Wavelength (nm)",
-      y = "VIP Score",
-      color = "Model"
+      y = "VIP Score"
     ) +
     theme_minimal() +
-    theme(legend.position = "bottom")
+    theme(legend.position = "none")
 }
-
 # =============================================================================
 # FIXED PLOTTING FUNCTIONS FOR FIGURES 2 AND 3
 # Add these functions to your R/core_functions.R file

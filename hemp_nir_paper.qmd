@@ -119,7 +119,7 @@ cat("- Final analysis:", ifelse(is.null(final_model_analysis), "NULL", "Availabl
 cat("- Preprocessing analysis:", ifelse(is.null(preprocessing_analysis), "NULL", "Available"), "\n")
 ```
 
-CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay
+CP, crude protein; NIR, near-infrared; NIRS, Near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RF, random forest; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay; SVM, support vector machines,
 
 ## INTRODUCTION
 

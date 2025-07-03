@@ -5,19 +5,16 @@
 .Ruserdata
 _targets/
 renv/library/
-
 # Generated output files (but keep docs/)
 *.html
 *_files/
 pastable_figures/
 nirs_revisions_formatted.docx
-
 # Allow docs folder for GitHub Pages
 !docs/
 !docs/**
-
 # System files
 .DS_Store
 Thumbs.db
-
 /.quarto/
+_targets.zip

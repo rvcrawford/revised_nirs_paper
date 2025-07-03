@@ -4894,13 +4894,12 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#laboratory-assay-cp-values" id="toc-laboratory-assay-cp-values" class="nav-link" data-scroll-target="#laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory assay CP values</a></li>
   <li><a href="#preprocessing-methods-comparison" id="toc-preprocessing-methods-comparison" class="nav-link" data-scroll-target="#preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing methods comparison</a></li>
-  <li><a href="#preprocessing-methods-comparison-1" id="toc-preprocessing-methods-comparison-1" class="nav-link" data-scroll-target="#preprocessing-methods-comparison-1"><span class="header-section-number">3.3</span> Preprocessing methods comparison</a></li>
+  <li><a href="#algorithm-comparison" id="toc-algorithm-comparison" class="nav-link" data-scroll-target="#algorithm-comparison"><span class="header-section-number">3.3</span> Algorithm comparison</a></li>
+  <li><a href="#plsr-full-spectrum-model-development" id="toc-plsr-full-spectrum-model-development" class="nav-link" data-scroll-target="#plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR full spectrum model development</a></li>
+  <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">3.5</span> Protein-Focused Model Validation</a></li>
   </ul></li>
-  <li><a href="#algorithm-comparison" id="toc-algorithm-comparison" class="nav-link" data-scroll-target="#algorithm-comparison"><span class="header-section-number">4</span> Algorithm comparison</a></li>
-  <li><a href="#final-model-development-and-summary" id="toc-final-model-development-and-summary" class="nav-link" data-scroll-target="#final-model-development-and-summary"><span class="header-section-number">5</span> Final model development and summary</a></li>
-  <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</a></li>
-  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments"><span class="header-section-number">7</span> ACKNOWLEDGMENTS</a></li>
-  <li><a href="#conflict-of-interest" id="toc-conflict-of-interest" class="nav-link" data-scroll-target="#conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</a></li>
+  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments"><span class="header-section-number">4</span> ACKNOWLEDGMENTS</a></li>
+  <li><a href="#conflict-of-interest" id="toc-conflict-of-interest" class="nav-link" data-scroll-target="#conflict-of-interest"><span class="header-section-number">5</span> CONFLICT OF INTEREST</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="hemp_nir_paper.docx"><i class="bi bi-file-word"></i>MS Word</a></li></ul></div></nav>
     </div>
@@ -5331,7 +5330,7 @@ Table 1: Sample distribution by location and type
 <p>Initially a number of common spectral preprocessing methods were tested by creating 100 training and testing sets, as described above. Spectral data were transformed by each of the following methods: 1) first derivative; 2) Savitzky-Golay (SG) using the first derivative, third order polynomial, and a window of size five; 3) gap-segment derivative using the first derivative, a gap of 11, and a segment size of five; 4) SNV; 5) standard normal variate following Savitzky-Golay (SNV-SG) using the same SG parameters as above; 6) SNV-detrend with second order polynomial; and 7) multiplicative scatter correction. For comparison, models were also developed using untransformed spectra.</p>
 <p>For each of these preprocessing methods, PLSR models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R<sup>2</sup>, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a “good” model varies depending upon the reference consulted, but for simplicity’s sake the standard established for an acceptable model was R<sup>2</sup> &gt; 0.80, an RPD greater than 2.5 and ideally greater than 3 (“good” to “excellent” quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set <span class="citation" data-cites="rawal_visible_2024 luce_prediction_2017 chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>; <a href="#ref-luce_prediction_2017" role="doc-biblioref">Luce et al., 2017</a>; <a href="#ref-rawal_visible_2024" role="doc-biblioref">Rawal et al., 2024</a>)</span>.</p>
 <p>Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, it was used in all subsequent analyses.</p>
-<p>To optimze the final model for these data, researchers compared three machine learning algorithms: PLSR, SVM (with radial basis function kernel), and random forest (RF). This comparison was conducted to validate the choice of PLSR through empirical evaluation against alternative algorithms and to assess whether more complex modeling approaches might improve predictive accuracy.</p>
+<p>To select an algorithm to fit a final model for these data, researchers compared three machine learning algorithms: PLSR, SVM (with radial basis function kernel), and random forest (RF). This comparison was conducted to validate the choice of PLSR through empirical evaluation against alternative algorithms and to assess whether more complex modeling approaches might improve predictive accuracy.</p>
 <p>All algorithms were evaluated using identical training and testing set splits and the optimal preprocessing method identified in the initial screening. Each algorithm was permitted optimal hyperparameter tuning using R’s caret package to ensure fair comparison. One hundred random splits into training sets and testing sets were performed for each algorithm, with model performance evaluated using the same metrics as the preprocessing comparison (RMSE, R², RPD, and RPIQ). Statistical significance of performance differences between algorithms was assessed using analysis of variance.</p>
 <p>Using the optimal preprocessing method identified above, one thousand training and testing sets were generated and models were developed. The larger number of iterations was feasible once the preprocessing method was selected, allowing for more robust performance estimates. Performance on the testing sets was summarized with RMSE, R<sup>2</sup>, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.</p>
 <p>To validate the biological basis of spectroscopic predictions and ensure that models were responding to protein-related spectral features rather than chance correlations, a protein-focused model was developed using the same PLSR methodology as the full-spectrum model but restricted to three protein-relevant bands wavelengths. Performance was compared to the full-spectrum model to assess whether targeted wavelength selection could maintain prediction accuracy while providing greater biological interpretability.</p>
@@ -5383,10 +5382,6 @@ Table 2: Summary of laboratory-assayed CP values
 </section>
 <section id="preprocessing-methods-comparison" class="level3" data-number="3.2">
 <h3 data-number="3.2" class="anchored" data-anchor-id="preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing methods comparison</h3>
-<p>All preprocessing methods outperformed untransformed spectral data, as shown in <a href="#tbl-preproc" class="quarto-xref">Table 3</a>. The SNV-SG method had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.</p>
-</section>
-<section id="preprocessing-methods-comparison-1" class="level3" data-number="3.3">
-<h3 data-number="3.3" class="anchored" data-anchor-id="preprocessing-methods-comparison-1"><span class="header-section-number">3.3</span> Preprocessing methods comparison</h3>
 <p>All preprocessing methods outperformed untransformed spectral data, as shown in <a href="#tbl-preproc" class="quarto-xref">Table 3</a>. The SNV-SG method had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.</p>
 <div class="cell">
 <div id="tbl-preproc" class="cell quarto-float quarto-figure quarto-figure-center anchored">
@@ -5480,9 +5475,8 @@ Table 3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 </div>
 <p>From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples <span class="citation" data-cites="barnes_standard_1989">(<a href="#ref-barnes_standard_1989" role="doc-biblioref">Barnes et al., 1989</a>)</span>. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal’s shape and features <span class="citation" data-cites="li_quantitative_2020 luo_properties_2005">(<a href="#ref-li_quantitative_2020" role="doc-biblioref">Li et al., 2020</a>; <a href="#ref-luo_properties_2005" role="doc-biblioref">Luo et al., 2005</a>)</span>. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise <span class="citation" data-cites="rinnan_review_2009">(<a href="#ref-rinnan_review_2009" role="doc-biblioref">Rinnan et al., 2009</a>)</span>. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.</p>
 </section>
-</section>
-<section id="algorithm-comparison" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="algorithm-comparison"><span class="header-section-number">4</span> Algorithm comparison</h2>
+<section id="algorithm-comparison" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="algorithm-comparison"><span class="header-section-number">3.3</span> Algorithm comparison</h3>
 <div class="cell">
 <div id="tbl-algorithm-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -5550,8 +5544,8 @@ Table 4: Performance comparison of machine learning algorithms for hemp grain p
 </div>
 <p>The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (<a href="#tbl-algorithm-comparison" class="quarto-xref">Table 4</a>). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantage. The superior performance of PLSR validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p &lt; 0.05), indicating robust performance differences despite the relatively modest sample size.</p>
 </section>
-<section id="final-model-development-and-summary" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="final-model-development-and-summary"><span class="header-section-number">5</span> Final model development and summary</h2>
+<section id="plsr-full-spectrum-model-development" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR full spectrum model development</h3>
 <p>The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (<a href="#fig-model-calibration" class="quarto-xref">Figure 1</a>).</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -5567,7 +5561,7 @@ Figure 1: Decreasing RMSE with increasing number of components for 1000 trainin
 </div>
 </div>
 </div>
-<p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure 2</a>. The means of the final models were: RMSE = NA, R<sup>2</sup> = NA, RPD = NA, and RPIQ = NA. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with % having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
+<p>The performance of the final models on the testing sets are summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure 2</a>. The means of the final models were: RMSE = 9.94, R<sup>2</sup> = 0.84, RPD = 2.5, and RPIQ = 3.94. Seventy-four percent of the models had, at minimum, the ability to distinguish between high and low values with % having the ability for quantitative prediction. Despite the generally good model performance, a subset of poor models can be seen in the boxplots.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-performance-boxplot" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -5600,8 +5594,8 @@ Figure 3: Testing set prediction errors on a per-sample basis. Actual sample va
 <p>The 15 (10%) best and 15 worst predicted samples as measured by the mean absolute error of prediction were identified and their backgrounds examined. Overall, half of the samples in the data set came from Ithaca, NY (“Ithaca”), while 28% were collected from Geneva, NY (“Geneva”) Table 3. However, of the 15 worst-predicted samples, nine were from Geneva, while three of the 15 best-predicted samples were from Geneva (by contrast, seven of the best-predicted and five of the worst-predicted samples came from Ithaca). Overall, samples from Geneva had the highest mean absolute error of prediction among locations, 61% greater than samples from Ithaca and 155% greater than samples from Freeville, NY (the only locations where more than 20 samples were assayed).</p>
 <p>Trials in Geneva and Ithaca were generally planted and harvested near the same date, and samples were assayed with the NIRS instrument within the same few weeks between field seasons. The likeliest explanation is variation in sample-handling, particularly harvesting and grain-cleaning. However, the exact reason for these differences is unknowable.</p>
 </section>
-<section id="protein-focused-model-validation" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="protein-focused-model-validation"><span class="header-section-number">6</span> Protein-Focused Model Validation</h2>
+<section id="protein-focused-model-validation" class="level3" data-number="3.5">
+<h3 data-number="3.5" class="anchored" data-anchor-id="protein-focused-model-validation"><span class="header-section-number">3.5</span> Protein-Focused Model Validation</h3>
 <p>The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -5668,14 +5662,15 @@ Figure 4: Comparing models developed using full and protein-specific spectra
 <p>The biological validation of spectroscopic predictions opens new possibilities for accelerating hemp protein improvement through plant breeding. The non-destructive nature of NIRS allows breeders to analyze individual seeds while preserving their viability for planting, enabling selection decisions based on protein content before committing land and resources to field evaluation.</p>
 <p>For genomic selection programs, the ability to phenotype large populations (thousands of individuals) cost-effectively using NIRS could substantially improve the accuracy of genomic selection for protein content, accelerating genetic gains compared to traditional phenotyping approaches, as they are limited by analytical cost and throughput. The heritability of grain protein content in related cereals (wheat, barley) ranges from 0.6-0.8, suggesting that genetic improvement in hemp protein content is achievable with adequate phenotyping. NIRS provides the phenotyping capability necessary to exploit this genetic variation, particularly in early generation selection where large numbers of low-protein genotypes can be efficiently eliminated before expensive field testing.</p>
 </section>
-<section id="acknowledgments" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="acknowledgments"><span class="header-section-number">7</span> ACKNOWLEDGMENTS</h2>
+</section>
+<section id="acknowledgments" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="acknowledgments"><span class="header-section-number">4</span> ACKNOWLEDGMENTS</h2>
 <p>This work would not have been possible without the efforts of the field staff, undergraduate, and graduate students who planted, maintained, monitored and harvested these trials. Funding was provided by New York State through a grant from Empire State Development (AC477). We are grateful to those who provided seed for this project, including: Uniseeds, Verve Seeds, Winterfox Farms, International Hemp, Fiacre Seeds, and KonopiUS.</p>
 </section>
-<section id="conflict-of-interest" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">8</span> CONFLICT OF INTEREST</h2>
+<section id="conflict-of-interest" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">5</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-03 13:24:42<br>
+<p><strong>Generated:</strong> 2025-07-03 14:41:56<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

@@ -3,6 +3,21 @@ title: Near Infrared Spectroscopy Predicts Crude Protein Concentration in Hemp G
 execute:
   freeze: auto
   echo: false
+
+format:
+  html:
+    theme: default
+    toc: true
+    toc-depth: 3
+    embed-resources: true
+    fig-width: 8
+    fig-height: 6
+  docx:
+    toc: true
+    fig-width: 6.5
+    fig-height: 4.5
+    prefer-html: false
+  
 author:
   - name: Ryan V. Crawford
     orcid: 0009-0006-3052-3269
@@ -123,7 +138,7 @@ Partial least squares regression (PLSR) is a typical method used in the agricult
 
 While PLSR is commonly used in agricultural applications, other algorithms may offer comparable or improved prediction accuracy. Support vector machines (SVM) and random forest (RF) algorithms have been utilized in spectroscopic applications, particularly where non-linear relationships exist between spectral features and analyte concentrations [@chinilin2023]. Support vector machines apply non-linear kernel functions to capture relationships between spectral data and analyte concentrations, with studies demonstrating competitive performance with PLSR for protein prediction in stored wheat grains [@kamboj2022]. Random forest (RF) algorithms use ensemble learning to combine multiple decision trees and has been used to predict protein content in grains [@chadalavada2022; @haruna2022]. Comparing multiple algorithms helps ensure that the best approach is chosen.
 
-The biological validity of spectroscopic predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. For protein analysis, specific NIR regions are associated with distinct molecular vibrations: . Developing models using biologically-relevant wavelengths can validate that predictions are based on true protein-spectral relationships rather than spurious correlations with other grain components. Three spectral regions with established vibrational assignments are: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 2040-2070 nm (N-H + C-N combination bands) [@köllmann2023; @shi2022]. These models may also be more readily transferable between instruments because they attempt to discard noisy, irrelevant portions of the spectra [@wang_nirs-based_2025].
+The biological validity of spectroscopic predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. Models developed using biologically-relevant wavelengths are evidence that predictions are based on true protein-spectral relationships rather than spurious correlations with other grain components. Three spectral regions with established vibrational assignments are: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 2040-2070 nm (N-H + C-N combination bands) [@köllmann2023; @shi2022]. These models may also be more readily transferable between instruments because they discard noisy, irrelevant portions of the spectra [@wang_nirs-based_2025].
 
 Non-destructive sampling of grain is attractive for plant breeders. A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed. In wheat and corn, grain protein content has been shown to be heritable [@giancaspro_genetic_2019; @geyer_genetics_2022]. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.
 
@@ -177,11 +192,11 @@ Analyses of variance were performed for each of these metrics in order to compar
 
 To optimze the final model for these data, researchers compared three machine learning algorithms: PLSR, SVM (with radial basis function kernel), and random forest (RF). This comparison was conducted to validate the choice of PLSR through empirical evaluation against alternative algorithms and to assess whether more complex modeling approaches might improve predictive accuracy.
 
-All algorithms were evaluated using identical training and testing set splits and the optimal preprocessing method identified in the initial screening. Each algorithm was permitted optimal hyperparameter tuning using R's caret package to ensure fair comparison. One hundred random splits into training testing sets were performed for each algorithm, with model performance evaluated using the same metrics as the preprocessing comparison (RMSE, R², RPD, and RPIQ). Statistical significance of performance differences between algorithms was assessed using analysis of variance.
+All algorithms were evaluated using identical training and testing set splits and the optimal preprocessing method identified in the initial screening. Each algorithm was permitted optimal hyperparameter tuning using R's caret package to ensure fair comparison. One hundred random splits into training sets and testing sets were performed for each algorithm, with model performance evaluated using the same metrics as the preprocessing comparison (RMSE, R², RPD, and RPIQ). Statistical significance of performance differences between algorithms was assessed using analysis of variance.
 
 Using the optimal preprocessing method identified above, one thousand training and testing sets were generated and models were developed. The larger number of iterations was feasible once the preprocessing method was selected, allowing for more robust performance estimates. Performance on the testing sets was summarized with RMSE, R^2^, RPD, and RPIQ. The pattern of errors, expressed as the difference between the actual and predicted values for a given sample, was examined.
 
-To validate the biological basis of spectroscopic predictions and ensure that models were responding to protein-related spectral features rather than spurious correlations, a protein-focused model was developed using the same PLSR methodology as the full-spectrum model but restricted to three protein-relevant bands wavelengths. Performance was compared to the full-spectrum model to assess whether targeted wavelength selection could maintain prediction accuracy while providing greater biological interpretability.
+To validate the biological basis of spectroscopic predictions and ensure that models were responding to protein-related spectral features rather than chance correlations, a protein-focused model was developed using the same PLSR methodology as the full-spectrum model but restricted to three protein-relevant bands wavelengths. Performance was compared to the full-spectrum model to assess whether targeted wavelength selection could maintain prediction accuracy while providing greater biological interpretability.
 
 ## RESULTS AND DISCUSSION
 
@@ -216,20 +231,20 @@ From the literature, these results are readily explained. Standard normal variat
 ## Algorithm comparison
 
 ```{r}
-#| label: fig-algorithm-comparison
-#| fig-cap: Comparing algorithms
-
-fig_algorithm_comparison
+# #| label: fig-algorithm-comparison
+# #| fig-cap: Comparing algorithms
+# 
+# fig_algorithm_comparison
 ```
 
 ```{r}
-#| label: table-algorithm-comparison
+#| label: tbl-algorithm-comparison
 #| fig-cap: Comparing algorithms
 
 table_algorithm_comparison
 ```
 
-The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (@fig-algorithm-comparison, @table-algorithm-comparison). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantage. The superior performance of PLSR validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p \< 0.05), indicating robust performance differences despite the relatively modest sample size.
+The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (@tbl-algorithm-comparison). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantage. The superior performance of PLSR validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p \< 0.05), indicating robust performance differences despite the relatively modest sample size.
 
 ## Final model development and summary
 
@@ -262,7 +277,7 @@ fig_validation_errors
 
 The 15 (10%) best and 15 worst predicted samples as measured by the mean absolute error of prediction were identified and their backgrounds examined. Overall, half of the samples in the data set came from Ithaca, NY ("Ithaca"), while 28% were collected from Geneva, NY ("Geneva") Table 3. However, of the 15 worst-predicted samples, nine were from Geneva, while three of the 15 best-predicted samples were from Geneva (by contrast, seven of the best-predicted and five of the worst-predicted samples came from Ithaca). Overall, samples from Geneva had the highest mean absolute error of prediction among locations, 61% greater than samples from Ithaca and 155% greater than samples from Freeville, NY (the only locations where more than 20 samples were assayed).
 
-Trials in Geneva and Ithaca were generally planted and harvested near the same date, and samples were analyzed within the same few weeks between field seasons. The likeliest explanation is variation in sample-handling, particularly harvesting and grain-cleaning. However, the exact reason for these differences is unknowable.
+Trials in Geneva and Ithaca were generally planted and harvested near the same date, and samples were assayed with the NIRS instrument within the same few weeks between field seasons. The likeliest explanation is variation in sample-handling, particularly harvesting and grain-cleaning. However, the exact reason for these differences is unknowable.
 
 ## Protein-Focused Model Validation
 

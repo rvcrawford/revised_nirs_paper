@@ -150,8 +150,8 @@ apply_preprocessing <- function(spectra_matrix, method = 1) {
   # Apply preprocessing
   processed <- switch(method,
                       "1" = spectra_matrix,  # Raw
-                      "2" = prospectr::savitzkyGolay(spectra_matrix, m = 1, p = 3, w = 5),  # First derivative
-                      "3" = prospectr::savitzkyGolay(spectra_matrix, m = 0, p = 3, w = 5),  # SG smoothing
+                      "2" = t(diff(t(spectra_matrix), diff = 1)),  # First derivative
+                      "3" = prospectr::savitzkyGolay(spectra_matrix, m = 1, p = 3, w = 5),  # SG smoothing
                       "4" = prospectr::gapDer(spectra_matrix, m = 1, w = 11, s = 5),  # Gap-segment
                       "5" = prospectr::standardNormalVariate(spectra_matrix),  # SNV
                       "6" = {  # SNV + SG
@@ -437,51 +437,167 @@ run_final_modeling <- function(hemp_data, best_method, n_iterations = 10) {
     method = best_method
   ))
 }
-analyze_final_model <- function(final_model_results) {
-  # Analyze final model performance
-  
-  metrics <- final_model_results$metrics
-  predictions <- final_model_results$predictions
-  
-  # Overall statistics
-  overall_stats <- metrics[, .(
-    mean_rmse = mean(rmse, na.rm = TRUE),
-    sd_rmse = sd(rmse, na.rm = TRUE),
-    mean_rsq = mean(rsq, na.rm = TRUE),
-    sd_rsq = sd(rsq, na.rm = TRUE),
-    mean_rpd = mean(rpd, na.rm = TRUE),
-    sd_rpd = sd(rpd, na.rm = TRUE),
-    mean_rpiq = mean(rpiq, na.rm = TRUE),
-    sd_rpiq = sd(rpiq, na.rm = TRUE),
-    n_successful = .N
-  )]
-  
-  # Performance categories
-  good_models <- metrics[rpd >= 2.0 & rsq >= 0.7, .N]
-  excellent_models <- metrics[rpd >= 2.5 & rsq >= 0.8, .N]
-  total_models <- nrow(metrics)
-  
-  performance_summary <- list(
-    total_models = total_models,
-    good_models = good_models,
-    excellent_models = excellent_models,
-    good_percent = round(100 * good_models / total_models, 1),
-    excellent_percent = round(100 * excellent_models / total_models, 1)
-  )
-  
-  cat("Final model analysis:\n")
-  cat("- Total successful models:", total_models, "\n")
-  cat("- Good models (RPD≥2.0, R²≥0.7):", good_models, "(", performance_summary$good_percent, "%)\n")
-  cat("- Excellent models (RPD≥2.5, R²≥0.8):", excellent_models, "(", performance_summary$excellent_percent, "%)\n")
-  
-  return(list(
-    overall_stats = overall_stats,
-    performance_summary = performance_summary,
-    metrics = metrics,
-    predictions = predictions
-  ))
-}
+# analyze_final_model <- function(final_model_results) {
+#   # Analyze final model performance
+#   
+#   metrics <- final_model_results$metrics
+#   predictions <- final_model_results$predictions
+#   
+#   # Overall statistics
+#   overall_stats <- metrics[, .(
+#     mean_rmse = mean(rmse, na.rm = TRUE),
+#     sd_rmse = sd(rmse, na.rm = TRUE),
+#     mean_rsq = mean(rsq, na.rm = TRUE),
+#     sd_rsq = sd(rsq, na.rm = TRUE),
+#     mean_rpd = mean(rpd, na.rm = TRUE),
+#     sd_rpd = sd(rpd, na.rm = TRUE),
+#     mean_rpiq = mean(rpiq, na.rm = TRUE),
+#     sd_rpiq = sd(rpiq, na.rm = TRUE),
+#     n_successful = .N
+#   )]
+#   
+#   # Performance categories
+#   good_models <- metrics[rpd >= 2.0 & rsq >= 0.7, .N]
+#   excellent_models <- metrics[rpd >= 2.5 & rsq >= 0.8, .N]
+#   total_models <- nrow(metrics)
+#   
+#   performance_summary <- list(
+#     total_models = total_models,
+#     good_models = good_models,
+#     excellent_models = excellent_models,
+#     good_percent = round(100 * good_models / total_models, 1),
+#     excellent_percent = round(100 * excellent_models / total_models, 1)
+#   )
+#   
+#   cat("Final model analysis:\n")
+#   cat("- Total successful models:", total_models, "\n")
+#   cat("- Good models (RPD≥2.0, R²≥0.7):", good_models, "(", performance_summary$good_percent, "%)\n")
+#   cat("- Excellent models (RPD≥2.5, R²≥0.8):", excellent_models, "(", performance_summary$excellent_percent, "%)\n")
+#   
+#   return(list(
+#     overall_stats = overall_stats,
+#     performance_summary = performance_summary,
+#     metrics = metrics,
+#     predictions = predictions
+#   ))
+# }
 
+analyze_final_model <- function(final_model_results) {
+  cat("=== USING FRESH RPD-PRIMARY ANALYSIS ===\n")
+
+metrics <- final_model_results$metrics
+predictions <- final_model_results$predictions
+
+# DEBUG: Check data
+cat("Total models:", nrow(metrics), "\n")
+cat("RPD range:", paste(round(range(metrics$rpd, na.rm = TRUE), 2), collapse = " to "), "\n")
+cat("Mean RPD:", round(mean(metrics$rpd, na.rm = TRUE), 2), "\n")
+
+# Overall statistics
+overall_stats <- metrics[, .(
+  mean_rmse = mean(rmse, na.rm = TRUE),
+  sd_rmse = sd(rmse, na.rm = TRUE),
+  mean_rsq = mean(rsq, na.rm = TRUE),
+  sd_rsq = sd(rsq, na.rm = TRUE),
+  mean_rpd = mean(rpd, na.rm = TRUE),
+  sd_rpd = sd(rpd, na.rm = TRUE),
+  mean_rpiq = mean(rpiq, na.rm = TRUE),
+  sd_rpiq = sd(rpiq, na.rm = TRUE),
+  n_successful = .N
+)]
+
+# Classification using RPD ONLY (primary approach)
+# Create classification vectors
+excellent_mask <- metrics$rpd > 3.0
+good_mask <- metrics$rpd >= 2.0 & metrics$rpd <= 3.0
+fair_mask <- metrics$rpd >= 1.4 & metrics$rpd < 2.0
+poor_mask <- metrics$rpd < 1.4
+
+# Count each category
+excellent_count <- sum(excellent_mask, na.rm = TRUE)
+good_count <- sum(good_mask, na.rm = TRUE)
+fair_count <- sum(fair_mask, na.rm = TRUE)
+poor_count <- sum(poor_mask, na.rm = TRUE)
+
+# DEBUG: Show classification counts
+cat("Classification counts:\n")
+cat("- Excellent (RPD > 3.0):", excellent_count, "\n")
+cat("- Good (RPD 2.0-3.0):", good_count, "\n")
+cat("- Fair (RPD 1.4-2.0):", fair_count, "\n")
+cat("- Poor (RPD < 1.4):", poor_count, "\n")
+cat("- Total:", excellent_count + good_count + fair_count + poor_count, "\n")
+
+# Supporting metric analysis (for those in each RPD category)
+excellent_with_support <- sum(excellent_mask & metrics$rpiq > 4.1 & metrics$rsq > 0.9, na.rm = TRUE)
+good_with_support <- sum(good_mask & metrics$rpiq >= 2.3 & metrics$rsq >= 0.8, na.rm = TRUE)
+fair_with_support <- sum(fair_mask & metrics$rpiq >= 1.5 & metrics$rsq >= 0.5, na.rm = TRUE)
+
+# Calculate percentages
+total_models <- nrow(metrics)
+excellent_pct <- round(100 * excellent_count / total_models, 1)
+good_pct <- round(100 * good_count / total_models, 1)
+fair_pct <- round(100 * fair_count / total_models, 1)
+poor_pct <- round(100 * poor_count / total_models, 1)
+
+# Supporting metric concordance rates
+excellent_support_pct <- ifelse(excellent_count > 0, round(100 * excellent_with_support / excellent_count, 1), 0)
+good_support_pct <- ifelse(good_count > 0, round(100 * good_with_support / good_count, 1), 0)
+fair_support_pct <- ifelse(fair_count > 0, round(100 * fair_with_support / fair_count, 1), 0)
+
+# Summary metrics
+quantitative_capable <- excellent_pct + good_pct
+total_acceptable <- excellent_pct + good_pct + fair_pct
+
+# Create results structure
+performance_summary <- list(
+  total_models = total_models,
+  excellent_models = excellent_count,
+  good_models = good_count,
+  fair_models = fair_count,
+  poor_models = poor_count,
+  excellent_percent = excellent_pct,
+  good_percent = good_pct,
+  fair_percent = fair_pct,
+  poor_percent = poor_pct,
+  excellent_support_rate = excellent_support_pct,
+  good_support_rate = good_support_pct,
+  fair_support_rate = fair_support_pct,
+  quantitative_capable = quantitative_capable,
+  total_acceptable = total_acceptable
+)
+
+# Print results
+cat("\n=== FINAL RESULTS ===\n")
+cat("Performance metrics (mean ± SD):\n")
+cat("- RMSE:", round(overall_stats$mean_rmse, 2), "±", round(overall_stats$sd_rmse, 2), "g/kg\n")
+cat("- R²:", round(overall_stats$mean_rsq, 3), "±", round(overall_stats$sd_rsq, 3), "\n")
+cat("- RPD:", round(overall_stats$mean_rpd, 2), "±", round(overall_stats$sd_rpd, 2), "\n")
+cat("- RPIQ:", round(overall_stats$mean_rpiq, 2), "±", round(overall_stats$sd_rpiq, 2), "\n\n")
+
+cat("Model classification (RPD-primary):\n")
+cat("- Excellent (RPD > 3.0):", excellent_count, "(", excellent_pct, "%)\n")
+cat("- Good (RPD 2.0-3.0):", good_count, "(", good_pct, "%)\n")
+cat("- Fair (RPD 1.4-2.0):", fair_count, "(", fair_pct, "%)\n")
+cat("- Poor (RPD < 1.4):", poor_count, "(", poor_pct, "%)\n\n")
+
+cat("Supporting metric concordance:\n")
+cat("- Excellent with full support:", excellent_support_pct, "%\n")
+cat("- Good with full support:", good_support_pct, "%\n")
+cat("- Fair with full support:", fair_support_pct, "%\n\n")
+
+cat("Summary:\n")
+cat("- Quantitative capable:", quantitative_capable, "%\n")
+cat("- Total acceptable:", total_acceptable, "%\n")
+
+return(list(
+  overall_stats = overall_stats,
+  performance_summary = performance_summary,
+  metrics = metrics,
+  predictions = predictions,
+  classification_method = "rpd_primary_fresh"
+))
+}
+ 
 analyze_prediction_errors <- function(final_model_results, hemp_data) {
   cat("=== ANALYZING REAL PREDICTION ERRORS ===\n")
   
@@ -758,7 +874,8 @@ run_multi_algorithm_comparison <- function(data, best_method, n_iterations = 100
 }
 
 analyze_multi_algorithm_results <- function(multi_algorithm_results) {
-  # Analyze multi-algorithm comparison results
+  # Analyze multi-algorithm comparison results using RPD-primary unified evaluation criteria
+  # RPD determines the category, with optional reporting of RPIQ and R² support
   
   # Summary statistics by algorithm
   summary_stats <- multi_algorithm_results[, .(
@@ -773,22 +890,209 @@ analyze_multi_algorithm_results <- function(multi_algorithm_results) {
     n_iterations = .N
   ), by = algorithm]
   
-  # Model quality assessment
-  model_quality <- multi_algorithm_results[, .(
-    excellent_models = sum(rpd >= 2.5 & rsq >= 0.8, na.rm = TRUE),
-    good_models = sum(rpd >= 2.0 & rsq >= 0.7, na.rm = TRUE),
-    quantitative_capable = round(100 * sum(rpd >= 2.0, na.rm = TRUE) / .N, 1),
-    total_acceptable = round(100 * sum(rpd >= 1.5, na.rm = TRUE) / .N, 1)
-  ), by = algorithm]
+  # Model quality assessment using RPD as primary classifier
+  model_quality <- multi_algorithm_results[, {
+    
+    # Primary classification by RPD thresholds
+    excellent_rpd <- rpd > 3.0
+    good_rpd <- rpd >= 2.0 & rpd <= 3.0
+    fair_rpd <- rpd >= 1.4 & rpd < 2.0
+    poor_rpd <- rpd < 1.4
+    
+    # Supporting metrics analysis (for reporting, not classification)
+    excellent_rpiq_support <- rpd > 3.0 & rpiq > 4.1
+    excellent_rsq_support <- rpd > 3.0 & rsq > 0.9
+    excellent_full_support <- rpd > 3.0 & rpiq > 4.1 & rsq > 0.9
+    
+    good_rpiq_support <- rpd >= 2.0 & rpd <= 3.0 & rpiq >= 2.3 & rpiq <= 4.1
+    good_rsq_support <- rpd >= 2.0 & rpd <= 3.0 & rsq >= 0.8 & rsq <= 0.9
+    good_full_support <- rpd >= 2.0 & rpd <= 3.0 & rpiq >= 2.3 & rpiq <= 4.1 & rsq >= 0.8 & rsq <= 0.9
+    
+    fair_rpiq_support <- rpd >= 1.4 & rpd < 2.0 & rpiq >= 1.5 & rpiq < 2.3
+    fair_rsq_support <- rpd >= 1.4 & rpd < 2.0 & rsq >= 0.5 & rsq < 0.8
+    fair_full_support <- rpd >= 1.4 & rpd < 2.0 & rpiq >= 1.5 & rpiq < 2.3 & rsq >= 0.5 & rsq < 0.8
+    
+    .(
+      # Primary counts (based on RPD only)
+      excellent_models = sum(excellent_rpd, na.rm = TRUE),
+      good_models = sum(good_rpd, na.rm = TRUE),
+      fair_models = sum(fair_rpd, na.rm = TRUE),
+      poor_models = sum(poor_rpd, na.rm = TRUE),
+      total_models = .N,
+      
+      # Supporting metric concordance (for quality assessment)
+      excellent_with_rpiq = sum(excellent_rpiq_support, na.rm = TRUE),
+      excellent_with_rsq = sum(excellent_rsq_support, na.rm = TRUE),
+      excellent_with_all = sum(excellent_full_support, na.rm = TRUE),
+      
+      good_with_rpiq = sum(good_rpiq_support, na.rm = TRUE),
+      good_with_rsq = sum(good_rsq_support, na.rm = TRUE),
+      good_with_all = sum(good_full_support, na.rm = TRUE),
+      
+      fair_with_rpiq = sum(fair_rpiq_support, na.rm = TRUE),
+      fair_with_rsq = sum(fair_rsq_support, na.rm = TRUE),
+      fair_with_all = sum(fair_full_support, na.rm = TRUE),
+      
+      # Overall quality indicators
+      high_quality_models = sum(rpd >= 2.0 & rpiq >= 2.3 & rsq >= 0.8, na.rm = TRUE),
+      na_models = sum(is.na(rpd) | is.na(rpiq) | is.na(rsq))
+    )
+  }, by = algorithm]
   
-  cat("Multi-algorithm analysis complete for", length(unique(summary_stats$algorithm)), "algorithms\n")
+  # Calculate percentages
+  model_quality[, `:=`(
+    excellent_pct = round(100 * excellent_models / total_models, 1),
+    good_pct = round(100 * good_models / total_models, 1),
+    fair_pct = round(100 * fair_models / total_models, 1),
+    poor_pct = round(100 * poor_models / total_models, 1),
+    
+    # Supporting metric concordance rates
+    excellent_rpiq_concordance = ifelse(excellent_models > 0, round(100 * excellent_with_rpiq / excellent_models, 1), 0),
+    excellent_rsq_concordance = ifelse(excellent_models > 0, round(100 * excellent_with_rsq / excellent_models, 1), 0),
+    excellent_full_concordance = ifelse(excellent_models > 0, round(100 * excellent_with_all / excellent_models, 1), 0),
+    
+    good_rpiq_concordance = ifelse(good_models > 0, round(100 * good_with_rpiq / good_models, 1), 0),
+    good_rsq_concordance = ifelse(good_models > 0, round(100 * good_with_rsq / good_models, 1), 0),
+    good_full_concordance = ifelse(good_models > 0, round(100 * good_with_all / good_models, 1), 0),
+    
+    # Summary categories
+    quantitative_capable = round(100 * (excellent_models + good_models) / total_models, 1),  # Excellent + Good
+    qualitative_capable = round(100 * fair_models / total_models, 1),  # Fair only
+    total_acceptable = round(100 * (excellent_models + good_models + fair_models) / total_models, 1),  # All except Poor
+    high_quality_pct = round(100 * high_quality_models / total_models, 1)  # Meet all criteria regardless of category
+  )]
+  
+  cat("Multi-algorithm analysis complete using RPD-primary unified criteria for", length(unique(summary_stats$algorithm)), "algorithms\n")
+  cat("Primary classification by RPD thresholds:\n")
+  cat("- Excellent: RPD > 3.0 (excellent quantitative prediction)\n")
+  cat("- Good: RPD 2.0-3.0 (good quantitative prediction)\n") 
+  cat("- Fair: RPD 1.4-2.0 (qualitative/screening prediction)\n")
+  cat("- Poor: RPD < 1.4 (unreliable)\n\n")
+  
+  # Print classification summary
+  for (i in 1:nrow(model_quality)) {
+    algo <- model_quality$algorithm[i]
+    total <- model_quality$total_models[i]
+    excellent <- model_quality$excellent_models[i]
+    good <- model_quality$good_models[i]
+    fair <- model_quality$fair_models[i]
+    poor <- model_quality$poor_models[i]
+    
+    cat(sprintf("%s: %d total models\n", algo, total))
+    cat(sprintf("  Excellent: %d (%.1f%%), Good: %d (%.1f%%), Fair: %d (%.1f%%), Poor: %d (%.1f%%)\n", 
+                excellent, model_quality$excellent_pct[i],
+                good, model_quality$good_pct[i], 
+                fair, model_quality$fair_pct[i],
+                poor, model_quality$poor_pct[i]))
+    
+    if (excellent > 0) {
+      cat(sprintf("  Excellent models with RPIQ support: %.1f%%, R² support: %.1f%%, both: %.1f%%\n",
+                  model_quality$excellent_rpiq_concordance[i],
+                  model_quality$excellent_rsq_concordance[i],
+                  model_quality$excellent_full_concordance[i]))
+    }
+    cat("\n")
+  }
   
   return(list(
     summary_stats = summary_stats,
     model_quality = model_quality,
-    raw_results = multi_algorithm_results
+    raw_results = multi_algorithm_results,
+    classification_method = "unified_criteria_rpd_primary"
   ))
 }
+
+# analyze_multi_algorithm_results <- function(multi_algorithm_results) {
+#   # Analyze multi-algorithm comparison results using STRICT unified evaluation criteria
+#   # A model must meet ALL three criteria (RPD AND RPIQ AND R²) to be classified in a category
+#   
+#   # Summary statistics by algorithm
+#   summary_stats <- multi_algorithm_results[, .(
+#     mean_rmse = mean(rmse, na.rm = TRUE),
+#     sd_rmse = sd(rmse, na.rm = TRUE),
+#     mean_rsq = mean(rsq, na.rm = TRUE),
+#     sd_rsq = sd(rsq, na.rm = TRUE),
+#     mean_rpd = mean(rpd, na.rm = TRUE),
+#     sd_rpd = sd(rpd, na.rm = TRUE),
+#     mean_rpiq = mean(rpiq, na.rm = TRUE),
+#     sd_rpiq = sd(rpiq, na.rm = TRUE),
+#     n_iterations = .N
+#   ), by = algorithm]
+#   
+#   # Strict model quality assessment - ALL criteria must be met
+#   # Categories are mutually exclusive and hierarchical
+#   model_quality <- multi_algorithm_results[, {
+#     
+#     # Apply strict hierarchical classification
+#     # Excellent: RPD > 3.0 AND RPIQ > 4.1 AND R² > 0.9
+#     excellent_mask <- rpd > 3.0 & rpiq > 4.1 & rsq > 0.9
+#     
+#     # Good: RPD 2.0-3.0 AND RPIQ 2.3-4.1 AND R² 0.8-0.9 (and not excellent)
+#     good_mask <- !excellent_mask & 
+#       rpd >= 2.0 & rpd <= 3.0 & 
+#       rpiq >= 2.3 & rpiq <= 4.1 & 
+#       rsq >= 0.8 & rsq <= 0.9
+#     
+#     # Fair: RPD 1.4-2.0 AND RPIQ 1.5-2.3 AND R² 0.5-0.8 (and not excellent or good)
+#     fair_mask <- !excellent_mask & !good_mask &
+#       rpd >= 1.4 & rpd < 2.0 & 
+#       rpiq >= 1.5 & rpiq < 2.3 & 
+#       rsq >= 0.5 & rsq < 0.8
+#     
+#     # Poor: Everything else (fails to meet any complete category)
+#     poor_mask <- !excellent_mask & !good_mask & !fair_mask
+#     
+#     # Count models in each category
+#     .(
+#       excellent_models = sum(excellent_mask, na.rm = TRUE),
+#       good_models = sum(good_mask, na.rm = TRUE),
+#       fair_models = sum(fair_mask, na.rm = TRUE),
+#       poor_models = sum(poor_mask, na.rm = TRUE),
+#       total_models = .N,
+#       
+#       # Additional diagnostics
+#       na_models = sum(is.na(rpd) | is.na(rpiq) | is.na(rsq))
+#     )
+#   }, by = algorithm]
+#   
+#   # Calculate percentages
+#   model_quality[, `:=`(
+#     excellent_pct = round(100 * excellent_models / total_models, 1),
+#     good_pct = round(100 * good_models / total_models, 1),
+#     fair_pct = round(100 * fair_models / total_models, 1),
+#     poor_pct = round(100 * poor_models / total_models, 1),
+#     
+#     # Summary categories
+#     quantitative_capable = round(100 * (excellent_models + good_models) / total_models, 1),  # Excellent + Good
+#     qualitative_capable = round(100 * fair_models / total_models, 1),  # Fair only  
+#     total_acceptable = round(100 * (excellent_models + good_models + fair_models) / total_models, 1)  # All except Poor
+#   )]
+#   
+#   # Verification: check that all models are classified
+#   model_quality[, total_classified := excellent_models + good_models + fair_models + poor_models]
+#   
+#   cat("Multi-algorithm analysis complete using STRICT unified criteria for", length(unique(summary_stats$algorithm)), "algorithms\n")
+#   cat("Classification requires ALL three metrics to meet thresholds:\n")
+#   cat("- Excellent: RPD > 3.0 AND RPIQ > 4.1 AND R² > 0.9\n")
+#   cat("- Good: RPD 2.0-3.0 AND RPIQ 2.3-4.1 AND R² 0.8-0.9\n") 
+#   cat("- Fair: RPD 1.4-2.0 AND RPIQ 1.5-2.3 AND R² 0.5-0.8\n")
+#   cat("- Poor: Fails to meet any complete category criteria\n\n")
+#   
+#   # Print verification
+#   for (i in 1:nrow(model_quality)) {
+#     algo <- model_quality$algorithm[i]
+#     total <- model_quality$total_models[i]
+#     classified <- model_quality$total_classified[i]
+#     cat(sprintf("%s: %d/%d models classified", algo, classified, total), "\n")
+#   }
+#   
+#   return(list(
+#     summary_stats = summary_stats,
+#     model_quality = model_quality,
+#     raw_results = multi_algorithm_results,
+#     classification_method = "unified_criteria_strict"
+#   ))
+# }
 
 # =============================================================================
 # SPECTRAL ANALYSIS FUNCTIONS
@@ -1129,7 +1433,7 @@ create_preprocessing_comparison_table <- function(analysis) {
 }
 
 create_algorithm_comparison_table <- function(multi_algo_analysis) {
-  # Create algorithm comparison table
+  # Create algorithm comparison table with RPD-primary unified criteria
   
   summary_stats <- multi_algo_analysis$summary_stats
   model_quality <- multi_algo_analysis$model_quality
@@ -1150,28 +1454,239 @@ create_algorithm_comparison_table <- function(multi_algo_analysis) {
       R2_formatted = paste0(round(mean_rsq, 3), " (±", round(sd_rsq, 3), ")"),
       RPD_formatted = paste0(round(mean_rpd, 2), " (±", round(sd_rpd, 2), ")"),
       RPIQ_formatted = paste0(round(mean_rpiq, 2), " (±", round(sd_rpiq, 2), ")"),
-      Quantitative_formatted = paste0(round(quantitative_capable, 1), "%"),
-      Total_formatted = paste0(round(total_acceptable, 1), "%")
+      
+      # RPD-based categories
+      Excellent_formatted = paste0(excellent_pct, "%"),
+      Good_formatted = paste0(good_pct, "%"),
+      Fair_formatted = paste0(fair_pct, "%"),
+      Poor_formatted = paste0(poor_pct, "%"),
+      
+      # Summary categories  
+      Quantitative_formatted = paste0(quantitative_capable, "%"),  # Excellent + Good
+      Qualitative_formatted = paste0(qualitative_capable, "%"),   # Fair (qualitative prediction)
+      Total_formatted = paste0(total_acceptable, "%"),            # All except Poor
+      HighQuality_formatted = paste0(high_quality_pct, "%")       # Meet all criteria
     )
   
+  # Create final table
   final_table <- data.frame(
     "Algorithm" = formatted_table$Algorithm,
     "RMSE (±SD)" = formatted_table$RMSE_formatted,
     "R² (±SD)" = formatted_table$R2_formatted,
     "RPD (±SD)" = formatted_table$RPD_formatted,
     "RPIQ (±SD)" = formatted_table$RPIQ_formatted,
-    "Quantitative Capable (%)" = formatted_table$Quantitative_formatted,
-    "Total Acceptable (%)" = formatted_table$Total_formatted,
+    "Excellent (%)" = formatted_table$Excellent_formatted,
+    "Good (%)" = formatted_table$Good_formatted,
+    "Fair (%)" = formatted_table$Fair_formatted,
+    "Poor (%)" = formatted_table$Poor_formatted,
+    "Quantitative (%)" = formatted_table$Quantitative_formatted,
+    "Qualitative (%)" = formatted_table$Qualitative_formatted,
+    "Total Usable (%)" = formatted_table$Total_formatted,
     check.names = FALSE
   )
   
   knitr::kable(
     final_table,
-    caption = "Performance comparison of machine learning algorithms for hemp grain protein prediction",
+    caption = "Algorithm performance using RPD-primary unified evaluation criteria",
     row.names = FALSE,
-    align = c("l", rep("c", 6))
-  )
+    align = c("l", rep("c", 11))
+  ) %>%
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover")) %>%
+    kableExtra::footnote(
+      general = "Primary classification by RPD: Excellent (>3.0), Good (2.0-3.0), Fair (1.4-2.0), Poor (<1.4). RPIQ and R² provide supporting evidence."
+    )
 }
+
+
+# create_algorithm_comparison_table <- function(multi_algo_analysis) {
+#   # Create algorithm comparison table with strict unified criteria
+#   
+#   summary_stats <- multi_algo_analysis$summary_stats
+#   model_quality <- multi_algo_analysis$model_quality
+#   
+#   # Combine data
+#   combined_table <- merge(summary_stats, model_quality, by = "algorithm")
+#   
+#   # Format for manuscript with unified categories
+#   formatted_table <- combined_table %>%
+#     mutate(
+#       Algorithm = case_when(
+#         algorithm == "pls" ~ "Partial Least Squares",
+#         algorithm == "svmRadial" ~ "Support Vector Machine", 
+#         algorithm == "rf" ~ "Random Forest",
+#         TRUE ~ str_to_title(algorithm)
+#       ),
+#       RMSE_formatted = paste0(round(mean_rmse, 3), " (±", round(sd_rmse, 3), ")"),
+#       R2_formatted = paste0(round(mean_rsq, 3), " (±", round(sd_rsq, 3), ")"),
+#       RPD_formatted = paste0(round(mean_rpd, 2), " (±", round(sd_rpd, 2), ")"),
+#       RPIQ_formatted = paste0(round(mean_rpiq, 2), " (±", round(sd_rpiq, 2), ")"),
+#       
+#       # Unified criteria categories
+#       Excellent_formatted = paste0(excellent_pct, "%"),
+#       Good_formatted = paste0(good_pct, "%"),
+#       Fair_formatted = paste0(fair_pct, "%"),
+#       Poor_formatted = paste0(poor_pct, "%"),
+#       
+#       # Summary categories
+#       Quantitative_formatted = paste0(quantitative_capable, "%"),  # Excellent + Good
+#       Qualitative_formatted = paste0(qualitative_capable, "%"),   # Fair (qualitative prediction)
+#       Total_formatted = paste0(total_acceptable, "%")             # All except Poor
+#     )
+#   
+#   # Create final table
+#   final_table <- data.frame(
+#     "Algorithm" = formatted_table$Algorithm,
+#     "RMSE (±SD)" = formatted_table$RMSE_formatted,
+#     "R² (±SD)" = formatted_table$R2_formatted,
+#     "RPD (±SD)" = formatted_table$RPD_formatted,
+#     "RPIQ (±SD)" = formatted_table$RPIQ_formatted,
+#     "Excellent (%)" = formatted_table$Excellent_formatted,
+#     "Good (%)" = formatted_table$Good_formatted,
+#     "Fair (%)" = formatted_table$Fair_formatted,
+#     "Poor (%)" = formatted_table$Poor_formatted,
+#     "Quantitative (%)" = formatted_table$Quantitative_formatted,
+#     "Qualitative (%)" = formatted_table$Qualitative_formatted,
+#     "Total Usable (%)" = formatted_table$Total_formatted,
+#     check.names = FALSE
+#   )
+#   
+#   knitr::kable(
+#     final_table,
+#     caption = "Algorithm performance using strict unified evaluation criteria (all three metrics must meet thresholds)",
+#     row.names = FALSE,
+#     align = c("l", rep("c", 11))
+#   ) %>%
+#     kableExtra::kable_styling(bootstrap_options = c("striped", "hover")) %>%
+#     kableExtra::footnote(
+#       general = "Excellent: RPD>3.0 & RPIQ>4.1 & R²>0.9; Good: RPD 2.0-3.0 & RPIQ 2.3-4.1 & R² 0.8-0.9; Fair: RPD 1.4-2.0 & RPIQ 1.5-2.3 & R² 0.5-0.8; Poor: fails any category"
+#     )
+# }
+
+# =============================================================================
+# OPTIONAL: FUNCTION TO DIAGNOSE CLASSIFICATION MISMATCHES  
+# =============================================================================
+
+diagnose_model_classification <- function(multi_algorithm_results, algorithm_name = "pls") {
+  # Diagnostic function to understand why models fall into different categories
+  
+  data_subset <- multi_algorithm_results[algorithm == algorithm_name]
+  
+  # Apply the same classification logic
+  data_subset[, category := {
+    excellent_mask <- rpd > 3.0 & rpiq > 4.1 & rsq > 0.9
+    good_mask <- !excellent_mask & 
+      rpd >= 2.0 & rpd <= 3.0 & 
+      rpiq >= 2.3 & rpiq <= 4.1 & 
+      rsq >= 0.8 & rsq <= 0.9
+    fair_mask <- !excellent_mask & !good_mask &
+      rpd >= 1.4 & rpd < 2.0 & 
+      rpiq >= 1.5 & rpiq < 2.3 & 
+      rsq >= 0.5 & rsq < 0.8
+    
+    case_when(
+      excellent_mask ~ "Excellent",
+      good_mask ~ "Good", 
+      fair_mask ~ "Fair",
+      TRUE ~ "Poor"
+    )
+  }]
+  
+  # Show breakdown
+  cat("Classification breakdown for", algorithm_name, ":\n")
+  print(table(data_subset$category))
+  
+  # Show examples of each category
+  cat("\nSample models from each category:\n")
+  for (cat_name in c("Excellent", "Good", "Fair", "Poor")) {
+    sample_data <- data_subset[category == cat_name][1:min(3, .N)]
+    if (nrow(sample_data) > 0) {
+      cat("\n", cat_name, "examples:\n")
+      print(sample_data[, .(iteration, rpd, rpiq, rsq)])
+    }
+  }
+  
+  return(data_subset)
+}
+
+# =============================================================================
+# BACKWARDS COMPATIBILITY: UPDATED analyze_final_model FUNCTION
+# =============================================================================
+
+analyze_final_model <- function(final_model_results) {
+  # Analyze final model performance using strict unified criteria
+  
+  metrics <- final_model_results$metrics
+  predictions <- final_model_results$predictions
+  
+  # Overall statistics
+  overall_stats <- metrics[, .(
+    mean_rmse = mean(rmse, na.rm = TRUE),
+    sd_rmse = sd(rmse, na.rm = TRUE),
+    mean_rsq = mean(rsq, na.rm = TRUE),
+    sd_rsq = sd(rsq, na.rm = TRUE),
+    mean_rpd = mean(rpd, na.rm = TRUE),
+    sd_rpd = sd(rpd, na.rm = TRUE),
+    mean_rpiq = mean(rpiq, na.rm = TRUE),
+    sd_rpiq = sd(rpiq, na.rm = TRUE),
+    n_successful = .N
+  )]
+  
+  # Apply strict unified criteria classification
+  classification_counts <- metrics[, {
+    excellent_mask <- rpd > 3.0 & rpiq > 4.1 & rsq > 0.9
+    good_mask <- !excellent_mask & 
+      rpd >= 2.0 & rpd <= 3.0 & 
+      rpiq >= 2.3 & rpiq <= 4.1 & 
+      rsq >= 0.8 & rsq <= 0.9
+    fair_mask <- !excellent_mask & !good_mask &
+      rpd >= 1.4 & rpd < 2.0 & 
+      rpiq >= 1.5 & rpiq < 2.3 & 
+      rsq >= 0.5 & rsq < 0.8
+    poor_mask <- !excellent_mask & !good_mask & !fair_mask
+    
+    .(
+      excellent_models = sum(excellent_mask, na.rm = TRUE),
+      good_models = sum(good_mask, na.rm = TRUE),
+      fair_models = sum(fair_mask, na.rm = TRUE),
+      poor_models = sum(poor_mask, na.rm = TRUE),
+      total_models = .N
+    )
+  }]
+  
+  # Calculate percentages
+  performance_summary <- list(
+    total_models = classification_counts$total_models,
+    excellent_models = classification_counts$excellent_models,
+    good_models = classification_counts$good_models,
+    fair_models = classification_counts$fair_models,
+    poor_models = classification_counts$poor_models,
+    excellent_percent = round(100 * classification_counts$excellent_models / classification_counts$total_models, 1),
+    good_percent = round(100 * classification_counts$good_models / classification_counts$total_models, 1),
+    fair_percent = round(100 * classification_counts$fair_models / classification_counts$total_models, 1),
+    poor_percent = round(100 * classification_counts$poor_models / classification_counts$total_models, 1),
+    quantitative_capable = round(100 * (classification_counts$excellent_models + classification_counts$good_models) / classification_counts$total_models, 1),
+    total_acceptable = round(100 * (classification_counts$excellent_models + classification_counts$good_models + classification_counts$fair_models) / classification_counts$total_models, 1)
+  )
+  
+  cat("Final model analysis using strict unified criteria:\n")
+  cat("- Total successful models:", performance_summary$total_models, "\n")
+  cat("- Excellent models:", performance_summary$excellent_models, "(", performance_summary$excellent_percent, "%)\n")
+  cat("- Good models:", performance_summary$good_models, "(", performance_summary$good_percent, "%)\n")
+  cat("- Fair models (qualitative):", performance_summary$fair_models, "(", performance_summary$fair_percent, "%)\n")
+  cat("- Poor models:", performance_summary$poor_models, "(", performance_summary$poor_percent, "%)\n")
+  cat("- Quantitative capable (Excellent + Good):", performance_summary$quantitative_capable, "%\n")
+  cat("- Total acceptable (not Poor):", performance_summary$total_acceptable, "%\n")
+  
+  return(list(
+    overall_stats = overall_stats,
+    performance_summary = performance_summary,
+    classification_counts = classification_counts,
+    metrics = metrics,
+    predictions = predictions,
+    classification_method = "unified_criteria_strict"
+  ))
+}
+
 
 create_model_comparison_table <- function(model_comparison) {
   # Create model comparison table

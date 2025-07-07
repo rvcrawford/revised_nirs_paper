@@ -100,6 +100,8 @@ bibliography: [references.bib, grateful-refs.bib]
 library(knitr)
 library(ggplot2)
 library(targets)
+library(nlme)
+library(emmeans)
 
 source("R/core_functions.R")
 
@@ -109,7 +111,7 @@ hemp_data <- tryCatch(tar_read(hemp_data), error = function(e) NULL)
 best_method <- tryCatch(tar_read(best_method), error = function(e) "Not available")
 final_model_analysis <- tryCatch(tar_read(final_model_analysis), error = function(e) NULL)
 preprocessing_analysis <- tryCatch(tar_read(preprocessing_analysis), error = function(e) NULL)
-
+preprocessing_comparison<- tryCatch(tar_read(preprocessing_comparison), error = function(e) NULL)
 
 table_model_comparison <- tar_read(table_model_comparison)
 # Also load the table and figure objects that are referenced later
@@ -190,7 +192,7 @@ Training and testing sets were created by dividing samples by their laboratory C
 
 Initially a number of common spectral preprocessing methods were tested by creating 100 training and testing sets, as described above. Spectral data were transformed by each of the following methods: 1) first derivative; 2) Savitzky-Golay (SG) using the first derivative, third order polynomial, and a window of size five; 3) gap-segment derivative using the first derivative, a gap of 11, and a segment size of five; 4) SNV; 5) standard normal variate following Savitzky-Golay (SNV-SG) using the same SG parameters as above; 6) SNV-detrend with second order polynomial; and 7) multiplicative scatter correction. For comparison, models were also developed using untransformed spectra.
 
-For each of these preprocessing methods, PLSR models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R^2^, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R^2^, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a "good" model varies depending upon the reference consulted, but a simple rubric for model quality is set forth in @tbl-model-rubric [@rawal_visible_2024; @luce_prediction_2017; @chadalavada_nir_2022].
+For each of these preprocessing methods, PLSR models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R^2^, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R^2^, RPD and RPIQ values and smaller RMSE values are best. There is a long history of using RPD to evaluate chemometric models although the statistic has been criticized as inadequately reflecting the distribution of skewed populations, a situation which RPIQ was designed to address [@bellon-maurel_critical_2010]. The answer to the question of exactly which values constitute a "good" model varies depending upon the reference consulted, but a simple rubric for model quality is set forth in @tbl-model-rubric [@rawal_visible_2024; @luce_prediction_2017; @chadalavada_nir_2022].
 
 ```{r}
 #| label: tbl-model_rubric
@@ -240,7 +242,21 @@ table_sample_summary
 
 ### Preprocessing methods comparison
 
-All preprocessing methods outperformed untransformed spectral data, as shown in @tbl-preproc. The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.
+Among the eight methods compared via ANOVA, the SNV-SG and SG preprocessing methods performed the best and were in the best highest-performing post-hoc comparison group (tukey method to compare estimates $\alpha$ = 0.05.  The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations (@tbl-preproc). The superiority of SNV-SG by these metrics made it the best choice for the final model.
+
+```{r, message=FALSE, warning=FALSE}
+
+
+method_comparison_marginal_means <- preprocessing_comparison |> 
+  mutate(across(c(preprocessing_method, iteration), as.factor)) |> 
+  pivot_longer(-c(1:3)) |> 
+  nest(-name) |> 
+  mutate(model = map(data, ~lme(value~preprocessing_method, random = ~1|iteration,
+          weights = varIdent(form = ~ 1 | preprocessing_method), data = .x)),
+         marginal_means = map(model, ~emmeans(.x, "preprocessing_method") |> multcomp::cld() |> 
+                                as.data.frame()))
+```
+
 
 ```{r}
 #| label: tbl-preproc
@@ -252,13 +268,6 @@ table_preprocessing
 From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples [@barnes_standard_1989]. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal's shape and features [@li_quantitative_2020; @luo_properties_2005]. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise [@rinnan_review_2009]. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.
 
 ### Algorithm comparison
-
-```{r}
-# #| label: fig-algorithm-comparison
-# #| fig-cap: Comparing algorithms
-# 
-# fig_algorithm_comparison
-```
 
 ```{r}
 #| label: tbl-algorithm-comparison

@@ -4931,7 +4931,7 @@ window.Quarto = {
 <p>While PLSR is commonly used in agricultural applications, other algorithms may offer comparable or improved prediction accuracy. Support vector machines (SVM) and random forest (RF) algorithms have been utilized in NIRS applications, particularly where non-linear relationships exist between spectral features and analyte concentrations <span class="citation" data-cites="chinilin2023">(<a href="#ref-chinilin2023" role="doc-biblioref"><strong>chinilin2023?</strong></a>)</span>. Support vector machines apply non-linear kernel functions to capture relationships between spectral data and analyte concentrations, with studies demonstrating competitive performance with PLSR for protein prediction in stored wheat grains <span class="citation" data-cites="kamboj2022">(<a href="#ref-kamboj2022" role="doc-biblioref"><strong>kamboj2022?</strong></a>)</span>. Random forest (RF) algorithms use ensemble learning to combine multiple decision trees and has been used to predict protein content in grains <span class="citation" data-cites="chadalavada2022 haruna2022">(<a href="#ref-chadalavada2022" role="doc-biblioref"><strong>chadalavada2022?</strong></a>; <a href="#ref-haruna2022" role="doc-biblioref"><strong>haruna2022?</strong></a>)</span>. Comparing multiple algorithms helps ensure that the best approach is chosen.</p>
 <p>The biological validity of NIRS predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. Models developed using biologically-relevant wavelengths are evidence that predictions are based on true protein-spectral relationships rather than spurious correlations with other quality components. Three spectral regions with established CP-related vibrational assignments are: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 2040-2070 nm (N-H + C-N combination bands) <span class="citation" data-cites="köllmann2023 shi_estimation_2022">(<a href="#ref-shi_estimation_2022" role="doc-biblioref">Shi et al., 2022</a>; <a href="#ref-köllmann2023" role="doc-biblioref"><strong>köllmann2023?</strong></a>)</span>. These models may also be more readily transferable between instruments because they discard noisy, irrelevant portions of the spectra <span class="citation" data-cites="wang_nirs-based_2025">(<a href="#ref-wang_nirs-based_2025" role="doc-biblioref">Wang et al., 2025</a>)</span>.</p>
 <!-- Non-destructive sampling of grain is attractive for plant breeders. -->
-<p>A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed. In wheat and corn, grain protein content has been shown to be heritable <span class="citation" data-cites="giancaspro_genetic_2019 geyer_genetics_2022">(<a href="#ref-geyer_genetics_2022" role="doc-biblioref">Geyer et al., 2022</a>; <a href="#ref-giancaspro_genetic_2019" role="doc-biblioref">Giancaspro et al., 2019</a>)</span>. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.</p>
+<p>A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed or consumed, benefits attractive to plant breeders, farmers, and the food industry <span class="citation" data-cites="caporaso2018">(<a href="#ref-caporaso2018" role="doc-biblioref">Caporaso et al., 2018</a>)</span>. In wheat and corn, grain CP content has been shown to be heritable <span class="citation" data-cites="giancaspro_genetic_2019 geyer_genetics_2022">(<a href="#ref-geyer_genetics_2022" role="doc-biblioref">Geyer et al., 2022</a>; <a href="#ref-giancaspro_genetic_2019" role="doc-biblioref">Giancaspro et al., 2019</a>)</span>. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.</p>
 <p>For this study, researchers hypothesized that a benchtop NIR spectrometer could be used to develop a model to accurately predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR.</p>
 </section>
 <section id="materials-and-methods" class="level2" data-number="2">
@@ -5315,7 +5315,7 @@ Table 1: Sample distribution by location and type
 <section id="spectral-data-collection-and-preprocessing" class="level3" data-number="2.2">
 <h3 data-number="2.2" class="anchored" data-anchor-id="spectral-data-collection-and-preprocessing"><span class="header-section-number">2.2</span> Spectral Data Collection and Preprocessing</h3>
 <p>A benchtop NIR spectrometer (FOSS/ NIR FOSS/ NIR Systems model 5000) was used to obtain the spectra (FOSS North America, Eden Prairie, MN, USA). Spectra were collected every 2 nm from 1100-2498 nm and the logarithm of reciprocal reflectance was recorded. A 1/4 rectangular sample cup (5.7 cm × 4.6 cm) was used to scan the samples.</p>
-<p>WINISI software version 1.02A (Infrasoft International, Port Matilda, PA, USA) was used to calculate the mean spectra in 2017 and to select samples for laboratory assay in all years. Samples were selected according to their spectral distance from their nearest neighbor within the data set with a cutoff of a distance of 0.6 H, where H is approximately equal to the squared Mahalanobis distance divided by the number of principal components used in the calculation <span class="citation" data-cites="garrido-varo_note_2019">(<a href="#ref-garrido-varo_note_2019" role="doc-biblioref">Garrido-Varo et al., 2019</a>)</span>. The spectral cutoff threshold of 0.6 H is a common metric used to optimize the number of samples for chemical analysis <span class="citation" data-cites="nogales-bueno2021">(<a href="#ref-nogales-bueno2021" role="doc-biblioref"><strong>nogales-bueno2021?</strong></a>)</span>. Prior to selection, spectra were preprocessed using Standard Normal Variate (SNV)-detrend with settings 1,4,4,1 for the derivative, gap, smooth, and smooth-two settings respectively. These settings are standard WINISI software parameters and were applied because hemp grain samples were subject to light scatter and noise due to particle size variation, with the first derivative applied to show component aborption <span class="citation" data-cites="barnes1989 towett2013">(<a href="#ref-towett2013" role="doc-biblioref">Towett et al., 2013</a>; <a href="#ref-barnes1989" role="doc-biblioref"><strong>barnes1989?</strong></a>)</span>.</p>
+<p>WINISI software version 1.02A (Infrasoft International, Port Matilda, PA, USA) was used to calculate the mean spectra in 2017 and to select samples for laboratory assay in all years. Samples were selected according to their spectral distance from their nearest neighbor within the data set with a cutoff of a distance of 0.6 H, where H is approximately equal to the squared Mahalanobis distance divided by the number of principal components used in the calculation <span class="citation" data-cites="garrido-varo_note_2019">(<a href="#ref-garrido-varo_note_2019" role="doc-biblioref">Garrido-Varo et al., 2019</a>)</span>. The spectral cutoff threshold of 0.6 H is a common metric used to optimize the number of samples for chemical analysis <span class="citation" data-cites="nogales-bueno2021">(<a href="#ref-nogales-bueno2021" role="doc-biblioref"><strong>nogales-bueno2021?</strong></a>)</span>. Prior to selection, spectra were preprocessed using Standard Normal Variate (SNV)-detrend with settings 1,4,4,1 for the derivative, gap, smooth, and smooth-two settings respectively. These settings are standard WINISI software parameters and were applied because hemp grain samples were subject to light scatter and noise due to particle size variation, with the first derivative applied to show component aborption <span class="citation" data-cites="barnes1989 towett2013">(<a href="#ref-barnes1989" role="doc-biblioref"><strong>barnes1989?</strong></a>; <a href="#ref-towett2013" role="doc-biblioref"><strong>towett2013?</strong></a>)</span>.</p>
 </section>
 <section id="laboratory-validation" class="level3" data-number="2.3">
 <h3 data-number="2.3" class="anchored" data-anchor-id="laboratory-validation"><span class="header-section-number">2.3</span> Laboratory Validation</h3>
@@ -5326,10 +5326,72 @@ Table 1: Sample distribution by location and type
 </section>
 <section id="model-development" class="level3" data-number="2.5">
 <h3 data-number="2.5" class="anchored" data-anchor-id="model-development"><span class="header-section-number">2.5</span> Model Development</h3>
-<p>Training and testing sets were created by dividing samples by their laboratory CP concentration values into tertiles (three equal parts) to ensure that a representative range of values was present in both training and testing sets and so that the model could predict across the entire range of data. Within each tertile, 75% of the samples were randomly assigned to the training set and the remaining 25% were assigned to the testing set. For each training set, models were developed in the caret package using PLSR, RF, and SVM models. The caret package allowed for consistent workflows In fitting and evaluating models using multiple algorithms.</p>
+<p>Training and testing sets were created by dividing samples by their laboratory CP concentration values into three equal parts (tertiles) to ensure that a representative range of values was present in both training and testing sets and so that the model could predict across the entire range of data. Within each tertile, 75% of the samples were randomly assigned to the training set and the remaining 25% were assigned to the testing set. For each training set, models were developed in the caret package using PLSR, RF, and SVM models. The caret package allowed for consistent workflows In fitting and evaluating models using multiple algorithms.</p>
 <p>###PUT SOMEWHERE ELSE### For PSLR the number of components was optimized over a grid search from 1-20. Model performance was evaluated with 25 iterations of bootstrapping and minimized RMSE in selecting the number of components in the final model.</p>
 <p>Initially a number of common spectral preprocessing methods were tested by creating 100 training and testing sets, as described above. Spectral data were transformed by each of the following methods: 1) first derivative; 2) Savitzky-Golay (SG) using the first derivative, third order polynomial, and a window of size five; 3) gap-segment derivative using the first derivative, a gap of 11, and a segment size of five; 4) SNV; 5) standard normal variate following Savitzky-Golay (SNV-SG) using the same SG parameters as above; 6) SNV-detrend with second order polynomial; and 7) multiplicative scatter correction. For comparison, models were also developed using untransformed spectra.</p>
-<p>For each of these preprocessing methods, PLSR models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R<sup>2</sup>, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a “good” model varies depending upon the reference consulted, but for simplicity’s sake the standard established for an acceptable model was R<sup>2</sup> &gt; 0.80, an RPD greater than 2.5 and ideally greater than 3 (“good” to “excellent” quantitative prediction), and an RPIQ greater than 2.3 but ideally greater than 4.1 prediction on the testing set <span class="citation" data-cites="rawal_visible_2024 luce_prediction_2017 chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>; <a href="#ref-luce_prediction_2017" role="doc-biblioref">Luce et al., 2017</a>; <a href="#ref-rawal_visible_2024" role="doc-biblioref">Rawal et al., 2024</a>)</span>.</p>
+<p>For each of these preprocessing methods, PLSR models were fit and predictions were made on the corresponding testing set. Since there were seven preprocessing methods as well as untransformed spectra, eight separate models were fit for each of the 100 sets. The relationship between the predicted and actual values of the test set were calculated via RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ), four common model assessment metrics. Larger R<sup>2</sup>, RPD and RPIQ values and smaller RMSE values are best. The answer to the question of exactly which values constitute a “good” model varies depending upon the reference consulted, but a simple rubric for model quality is set forth in <strong>?@tbl-model-rubric</strong>.</p>
+<div class="cell">
+<div id="tbl-model_rubric" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-model_rubric-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table 2: Model assessment rubric
+</figcaption>
+<div aria-describedby="tbl-model_rubric-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<caption>Unified Model Evaluation Criteria for NIRS Prediction Models</caption>
+<colgroup>
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 46%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Category</th>
+<th style="text-align: left;">RPD</th>
+<th style="text-align: left;">RPIQ</th>
+<th style="text-align: left;">R²</th>
+<th style="text-align: left;">Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Excellent</td>
+<td style="text-align: left;">&gt; 3.0</td>
+<td style="text-align: left;">&gt; 4.1</td>
+<td style="text-align: left;">&gt; 0.9</td>
+<td style="text-align: left;">Excellent quantitative prediction</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Good</td>
+<td style="text-align: left;">2.0 - 3.0</td>
+<td style="text-align: left;">2.3 - 4.1</td>
+<td style="text-align: left;">0.8 - 0.9</td>
+<td style="text-align: left;">Good quantitative prediction</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Fair</td>
+<td style="text-align: left;">1.4 - 2.0</td>
+<td style="text-align: left;">1.5 - 2.3</td>
+<td style="text-align: left;">0.5 - 0.8</td>
+<td style="text-align: left;">Moderate prediction (quantitative)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Poor</td>
+<td style="text-align: left;">&lt; 1.4</td>
+<td style="text-align: left;">&lt; 1.5</td>
+<td style="text-align: left;">&lt; 0.5</td>
+<td style="text-align: left;">Poor prediction</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
 <p>Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, it was used in all subsequent analyses.</p>
 <p>To select an algorithm to fit a final model for these data, researchers compared three machine learning algorithms: PLSR, SVM (with radial basis function kernel), and random forest (RF). This comparison was conducted to validate the choice of PLSR through empirical evaluation against alternative algorithms and to assess whether more complex modeling approaches might improve predictive accuracy.</p>
 <p>All algorithms were evaluated using identical training and testing set splits and the optimal preprocessing method identified in the initial screening. Each algorithm was permitted optimal hyperparameter tuning using R’s caret package to ensure fair comparison. One hundred random splits into training sets and testing sets were performed for each algorithm, with model performance evaluated using the same metrics as the preprocessing comparison (RMSE, R², RPD, and RPIQ). Statistical significance of performance differences between algorithms was assessed using analysis of variance.</p>
@@ -5341,12 +5403,12 @@ Table 1: Sample distribution by location and type
 <h2 data-number="3" class="anchored" data-anchor-id="results-and-discussion"><span class="header-section-number">3</span> RESULTS AND DISCUSSION</h2>
 <section id="laboratory-assay-cp-values" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory assay CP values</h3>
-<p>Laboratory assay CP concentration values are summarized in <a href="#tbl-protein-summary" class="quarto-xref">Table 2</a>. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of -0.29) and two thirds of the samples contained more than 250 g kg <sup>-1</sup> CP.</p>
+<p>Laboratory assay CP concentration values are summarized in <a href="#tbl-protein-summary" class="quarto-xref">Table 3</a>. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of -0.29) and two thirds of the samples contained more than 250 g kg <sup>-1</sup> CP.</p>
 <div class="cell">
 <div id="tbl-protein-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-protein-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table 2: Summary of laboratory-assayed CP values
+Table 3: Summary of laboratory-assayed CP values
 </figcaption>
 <div aria-describedby="tbl-protein-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -5383,12 +5445,12 @@ Table 2: Summary of laboratory-assayed CP values
 </section>
 <section id="preprocessing-methods-comparison" class="level3" data-number="3.2">
 <h3 data-number="3.2" class="anchored" data-anchor-id="preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing methods comparison</h3>
-<p>All preprocessing methods outperformed untransformed spectral data, as shown in <a href="#tbl-preproc" class="quarto-xref">Table 3</a>. The SNV-SG method had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.</p>
+<p>All preprocessing methods outperformed untransformed spectral data, as shown in <a href="#tbl-preproc" class="quarto-xref">Table 4</a>. The SNV-SG method had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ averaging over all iterations. The superiority of SNV-SG by these metrics made it the best choice for the final model.</p>
 <div class="cell">
 <div id="tbl-preproc" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-preproc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table 3: Evaluation of Preprocessing Methods by Metric ± Standard Error
+Table 4: Evaluation of Preprocessing Methods by Metric ± Standard Error
 </figcaption>
 <div aria-describedby="tbl-preproc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -5482,7 +5544,7 @@ Table 3: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <div id="tbl-algorithm-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-algorithm-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table 4: Performance comparison of machine learning algorithms for hemp grain protein prediction
+Table 5: Performance comparison of machine learning algorithms for hemp grain protein prediction
 </figcaption>
 <div aria-describedby="tbl-algorithm-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -5543,7 +5605,7 @@ Table 4: Performance comparison of machine learning algorithms for hemp grain p
 </figure>
 </div>
 </div>
-<p>The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (<a href="#tbl-algorithm-comparison" class="quarto-xref">Table 4</a>). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantage. The superior performance of PLSR validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p &lt; 0.05), indicating robust performance differences despite the relatively modest sample size.</p>
+<p>The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (<a href="#tbl-algorithm-comparison" class="quarto-xref">Table 5</a>). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantage. The superior performance of PLSR validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p &lt; 0.05), indicating robust performance differences despite the relatively modest sample size.</p>
 </section>
 <section id="plsr-full-spectrum-model-development" class="level3" data-number="3.4">
 <h3 data-number="3.4" class="anchored" data-anchor-id="plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR full spectrum model development</h3>
@@ -5671,7 +5733,7 @@ Figure 4: Comparing models developed using full and protein-specific spectra
 <section id="conflict-of-interest" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">5</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-07 09:09:18<br>
+<p><strong>Generated:</strong> 2025-07-07 10:02:00<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 
@@ -5687,6 +5749,9 @@ Bárta, J., Roudnický, P., Jarošová, M., Zdráhal, Z., Stupková, A., Bártov
 </div>
 <div id="ref-callaway_hempseed_2004" class="csl-entry" role="listitem">
 Callaway, J. C. (2004). Hempseed as a nutritional resource: An overview. <em>Euphytica</em>, <em>140</em>(1), 65–72. <a href="https://doi.org/10.1007/s10681-004-4811-6">https://doi.org/10.1007/s10681-004-4811-6</a>
+</div>
+<div id="ref-caporaso2018" class="csl-entry" role="listitem">
+Caporaso, N., Whitworth, M. B., &amp; Fisk, I. D. (2018). Near-infrared spectroscopy and hyperspectral imaging for non-destructive quality assessment of cereal grains. <em>Applied Spectroscopy Reviews</em>, <em>53</em>(8), 667–687. <a href="https://doi.org/10.1080/05704928.2018.1425214">https://doi.org/10.1080/05704928.2018.1425214</a>
 </div>
 <div id="ref-chadalavada_nir_2022" class="csl-entry" role="listitem">
 Chadalavada, K., Anbazhagan, K., Ndour, A., Choudhary, S., Palmer, W., Flynn, J. R., Mallayee, S., Pothu, S., Prasad, K. V. S. V., Varijakshapanikar, P., Jones, C. S., &amp; Kholová, J. (2022). <span>NIR</span> instruments and prediction methods for rapid access to grain protein content in multiple cereals. <em>Sensors (Basel, Switzerland)</em>, <em>22</em>(10). <a href="https://doi.org/10.3390/s22103710">https://doi.org/10.3390/s22103710</a>
@@ -5712,14 +5777,8 @@ Li, Y., Huang, Y., Xia, J., Xiong, Y., &amp; Min, S. (2020). Quantitative analys
 <div id="ref-liu_composition_2023" class="csl-entry" role="listitem">
 Liu, M., Toth, J. A., Childs, M., Smart, L. B., &amp; Abbaspourrad, A. (2023). Composition and functional properties of hemp seed protein isolates from various hemp cultivars. <em>Journal of Food Science</em>, <em>88</em>(3), 942–951. <a href="https://doi.org/10.1111/1750-3841.16467">https://doi.org/10.1111/1750-3841.16467</a>
 </div>
-<div id="ref-luce_prediction_2017" class="csl-entry" role="listitem">
-Luce, M. S., Ziadi, N., Gagnon, B., &amp; Lévesque, V. (2017). Prediction of total carbon, total nitrogen, and <span class="nocase">pH</span> of organic materials using visible near-infrared reflectance spectroscopy. <em>Canadian Journal of Soil Science</em>, <em>98</em>(1), 175–179. <a href="https://doi.org/10.1139/cjss-2017-0109">https://doi.org/10.1139/cjss-2017-0109</a>
-</div>
 <div id="ref-luo_properties_2005" class="csl-entry" role="listitem">
 Luo, J., Ying, K., He, P., &amp; Bai, J. (2005). Properties of savitzky–golay digital differentiators. <em>Digital Signal Processing</em>, <em>15</em>(2), 122–136. <a href="https://doi.org/10.1016/j.dsp.2004.09.008">https://doi.org/10.1016/j.dsp.2004.09.008</a>
-</div>
-<div id="ref-rawal_visible_2024" class="csl-entry" role="listitem">
-Rawal, A., Hartemink, A., Zhang, Y., Wang, Y., Lankau, R. A., &amp; Ruark, M. D. (2024). Visible and near-infrared spectroscopy predicted leaf nitrogen contents of potato varieties under different growth and management conditions. <em>Precision Agriculture</em>, <em>25</em>(2), 751–770. <a href="https://doi.org/10.1007/s11119-023-10091-z">https://doi.org/10.1007/s11119-023-10091-z</a>
 </div>
 <div id="ref-reeves_potential_2012" class="csl-entry" role="listitem">
 Reeves, J. B. (2012). Potential of near- and mid-infrared spectroscopy in biofuel production. <em>Communications in Soil Science and Plant Analysis</em>, <em>43</em>(1), 478–495. <a href="https://doi.org/10.1080/00103624.2012.641844">https://doi.org/10.1080/00103624.2012.641844</a>
@@ -5732,9 +5791,6 @@ Roberts, C. A., Workman, J., &amp; Reeves, J. B. (2004). <em>Near-infrared spect
 </div>
 <div id="ref-shi_estimation_2022" class="csl-entry" role="listitem">
 Shi, D., Hang, J., Neufeld, J., Zhao, S., &amp; House, J. D. (2022). Estimation of crude protein and amino acid contents in whole, ground and defatted ground soybeans by different types of near-infrared (<span>NIR</span>) reflectance spectroscopy. <em>Journal of Food Composition and Analysis</em>, <em>111</em>, 104601. <a href="https://doi.org/10.1016/j.jfca.2022.104601">https://doi.org/10.1016/j.jfca.2022.104601</a>
-</div>
-<div id="ref-towett2013" class="csl-entry" role="listitem">
-Towett, E. K., Alex, M., Shepherd, K. D., Polreich, S., Aynekulu, E., &amp; Maass, B. L. (2013). Applicability of near-infrared reflectance spectroscopy (NIRS) for determination of crude protein content in cowpea (vigna unguiculata) leaves. <em>Food Science &amp; Nutrition</em>, <em>1</em>(1), 45–53. <a href="https://doi.org/10.1002/fsn3.7">https://doi.org/10.1002/fsn3.7</a>
 </div>
 <div id="ref-wang_nirs-based_2025" class="csl-entry" role="listitem">
 Wang, Y., Zhao, C., Tian, H., Xing, Z., Yue, X., Liu, S., He, Y., Bai, J., Hao, L., Zhu, M., &amp; Dong, D. (2025). <span>NIRS</span>-based detection advances in agriculture: Data enhancement, characteristic wavelength selection and modelling techniques. <em>Spectrochimica Acta Part A: Molecular and Biomolecular Spectroscopy</em>, <em>343</em>, 126611. <a href="https://doi.org/10.1016/j.saa.2025.126611">https://doi.org/10.1016/j.saa.2025.126611</a>

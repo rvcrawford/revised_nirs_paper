@@ -1389,7 +1389,7 @@ create_preprocessing_comparison_table <- function(analysis) {
 }
 
 create_algorithm_comparison_table <- function(multi_algo_analysis) {
-  # Create algorithm comparison table with RPD-primary unified criteria
+  # Create algorithm comparison table - DOCX compatible version
   
   summary_stats <- multi_algo_analysis$summary_stats
   model_quality <- multi_algo_analysis$model_quality
@@ -1418,10 +1418,10 @@ create_algorithm_comparison_table <- function(multi_algo_analysis) {
       Poor_formatted = paste0(poor_pct, "%"),
       
       # Summary categories  
-      Quantitative_formatted = paste0(quantitative_capable, "%"),  # Excellent + Good
-      Qualitative_formatted = paste0(qualitative_capable, "%"),   # Fair (qualitative prediction)
-      Total_formatted = paste0(total_acceptable, "%"),            # All except Poor
-      HighQuality_formatted = paste0(high_quality_pct, "%")       # Meet all criteria
+      Quantitative_formatted = paste0(quantitative_capable, "%"),
+      Qualitative_formatted = paste0(qualitative_capable, "%"),
+      Total_formatted = paste0(total_acceptable, "%"),
+      HighQuality_formatted = paste0(high_quality_pct, "%")
     )
   
   # Create final table
@@ -1441,18 +1441,14 @@ create_algorithm_comparison_table <- function(multi_algo_analysis) {
     check.names = FALSE
   )
   
+  # DOCX-compatible table - no kableExtra styling
   knitr::kable(
     final_table,
-    caption = "Algorithm performance using RPD-primary unified evaluation criteria",
+    caption = "Algorithm performance using RPD-primary unified evaluation criteria. Primary classification by RPD: Excellent (>3.0), Good (2.0-3.0), Fair (1.4-2.0), Poor (<1.4). RPIQ and R² provide supporting evidence.",
     row.names = FALSE,
     align = c("l", rep("c", 11))
-  ) %>%
-    kableExtra::kable_styling(bootstrap_options = c("striped", "hover")) %>%
-    kableExtra::footnote(
-      general = "Primary classification by RPD: Excellent (>3.0), Good (2.0-3.0), Fair (1.4-2.0), Poor (<1.4). RPIQ and R² provide supporting evidence."
-    )
+  )
 }
-
 
 
 # =============================================================================

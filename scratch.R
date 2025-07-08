@@ -168,3 +168,49 @@ test_classification_logic <- function(rpd_values) {
 
 # Test with some example values
 # test_classification_logic(c(1.2, 1.5, 2.0, 2.5, 3.0, 3.5))
+
+
+# analyze_final_model <- function(final_model_results) {
+#   # Analyze final model performance
+#   
+#   metrics <- final_model_results$metrics
+#   predictions <- final_model_results$predictions
+#   
+#   # Overall statistics
+#   overall_stats <- metrics[, .(
+#     mean_rmse = mean(rmse, na.rm = TRUE),
+#     sd_rmse = sd(rmse, na.rm = TRUE),
+#     mean_rsq = mean(rsq, na.rm = TRUE),
+#     sd_rsq = sd(rsq, na.rm = TRUE),
+#     mean_rpd = mean(rpd, na.rm = TRUE),
+#     sd_rpd = sd(rpd, na.rm = TRUE),
+#     mean_rpiq = mean(rpiq, na.rm = TRUE),
+#     sd_rpiq = sd(rpiq, na.rm = TRUE),
+#     n_successful = .N
+#   )]
+#   
+#   # Performance categories
+#   good_models <- metrics[rpd >= 2.0 & rsq >= 0.7, .N]
+#   excellent_models <- metrics[rpd >= 2.5 & rsq >= 0.8, .N]
+#   total_models <- nrow(metrics)
+#   
+#   performance_summary <- list(
+#     total_models = total_models,
+#     good_models = good_models,
+#     excellent_models = excellent_models,
+#     good_percent = round(100 * good_models / total_models, 1),
+#     excellent_percent = round(100 * excellent_models / total_models, 1)
+#   )
+#   
+#   cat("Final model analysis:\n")
+#   cat("- Total successful models:", total_models, "\n")
+#   cat("- Good models (RPD≥2.0, R²≥0.7):", good_models, "(", performance_summary$good_percent, "%)\n")
+#   cat("- Excellent models (RPD≥2.5, R²≥0.8):", excellent_models, "(", performance_summary$excellent_percent, "%)\n")
+#   
+#   return(list(
+#     overall_stats = overall_stats,
+#     performance_summary = performance_summary,
+#     metrics = metrics,
+#     predictions = predictions
+#   ))
+# }

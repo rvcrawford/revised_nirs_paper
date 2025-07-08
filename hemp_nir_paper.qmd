@@ -110,8 +110,11 @@ source("R/core_functions.R")
 hemp_data <- tryCatch(tar_read(hemp_data), error = function(e) NULL)
 best_method <- tryCatch(tar_read(best_method), error = function(e) "Not available")
 final_model_analysis <- tryCatch(tar_read(final_model_analysis), error = function(e) NULL)
+final_model_results <- tryCatch(tar_read(final_model_results), error = function(e) NULL)
+
 preprocessing_analysis <- tryCatch(tar_read(preprocessing_analysis), error = function(e) NULL)
 preprocessing_comparison<- tryCatch(tar_read(preprocessing_comparison), error = function(e) NULL)
+error_analysis<- tryCatch(tar_read(error_analysis), error = function(e) NULL)
 
 table_model_comparison <- tar_read(table_model_comparison)
 # Also load the table and figure objects that are referenced later
@@ -128,25 +131,25 @@ table_algorithm_comparison <- tryCatch(tar_read(table_algorithm_comparison), err
 
 ```
 
-CP, crude protein; NIR, near-infrared; NIRS, near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RF, random forest; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay; SVM, support vector machines
+CP, crude protein; MAE,mean absolute error; NIR, near-infrared; NIRS, near-infrared spectroscopy; NY, New York; PLSR, partial least squares regression; RF, random forest; RPD, relative predicted deviation, RPIQ, ratio of performance to interquartile distance; SG, Savitzky-Golay; SNV, standard normal variate, SNV-SG, standard normal variate following Savitzky-Golay; SVM, support vector machines
 
 ## INTRODUCTION
 
-Hemp (*Cannabis sativa* L.) is an annual crop with potential uses as a source of food or feed, derived from the grain, and fiber (bast or hurd), derived from the stalk. Hemp cultivars are commonly grown for one or both purposes, and a cultivar may be called a grain, fiber, or dual-purpose type #CITATION#. Because of its nutritional importance, the protein concentration of a grain crop is a prime consideration for researchers, producers, and consumers. Whole hemp grain typically contains approximately 200-300 g kg^−1^ crude protein (CP) [@ely_industrial_2022; @barta_proteomic_2024; @callaway_hempseed_2004; @liu_composition_2023]. Crude protein is a proxy for the direct measurement of protein concentration and consists of the multiplication of nitrogen concentration by a conversion factor, often 6.25 [@hayes_measuring_2020].
+Hemp (*Cannabis sativa* L.) is an annual crop with potential uses as a source of food or feed, derived from the grain, and fiber (bast or hurd), derived from the stalk. Hemp cultivars are commonly grown for one or both purposes, and a cultivar may be called a grain, fiber, or dual-purpose type [@tang2016]. Because of its nutritional importance, the protein concentration of a grain crop is a prime consideration for researchers, producers, and consumers. Whole hemp grain typically contains approximately 200-300 g kg^−1^ crude protein (CP) [@ely_industrial_2022; @barta_proteomic_2024; @callaway_hempseed_2004; @liu_composition_2023]. Crude protein is a proxy for the direct measurement of protein concentration and consists of the multiplication of nitrogen concentration by a conversion factor, often 6.25 [@hayes_measuring_2020].
 
 Near-infrared (NIR) spectroscopy (NIRS) technology is rapid, non-destructive, and inexpensive. It consists of the measurement of NIR radiation reflected and absorbed from a sample (the spectra). These spectra are then related to primary analytical values, typically obtained using wet chemistry assays, for components such as moisture, CP, fat, or fiber [@roberts_near-infrared_2004]. NIRS technology has been used since the 1970's to assess forage CP concentration [@reeves_potential_2012; @williams_application_1975]. A NIRS calibration set often consists of samples from diverse genotypes of one species grown in many environments encompassing the range of expected values from the analyte or analytes [@chadalavada_nir_2022].
 
 Partial least squares regression (PLSR), a typical method used in the agricultural and food sciences, calculates components that maximize covariance between predictor and response variables to relate spectra to analyte [@roberts_near-infrared_2004]. It uses some number of components, often selected via cross-validation in order to avoid overfitting, to fit the regression model. It is commonly used in spectroscopy because it tends to work well with highly correlated, noisy spectral data [@wold_pls-regression_2001].
 
-While PLSR is commonly used in agricultural applications, other algorithms may offer comparable or improved prediction accuracy. Support vector machines (SVM) and random forest (RF) algorithms have been utilized in NIRS applications, particularly where non-linear relationships exist between spectral features and analyte concentrations [@chinilin2023]. Support vector machines apply non-linear kernel functions to capture relationships between spectral data and analyte concentrations, with studies demonstrating competitive performance with PLSR for protein prediction in stored wheat grains [@kamboj2022]. Random forest (RF) algorithms use ensemble learning to combine multiple decision trees and has been used to predict protein content in grains [@chadalavada2022; @haruna2022]. Comparing multiple algorithms helps ensure that the best approach is chosen.
+While PLSR is commonly used in agricultural applications, other algorithms may offer comparable or improved prediction accuracy. Support vector machines (SVM) and random forest (RF) algorithms have been utilized in NIRS applications, particularly where non-linear relationships exist between spectral features and analyte concentration [@chinilin2023]. Support vector machines apply non-linear kernel functions to capture relationships between spectral data and analyte concentrations, with studies demonstrating competitive performance with PLSR for protein prediction in stored wheat grains [@kamboj2022]. Random forest (RF) algorithms use ensemble learning to combine multiple decision trees and has been used to predict protein content in grains [@chadalavada2022; @haruna2022]. Comparing multiple algorithms helps ensure that the best approach is chosen.
 
-The biological validity of NIRS predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. Models developed using biologically-relevant wavelengths are evidence that predictions are based on true protein-spectral relationships rather than spurious correlations with other quality components. Three spectral regions with established CP-related vibrational assignments are: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 2040-2070 nm (N-H + C-N combination bands) [@köllmann2023; @shi_estimation_2022]. These models may also be more readily transferable between instruments because they discard noisy, irrelevant portions of the spectra [@wang_nirs-based_2025].
+The biological validity of NIRS predictions can be enhanced through targeted analysis of wavelength regions corresponding to known molecular absorption bands. Models developed using biologically-relevant wavelengths are evidence that predictions are based on CP-spectral relationships rather than spurious correlations with other quality components. Three spectral regions with established CP-related vibrational assignments are: 1180-1230 nm (C-H stretch 2nd overtone from amino acid side chains), 1480-1530 nm (N-H stretch 1st overtone from peptide bonds), 2040-2070 nm (N-H + C-N combination bands) [@köllmann2023; @shi_estimation_2022]. These models may also be more readily transferable between instruments because they discard noisy, irrelevant portions of the spectra [@wang_nirs-based_2025].
 
 <!-- Non-destructive sampling of grain is attractive for plant breeders. -->
 
 A NIRS-scanned sample of whole grain may be used for other purposes besides the scan, including planting as a seed or consumed, benefits attractive to plant breeders, farmers, and the food industry [@caporaso2018]. In wheat and corn, grain CP content has been shown to be heritable [@giancaspro_genetic_2019; @geyer_genetics_2022]. This suggests that NIRS technology could serve as a resource to rapidly identify high concentration CP hemp germplasm, enabling the screening of germplasm as seed, before planting to the field, and facilitating the efficient development of high concentration CP hemp populations.
 
-For this study, researchers hypothesized that a benchtop NIR spectrometer could be used to develop a model to accurately predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR.
+For this study, researchers hypothesized that a benchtop NIR spectrometer could be used to develop a model to accurately predict CP concentration based on a data set of hemp grain representing multiple years, locations, and cultivars from grain and dual-purpose hemp types using PLSR, RF, or SVM.
 
 ## MATERIALS AND METHODS
 
@@ -272,13 +275,27 @@ From the literature, these results are readily explained. Standard normal variat
 table_algorithm_comparison
 ```
 
-The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (@tbl-algorithm-comparison). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, while the additional complexity of non-linear algorithms did not provide predictive advantage. This may be  The superior performance of PLSR validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p \< 0.05), indicating robust performance differences despite the relatively modest sample size.
+The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving superior performance across all evaluation metrics (@tbl-algorithm-comparison). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, at least for screening, while the additional complexity of non-linear algorithms did not provide predictive advantage. This contrasts with researchers who obtained their best predictions of grains or seeds using machine learning methods other than PLSR (SVM and convolutional neural networks,respectively) , although in the present case the training sets were less than half the size of those used by the other researchers [@huang2013; @chadalavada2022].
 
-
+The superior performance of PLSR in this relatively small data set validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p \< 0.05), indicating robust performance differences despite the relatively modest sample size.
 
 ### PLSR full spectrum model development
 
-The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 5%-12%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (@fig-model-calibration).
+```{r, message=FALSE, warning=FALSE}
+# check results
+final_results <- final_model_results$model_n_comp_statistics
+final_summary <- final_results[,list(mean_RMSE = mean(RMSE)), by = ncomp]
+
+final_summary[, pct_change :=(mean_RMSE/shift(mean_RMSE)-1)*100]
+
+# check components 1-7
+
+range(final_summary$pct_change[1:7], na.rm = T)
+# components 8-12
+range(final_summary$pct_change[8:12], na.rm = T)
+```
+
+The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 6%-11%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (@fig-model-calibration).
 
 ```{r}
 #| label: fig-model-calibration
@@ -287,7 +304,7 @@ The model improved most rapidly as the number of components increased from one t
 fig_model_calibration
 ```
 
-The performance of the final models on the testing sets are summarized in @fig-performance-boxplot. The means of the final models were: RMSE = `r round(mean(final_model_analysis$metrics$rmse), 2)`, R^2^ = `r round(mean(final_model_analysis$metrics$rsq), 2)`, RPD = `r round(mean(final_model_analysis$metrics$rpd), 2)`, and RPIQ = `r round(mean(final_model_analysis$metrics$rpiq), 2)`. All of the models had, at minimum, the ability to distinguish between high and low values with `r final_model_analysis$quantitative_capable`% having some capacity for quantitative prediction. Despite the generally reasonable model performance, a subset of poor models can be seen in the boxplots.
+The performance of the final models on the testing sets are summarized in @fig-performance-boxplot. The means of the final models were: RMSE = `r round(mean(final_model_analysis$metrics$rmse), 2)`, R^2^ = `r round(mean(final_model_analysis$metrics$rsq), 2)`, RPD = `r round(mean(final_model_analysis$metrics$rpd), 2)`, and RPIQ = `r round(mean(final_model_analysis$metrics$rpiq), 2)`. All of the models had, at minimum, the ability to distinguish between high and low values with `r final_model_analysis$quantitative_capable`% having some capacity for quantitative prediction. Despite  generally reasonable model performance, a subset of poor models can be seen in the boxplots.
 
 ```{r}
 #| label: fig-performance-boxplot
@@ -296,7 +313,7 @@ The performance of the final models on the testing sets are summarized in @fig-p
 fig_performance_boxplot
 ```
 
-This is a more lax standard for RPD than that set forth by @williams_calibration_2013, who recommended a minimum acceptable RPD value of 2.4 as suitable for use rough screening, such as breeding programs. Utilizing those higher benchmarks, `r round(final_model_analysis$metrics[rpd>2.4] |> nrow()/10)`% of the models were sufficient for rough screening and `r round(final_model_analysis$metrics[rpd>3.1] |> nrow()/10)`% were suitable for screening, although none sufficed for quality or process control. However, it models with lower RPD values can still be of use to researchers [@bellon-maurel2010]
+This is a more lax standard for RPD than that set forth by @williams_calibration_2013, who recommended a minimum acceptable RPD value of 2.4 as suitable rough screening, such as in plant breeding programs. Utilizing those higher benchmarks, `r round(final_model_analysis$metrics[rpd>2.4] |> nrow()/10)`% of the models were sufficient for rough screening and `r round(final_model_analysis$metrics[rpd>3.1] |> nrow()/10)`% were suitable for screening, although none sufficed for quality or process control. However, models with lower RPD values can still be of use to researchers [@bellon-maurel2010]
 
 The pattern of test set errors was examined on a per-sample basis by calculating the difference between the actual and predicted values for the samples in the test sets (@fig-validation-errors). The models showed systematic bias, with overestimation in the lowest tertile and underestimation in the highest tertile samples. The variance of the errors did not increase appreciably as CP concentration increased.
 
@@ -307,9 +324,33 @@ The pattern of test set errors was examined on a per-sample basis by calculating
 fig_validation_errors
 ```
 
-The 15 (10%) best and 15 worst predicted samples as measured by the mean absolute error of prediction were identified and their backgrounds examined. Overall, half of the samples in the data set came from Ithaca, NY ("Ithaca"), while 28% were collected from Geneva, NY ("Geneva") Table 3. However, of the 15 worst-predicted samples, nine were from Geneva, while three of the 15 best-predicted samples were from Geneva (by contrast, seven of the best-predicted and five of the worst-predicted samples came from Ithaca). Overall, samples from Geneva had the highest mean absolute error of prediction among locations, 61% greater than samples from Ithaca and 155% greater than samples from Freeville, NY (the only locations where more than 20 samples were assayed).
+```{r, message=FALSE, warning=FALSE}
+# check errors
+location_key <- fread("./input_data/final_data_set/location_key.txt")
 
-Trials in Geneva and Ithaca were generally planted and harvested near the same date, and samples were assayed with the NIRS instrument within the same few weeks between field seasons. The likeliest explanation is variation in sample-handling, particularly harvesting and grain-cleaning. However, the exact reason for these differences is unknowable.
+samples_with_errors <- error_analysis$sample_errors |> 
+  select(1:4) |> 
+  left_join(hemp_data_prepared |> select(ith_in_data_set, loc, year)) |> left_join(location_key) |> 
+  mutate(absolute_error = abs(mean_error)) |> 
+  arrange(absolute_error)
+
+abs_error_by_location <- samples_with_errors[,list(MAE = mean(absolute_error)), by = loc2]
+
+mae_gen_vs_ithaca <- (10.9-6.7)/6.7
+mae_gen_vs_free <- (10.9-4.3)/4.3
+
+abs_error_by_years <- samples_with_errors[,list(MAE = mean(absolute_error)), by = year]
+ samples_with_errors[,.N, by = year]
+
+ (11.5-6.3)/6.3
+
+ 
+```
+
+
+The 15 (10%) best and 15 worst predicted samples as measured by the mean absolute error of prediction were identified and their backgrounds examined. Overall, half of the samples in the data set came from Ithaca, NY ("Ithaca"), while 28% were collected from Geneva, NY ("Geneva") Table 3. However, of the 15 worst-predicted samples, ten were from Geneva, while four of the 15 best-predicted samples were from Geneva (by contrast, five of the best-predicted and five of the worst-predicted samples came from Ithaca). Overall, samples from Geneva had the highest mean absolute error (MAE) of prediction among locations, 63% greater than samples from Ithaca and 153% greater than samples from Freeville, NY (the only locations where more than 20 samples were assayed). 
+
+Trials in Geneva and Ithaca were generally planted and harvested near the same date, and samples were assayed with the NIRS instrument within the same few weeks between field seasons. The likeliest explanation is variation in sample-handling, particularly harvesting and grain-cleaning, or variation in environmental condititions across growing seasons. However, the exact reason for these differences is likely unknowable.
 
 ### Protein-Focused Model Validation
 
@@ -333,9 +374,9 @@ The protein-focused model successfully maintained predictive capability while us
 
 Using a smaller portion of the spectrum and reducing the number of principal components used in developing a model aligns with the advice to use 20 samples for calibration per principal component in PLSR [@williams2013a]. By that rubric, a model using five principal components would require at least 100 samples to calibrate it. Here 111 samples were used in calibration, exceeding that threshold.
 
-Variable Importance in Projection (VIP) scores revealed that the protein-focused model concentrated predictive power in the expected molecular absorption regions (@fig-model-comparison). The 1480-1530 nm region (N-H stretch from peptide bonds) showed the highest importance, followed by the 2040-2070 nm region (N-H + C-N combination bands). This pattern aligns with established protein spectroscopy literature #NEEDS CITATIONS# and confirms that the models are responding to genuine protein-related molecular vibrations rather than spurious correlations.
+Variable Importance in Projection (VIP) scores revealed that the protein-focused model concentrated predictive power in the expected molecular absorption regions (@fig-model-comparison). The 1480-1530 nm region (N-H stretch from peptide bonds) showed the highest importance, followed by the 2040-2070 nm region (N-H + C-N combination bands). This pattern aligns with established protein spectroscopy literature #NEEDS CITATIONS# and confirms that the models are responding to CP-related molecular vibrations rather than spurious correlations.
 
-The performance of the protein-focused model provides biological validation of NIRS predictions. This approach improved model interpretability by explicitly connecting predictions to known protein chemistry., suggesting that future hemp protein calibrations could focus on these specific wavelength regions. This could potentially improve model robustness and transferability across NIR instruments or environments. This approach is evidence that successful predictions are based on genuine protein-spectral relationships rather than correlations with other grain components such as oil, starch, or moisture.
+The performance of the protein-focused model provides biological validation of NIRS predictions. This approach improved model interpretability by explicitly connecting predictions to known CP chemistry., suggesting that future hemp CP calibrations could focus on these specific wavelength regions. This could potentially improve model robustness and transferability across NIR instruments or environments. This approach is evidence that successful predictions are based on genuine protein-spectral relationships rather than correlations with other grain components such as oil, starch, or moisture.
 
 This study is limited in that it represents the creation of one model based upon spectra collected from one machine. This is insufficient for use in an industrial setting [@williams2013]. NIRS calibrations can be unique to a particular machine, even if the machines compared are of the same model[@reeves2012]. As well, the testing and training sets are relatively small.
 

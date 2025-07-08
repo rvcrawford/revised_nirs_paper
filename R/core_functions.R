@@ -1454,69 +1454,6 @@ create_algorithm_comparison_table <- function(multi_algo_analysis) {
 }
 
 
-# create_algorithm_comparison_table <- function(multi_algo_analysis) {
-#   # Create algorithm comparison table with strict unified criteria
-#   
-#   summary_stats <- multi_algo_analysis$summary_stats
-#   model_quality <- multi_algo_analysis$model_quality
-#   
-#   # Combine data
-#   combined_table <- merge(summary_stats, model_quality, by = "algorithm")
-#   
-#   # Format for manuscript with unified categories
-#   formatted_table <- combined_table %>%
-#     mutate(
-#       Algorithm = case_when(
-#         algorithm == "pls" ~ "Partial Least Squares",
-#         algorithm == "svmRadial" ~ "Support Vector Machine", 
-#         algorithm == "rf" ~ "Random Forest",
-#         TRUE ~ str_to_title(algorithm)
-#       ),
-#       RMSE_formatted = paste0(round(mean_rmse, 3), " (±", round(sd_rmse, 3), ")"),
-#       R2_formatted = paste0(round(mean_rsq, 3), " (±", round(sd_rsq, 3), ")"),
-#       RPD_formatted = paste0(round(mean_rpd, 2), " (±", round(sd_rpd, 2), ")"),
-#       RPIQ_formatted = paste0(round(mean_rpiq, 2), " (±", round(sd_rpiq, 2), ")"),
-#       
-#       # Unified criteria categories
-#       Excellent_formatted = paste0(excellent_pct, "%"),
-#       Good_formatted = paste0(good_pct, "%"),
-#       Fair_formatted = paste0(fair_pct, "%"),
-#       Poor_formatted = paste0(poor_pct, "%"),
-#       
-#       # Summary categories
-#       Quantitative_formatted = paste0(quantitative_capable, "%"),  # Excellent + Good
-#       Qualitative_formatted = paste0(qualitative_capable, "%"),   # Fair (qualitative prediction)
-#       Total_formatted = paste0(total_acceptable, "%")             # All except Poor
-#     )
-#   
-#   # Create final table
-#   final_table <- data.frame(
-#     "Algorithm" = formatted_table$Algorithm,
-#     "RMSE (±SD)" = formatted_table$RMSE_formatted,
-#     "R² (±SD)" = formatted_table$R2_formatted,
-#     "RPD (±SD)" = formatted_table$RPD_formatted,
-#     "RPIQ (±SD)" = formatted_table$RPIQ_formatted,
-#     "Excellent (%)" = formatted_table$Excellent_formatted,
-#     "Good (%)" = formatted_table$Good_formatted,
-#     "Fair (%)" = formatted_table$Fair_formatted,
-#     "Poor (%)" = formatted_table$Poor_formatted,
-#     "Quantitative (%)" = formatted_table$Quantitative_formatted,
-#     "Qualitative (%)" = formatted_table$Qualitative_formatted,
-#     "Total Usable (%)" = formatted_table$Total_formatted,
-#     check.names = FALSE
-#   )
-#   
-#   knitr::kable(
-#     final_table,
-#     caption = "Algorithm performance using strict unified evaluation criteria (all three metrics must meet thresholds)",
-#     row.names = FALSE,
-#     align = c("l", rep("c", 11))
-#   ) %>%
-#     kableExtra::kable_styling(bootstrap_options = c("striped", "hover")) %>%
-#     kableExtra::footnote(
-#       general = "Excellent: RPD>3.0 & RPIQ>4.1 & R²>0.9; Good: RPD 2.0-3.0 & RPIQ 2.3-4.1 & R² 0.8-0.9; Fair: RPD 1.4-2.0 & RPIQ 1.5-2.3 & R² 0.5-0.8; Poor: fails any category"
-#     )
-# }
 
 # =============================================================================
 # OPTIONAL: FUNCTION TO DIAGNOSE CLASSIFICATION MISMATCHES  

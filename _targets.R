@@ -99,23 +99,30 @@ list(
   
   tar_target(
     spectral_analysis,
-    run_spectral_analysis(hemp_data, best_method)
+    run_spectral_analysis(hemp_data, best_method, n_iterations = 1000)
   ),
+  
+ 
   
   # =============================================================================
   # PROTEIN-FOCUSED SPECTRAL ANALYSIS
   # =============================================================================
   
   tar_target(
-    protein_focused_analysis,
-    run_protein_focused_analysis(hemp_data, best_method)
+    protein_validation,
+    run_protein_focused_validation(hemp_data, best_method, n_iterations = 1000)
   ),
+  
+  # tar_target(
+  #   model_comparison,
+  #   compare_full_vs_protein_models(spectral_analysis, protein_focused_analysis)
+  # ),
   
   tar_target(
-    model_comparison,
-    compare_full_vs_protein_models(spectral_analysis, protein_focused_analysis)
+    protein_analysis,
+    analyze_protein_focused_results(protein_validation)
   ),
-  
+  # 
   # =============================================================================
   # TABLES FOR MANUSCRIPT
   # =============================================================================
@@ -135,13 +142,33 @@ list(
     create_algorithm_comparison_table(multi_algorithm_analysis)
   ),
   
-  tar_target(
-    table_model_comparison,
-    create_model_comparison_table(model_comparison)
-  ),
+  # tar_target(
+  #   table_model_comparison,
+  #   create_model_comparison_table(model_comparison)
+  # ),
   tar_target(
     error_analysis,
     analyze_prediction_errors(final_model_results, hemp_data)
+  ),
+  tar_target(
+    vip_table,
+    create_variable_importance_table(protein_analysis = protein_analysis)
+  ),
+  tar_target(
+    performance_results,
+    process_analysis_results(protein_analysis, spectral_analysis)
+  ),
+  
+  # Generate the summary table
+  tar_target(
+    table_performance_summary,
+    create_summary_table(performance_results)
+  ),
+  
+  # Generate the performance distribution table
+  tar_target(
+    table_performance_distribution,
+    create_performance_distribution_table(performance_results)
   ),
   
   # =============================================================================
@@ -168,15 +195,20 @@ list(
     create_vip_plot(spectral_analysis, use_points = TRUE)
   ),
   
-  tar_target(
-    fig_model_comparison,
-    create_model_comparison_plot(spectral_analysis, protein_focused_analysis)
-  ),
+  # tar_target(
+  #   fig_model_comparison,
+  #   create_model_comparison_plot(spectral_analysis, protein_focused_analysis)
+  # ),
   
   tar_target(
     fig_validation_errors,
     create_validation_error_plot(error_analysis)
+  ),
+  tar_target(
+    combined_vip_plot,
+    create_combined_vip_distribution_plot(spectral_analysis, protein_analysis, alpha_level = 0.03)
   )
+  
   
   # =============================================================================
   # MANUSCRIPT RENDERING (OPTIONAL)

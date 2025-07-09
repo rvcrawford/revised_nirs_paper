@@ -1312,8 +1312,8 @@ analyze_protein_focused_results <- function(protein_results) {
   # RPD-based classification
   excellent_count <- sum(metrics$rpd > 3.0, na.rm = TRUE)
   good_count <- sum(metrics$rpd >= 2.0 & metrics$rpd <= 3.0, na.rm = TRUE)
-  fair_count <- sum(metrics$rpd >= 1.4 & metrics$rpd < 2.0, na.rm = TRUE)
-  poor_count <- sum(metrics$rpd < 1.4, na.rm = TRUE)
+  fair_count <- sum(metrics$rpd >= 1.5 & metrics$rpd < 2.0, na.rm = TRUE)
+  poor_count <- sum(metrics$rpd < 1.5, na.rm = TRUE)
   
   total_models <- nrow(metrics)
   performance_summary <- list(
@@ -1718,7 +1718,7 @@ create_algorithm_comparison_table <- function(multi_algo_analysis) {
   # DOCX-compatible table - no kableExtra styling
   knitr::kable(
     final_table,
-    caption = "Algorithm performance using RPD-primary unified evaluation criteria. Primary classification by RPD: Excellent (>3.0), Good (2.0-3.0), Fair (1.4-2.0), Poor (<1.4). RPIQ and R² provide supporting evidence.",
+    caption = "Algorithm performance using RPD-primary unified evaluation criteria. Primary classification by RPD: Excellent (>3.0), Good (2.0-3.0), Fair (1.5-2.0), Poor (<1.5). RPIQ and R² provide supporting evidence.",
     row.names = FALSE,
     align = c("l", rep("c", 11))
   )
@@ -1783,11 +1783,21 @@ create_variable_importance_table <- function(protein_analysis, top_n = 10) {
 }
 
 create_summary_table <- function(results) {
-  kable(results$summary_table, 
+  # Format data with mean ± SD format
+  formatted_data <- results$summary_table %>%
+    mutate(
+      RMSE_formatted = paste0(sprintf("%.1f", Mean_RMSE), " ± ", sprintf("%.1f", SD_RMSE)),
+      R2_formatted = paste0(sprintf("%.3f", Mean_R2), " ± ", sprintf("%.3f", SD_R2)),
+      RPD_formatted = paste0(sprintf("%.2f", Mean_RPD), " ± ", sprintf("%.2f", SD_RPD)),
+      RPIQ_formatted = paste0(sprintf("%.2f", Mean_RPIQ), " ± ", sprintf("%.2f", SD_RPIQ)),
+      Components_formatted = paste0(sprintf("%.1f", Mean_Components), " ± ", sprintf("%.1f", SD_Components))
+    ) %>%
+    select(Analysis, RMSE_formatted, R2_formatted, RPD_formatted, RPIQ_formatted, Components_formatted)
+  
+  kable(formatted_data, 
         caption = "Model Performance Summary Statistics (n=1000 iterations)",
-        col.names = c("Analysis Type", "RMSE (g/kg)", "SD", "R²", "SD", 
-                      "RPD", "SD", "RPIQ", "SD", "Components", "SD"),
-        align = c("l", rep("c", 10)))
+        col.names = c("Analysis Type", "RMSE (g/kg)", "R²", "RPD", "RPIQ", "Components"),
+        align = c("l", rep("c", 5)))
 }
 
 create_performance_distribution_table <- function(results) {

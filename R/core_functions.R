@@ -1943,15 +1943,28 @@ create_validation_error_plot <- function(error_analysis) {
   # STEP 4: Create the plot
   plot_data <- plot_data[order(plot_order)]
   
+  plot_data <- plot_data[order(plot_order)]
+  
+  plot_data <- plot_data[order(plot_order)]
+  
   p <- ggplot(plot_data) +
-    # Background points (very light triangles)
-    geom_point(aes(x = plot_order, y = error_raw), alpha = 0.05, shape = 2) +
+    # Background points (filled triangles) - now with aesthetic mapping
+    geom_point(aes(x = plot_order, y = error_raw, shape = "Raw Predictions"), 
+               alpha = 0.05, color = "black") +
     # Heavy dashed horizontal line at zero
     geom_hline(yintercept = 0, linewidth = 2, lty = 2) +
-    # CROSSES for systematic bias
+    # CROSSES for systematic bias - now with aesthetic mapping
     geom_point(data = sample_summaries, 
-               aes(x = plot_order, y = systematic_bias), 
-               shape = 3, size = 1.2, color = "black") +
+               aes(x = plot_order, y = systematic_bias, shape = "Systematic Bias"), 
+               size = 1.2, color = "black") +
+    # Manual shape scale to control legend
+    scale_shape_manual(
+      name = "Data Type",
+      values = c("Raw Predictions" = 17, "Systematic Bias" = 3),
+      labels = c("Raw Predictions" = "Raw Predictions", "Systematic Bias" = "Systematic Bias")
+    ) +
+    # Override legend aesthetics to make both shapes dark and visible
+    guides(shape = guide_legend(override.aes = list(alpha = 1, color = "black", size = 2))) +
     # Faceting
     facet_wrap(~cutpoints, 
                labeller = label_parsed, 
@@ -1959,11 +1972,17 @@ create_validation_error_plot <- function(error_analysis) {
     # Y-axis label matching backup
     ylab("Crude Protein Predicted Percent Difference\nfrom Assayed Value") +
     theme_classic() +
-    # Remove x-axis labeling
+    # Remove x-axis labeling and position legend
     theme(
       axis.title.x = element_blank(),
       axis.text.x = element_blank(),
-      axis.ticks.x = element_blank()
+      axis.ticks.x = element_blank(),
+      # Position legend in top right, but shifted left to stay within plot area
+      legend.position = "inside",
+      legend.position.inside = c(0.97, 0.97),
+      legend.justification = c(1, 1),
+      legend.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
+      legend.margin = margin(6, 6, 6, 6)
     )
   
   return(p)

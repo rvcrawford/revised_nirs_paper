@@ -72,7 +72,7 @@ keywords:
   - Grain
   - Spectroscopy
 abstract: |
-      The protein concentration of hemp (*Cannabis sativa* L.) grain is of interest to researchers, producers, and consumers. This study was conducted to determine whether hemp grain can be non-destructively assayed for crude protein (CP) concentration using spectra obtained from near-infrared spectroscopy (NIRS) to build a prediction model for CP using partial least squares regression (PLSR). One hundred and fourty-nine whole hemp grain samples were obtained from 18 cultivar trials in New York (NY) from 2017-2021. Their spectra were measured with a benchtop NIRS instrument, and then ground and assayed by combustion to directly measure CP concentration. Seven potential preprocessing methods, as well as untransformed spectra, were tested using 100 training and testing set splits of the data and the best method was selected. That method was applied to 1000 additional splits of the data set. Model fit was evaluated using RMSE, R^2^, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ). Once a preprocessing method was selected, the optimal number of model components and prediction performance on the testing sets were examined. A preprocessing method consisting of the standard normal variate transformation following a Savitzky-Golay filter had the lowest RMSE and the highest R^2^, RPD and RPIQ, with RPD and RPIQ. All preprocessing methods outperformed untransformed spectra. Optimal final models typically consisted of 12 components. Seventy-four percent of the 1000 final models had, at minimum, the ability to distinguish between high and low values of CP concentration, with 49% of the models capable of approximating quantitative prediction. The models tended to overestimate CP concentration by 0.5% in the lowest tertile of samples and underestimate CP concentration by 0.4% in the highest tertile of samples. The worst-predicted samples tended to come from Geneva, NY, possibly as a result of the models' class imbalance or differences in sample handling. The research shows the promise that NIRS offers in the non-destructive assay of CP concentration in hemp grain.
+      This study evaluated near-infrared spectroscopy (NIRS) for non-destructive crude protein (CP) prediction in hemp (Cannabis sativa L.) grain and validated the biological basis of spectral predictions. One hundred and forty-nine whole grain samples from 38 cultivars were collected from New York trials (2017-2021) and validated for CP by combustion. Seven preprocessing methods were tested using 100 training/testing splits, with standard normal variate transformation following Savitzky-Golay filtering selected as optimal. Comparing algorithms showed that partial least squares regression (PLSR) significantly outperformed support vector machines and random forest. The best preprocessing method and algorithm was applied to 1,000 additional splits. Optimal models contained 12 components with mean performance of RMSE = 9.94, R² = 0.84, RPD = 2.5, and RPIQ = 3.94.  More than 99% of the models had, at minimum, the ability to distinguish between high and low values, with 93.2% capable of quantitative prediction.To validate biological relevance, a protein-focused model was developed using three known protein absorption bands (1200-1250, 1500-1550, and 2040-2090 nm). These models had substantially reduced performance with 86% of models capable of distinguishing between high and low values but only 14% of models capable of quantitative prediction. However, this targeted approach offers evidence that NIRS predictions are biologically grounded in protein-specific spectral features rather than spurious correlations. This research demonstrates the promise and biological validity of NIRS for hemp grain CP assessment, supporting applications in breeding programs, although applications demanding more accurate prediction will require better models.
 
 plain-language-summary: |
   A model was developed to predict percent crude protein in hemp grain using near infrared spectroscopy.
@@ -191,7 +191,9 @@ WINISI software version 1.02A (Infrasoft International, Port Matilda, PA, USA) w
 
 Laboratory assays were performed by Dairy One Forage Laboratory (Ithaca, NY). For those assays, 1 mm ground samples were analyzed by combustion using a CN628 or CN928 Carbon/Nitrogen Determinator. Samples from 2017 were aggregated as described above, but the remaining samples were not aggregated.
 
-### R software and packages used
+### Software and Packages Used
+
+All analyses were conducted using R version 4.4.1 (R Core Team, 2024) with workflow management via targets v. 1.8.0 (Landau, 2021) and package control via renv v. 1.1.4 (Ushey, 2024). Data processing utilized data.table v. 1.16.0 (Barrett et al., 2024) and tidyverse v. 2.0.0 (Wickham et al., 2019), while machine learning was implemented through caret v. 6.0.90 (Kuhn, 2021) with pls v. 2.8.0, randomForest v. 4.7-1.1, and kernlab v. 0.9-33 for PLSR, random forest, and SVM algorithms, respectively.
 
 ### Model Development
 
@@ -231,7 +233,7 @@ To validate the biological basis of spectroscopic predictions and ensure that mo
 
 ## RESULTS AND DISCUSSION
 
-### Laboratory assay CP values
+### Laboratory Assay CP Values
 
 Laboratory assay CP concentration values are summarized in @tbl-protein-summary. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of `r round(calculate_skewness(hemp_data$crude_protein), 2)`) and two thirds of the samples contained more than 250 g kg ^-1^ CP.
 
@@ -242,7 +244,7 @@ Laboratory assay CP concentration values are summarized in @tbl-protein-summary.
 table_sample_summary
 ```
 
-### Preprocessing methods comparison
+### Preprocessing Methods Comparison
 
 Among the eight methods compared via ANOVA, the SNV-SG and SG preprocessing methods performed the best and were in the best highest-performing post-hoc comparison group. The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations (@tbl-preproc). The superiority of SNV-SG by these metrics made it the best choice for the final model.
 
@@ -268,7 +270,7 @@ table_preprocessing
 
 From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples [@barnes_standard_1989]. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal's shape and features [@li_quantitative_2020; @luo_properties_2005]. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise [@rinnan_review_2009]. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.
 
-### Algorithm comparison
+### Algorithm Comparison
 
 The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving significantly superior performance across all evaluation metrics (@tbl-algorithm-comparison). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, at least for screening, while the additional complexity of non-linear algorithms did not provide predictive advantage. This contrasts with researchers who obtained their best predictions of grains or seeds using machine learning methods other than PLSR (SVM and convolutional neural networks,respectively) , although in the present case the training sets were less than half the size of those used by the other researchers [@huang_feasibility_2013; @chadalavada_nir_2022].
 
@@ -281,7 +283,7 @@ table_algorithm_comparison
 
 The superior performance of PLSR in this relatively small data set validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p \< 0.05), indicating robust performance differences despite the relatively modest sample size.
 
-### PLSR full spectrum model development
+### PLSR Full Spectrum Model Development
 
 ```{r, message=FALSE, warning=FALSE, results = 'hide'}
 # check results
@@ -306,7 +308,7 @@ The model improved most rapidly as the number of components increased from one t
 fig_model_calibration
 ```
 
-The performance of the final models on the testing sets is summarized in @fig-performance-boxplot. The means of the final models were: RMSE = `r round(mean(final_model_analysis$metrics$rmse), 2)`, R^2^ = `r round(mean(final_model_analysis$metrics$rsq), 2)`, RPD = `r round(mean(final_model_analysis$metrics$rpd), 2)`, and RPIQ = `r round(mean(final_model_analysis$metrics$rpiq), 2)`. Nearly of the models had, at minimum, the ability to distinguish between high and low values with `r final_model_analysis$quantitative_capable`% having some capacity for quantitative prediction. Despite generally reasonable model performance, a subset of poor models can be seen in the boxplots.
+The performance of the final models on the testing sets is summarized in @fig-performance-boxplot. The means of the final models were: RMSE = `r round(mean(final_model_analysis$metrics$rmse), 2)`, R^2^ = `r round(mean(final_model_analysis$metrics$rsq), 2)`, RPD = `r round(mean(final_model_analysis$metrics$rpd), 2)`, and RPIQ = `r round(mean(final_model_analysis$metrics$rpiq), 2)`. More than 99% of the models had, at minimum, the ability to distinguish between high and low values, with `r final_model_analysis$performance_summary$quantitative_capable`% having some capacity for quantitative prediction (RPD \> 2.0). Despite generally reasonable model performance, a subset of poor models can be seen in the boxplots.
 
 ```{r}
 #| label: fig-performance-boxplot

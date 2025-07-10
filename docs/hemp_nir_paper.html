@@ -4887,15 +4887,15 @@ window.Quarto = {
   <li><a href="#hemp-grain-sample-background" id="toc-hemp-grain-sample-background" class="nav-link" data-scroll-target="#hemp-grain-sample-background"><span class="header-section-number">2.1</span> Hemp Grain Sample Background</a></li>
   <li><a href="#spectral-data-collection-and-preprocessing" id="toc-spectral-data-collection-and-preprocessing" class="nav-link" data-scroll-target="#spectral-data-collection-and-preprocessing"><span class="header-section-number">2.2</span> Spectral Data Collection and Preprocessing</a></li>
   <li><a href="#laboratory-validation" id="toc-laboratory-validation" class="nav-link" data-scroll-target="#laboratory-validation"><span class="header-section-number">2.3</span> Laboratory Validation</a></li>
-  <li><a href="#r-software-and-packages-used" id="toc-r-software-and-packages-used" class="nav-link" data-scroll-target="#r-software-and-packages-used"><span class="header-section-number">2.4</span> R software and packages used</a></li>
+  <li><a href="#software" id="toc-software" class="nav-link" data-scroll-target="#software"><span class="header-section-number">2.4</span> Software</a></li>
   <li><a href="#model-development" id="toc-model-development" class="nav-link" data-scroll-target="#model-development"><span class="header-section-number">2.5</span> Model Development</a></li>
   </ul></li>
   <li><a href="#results-and-discussion" id="toc-results-and-discussion" class="nav-link" data-scroll-target="#results-and-discussion"><span class="header-section-number">3</span> RESULTS AND DISCUSSION</a>
   <ul class="collapse">
-  <li><a href="#laboratory-assay-cp-values" id="toc-laboratory-assay-cp-values" class="nav-link" data-scroll-target="#laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory assay CP values</a></li>
-  <li><a href="#preprocessing-methods-comparison" id="toc-preprocessing-methods-comparison" class="nav-link" data-scroll-target="#preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing methods comparison</a></li>
-  <li><a href="#algorithm-comparison" id="toc-algorithm-comparison" class="nav-link" data-scroll-target="#algorithm-comparison"><span class="header-section-number">3.3</span> Algorithm comparison</a></li>
-  <li><a href="#plsr-full-spectrum-model-development" id="toc-plsr-full-spectrum-model-development" class="nav-link" data-scroll-target="#plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR full spectrum model development</a></li>
+  <li><a href="#laboratory-assay-cp-values" id="toc-laboratory-assay-cp-values" class="nav-link" data-scroll-target="#laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory Assay CP Values</a></li>
+  <li><a href="#preprocessing-methods-comparison" id="toc-preprocessing-methods-comparison" class="nav-link" data-scroll-target="#preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing Methods Comparison</a></li>
+  <li><a href="#algorithm-comparison" id="toc-algorithm-comparison" class="nav-link" data-scroll-target="#algorithm-comparison"><span class="header-section-number">3.3</span> Algorithm Comparison</a></li>
+  <li><a href="#plsr-full-spectrum-model-development" id="toc-plsr-full-spectrum-model-development" class="nav-link" data-scroll-target="#plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR Full Spectrum Model Development</a></li>
   <li><a href="#protein-focused-model-validation" id="toc-protein-focused-model-validation" class="nav-link" data-scroll-target="#protein-focused-model-validation"><span class="header-section-number">3.5</span> Protein-Focused Model Validation</a></li>
   </ul></li>
   <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions"><span class="header-section-number">4</span> Conclusions</a></li>
@@ -4918,7 +4918,7 @@ window.Quarto = {
 <p class="date">2025-07-10</p>
 <div class="abstract">
 <div class="abstract-title">Abstract</div>
-<p>The protein concentration of hemp (<em>Cannabis sativa</em> L.) grain is of interest to researchers, producers, and consumers. This study was conducted to determine whether hemp grain can be non-destructively assayed for crude protein (CP) concentration using spectra obtained from near-infrared spectroscopy (NIRS) to build a prediction model for CP using partial least squares regression (PLSR). One hundred and fourty-nine whole hemp grain samples were obtained from 18 cultivar trials in New York (NY) from 2017-2021. Their spectra were measured with a benchtop NIRS instrument, and then ground and assayed by combustion to directly measure CP concentration. Seven potential preprocessing methods, as well as untransformed spectra, were tested using 100 training and testing set splits of the data and the best method was selected. That method was applied to 1000 additional splits of the data set. Model fit was evaluated using RMSE, R<sup>2</sup>, relative predicted deviation (RPD), and ratio of performance to interquartile distance (RPIQ). Once a preprocessing method was selected, the optimal number of model components and prediction performance on the testing sets were examined. A preprocessing method consisting of the standard normal variate transformation following a Savitzky-Golay filter had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ, with RPD and RPIQ 2.1%, and 2.4% higher than a Savitzky-Golay filter by itself (significant at <span class="math inline">\(\alpha\)</span> &lt;0.05). All preprocessing methods outperformed untransformed spectra. Optimal final models typically consisted of 12 components. Seventy-four percent of the 1000 final models had, at minimum, the ability to distinguish between high and low values of CP concentration, with 49% of the models capable of approximating quantitative prediction. The models tended to overestimate CP concentration by 0.5% in the lowest tertile of samples and underestimate CP concentration by 0.4% in the highest tertile of samples. The worst-predicted samples tended to come from Geneva, NY, possibly as a result of the models’ class imbalance (half of the samples were from Ithaca, NY while 28% were from Geneva). The research shows the promise that NIRS offers in the non-destructive assay of CP concentration in hemp grain.</p>
+<p>This study evaluated near-infrared spectroscopy (NIRS) for non-destructive crude protein (CP) prediction in hemp (Cannabis sativa L.) grain and validated the biological basis of spectral predictions. One hundred and forty-nine whole grain samples from 38 cultivars were collected from New York trials (2017-2021) and validated for CP by combustion. Seven preprocessing methods were tested using 100 training/testing splits, with standard normal variate transformation following Savitzky-Golay filtering selected as optimal. Comparing algorithms showed that partial least squares regression (PLSR) significantly outperformed support vector machines and random forest. The best preprocessing method and algorithm was applied to 1,000 additional splits. Optimal models contained 12 components with mean performance of RMSE = 9.94, R² = 0.84, RPD = 2.5, and RPIQ = 3.94. More than 99% of the models had, at minimum, the ability to distinguish between high and low values, with 93.2% capable of quantitative prediction.To validate biological relevance, a protein-focused model was developed using three known protein absorption bands (1200-1250, 1500-1550, and 2040-2090 nm). These models had substantially reduced performance with 86% of models capable of distinguishing between high and low values but only 14% of models capable of quantitative prediction. However, this targeted approach offers evidence that NIRS predictions are biologically grounded in protein-specific spectral features rather than spurious correlations. This research demonstrates the promise and biological validity of NIRS for hemp grain CP assessment, supporting applications in breeding programs, although applications demanding more accurate prediction will require better models.</p>
 </div>
 </header>
 
@@ -5321,8 +5321,9 @@ Table 1: Sample distribution by location and type
 <h3 data-number="2.3" class="anchored" data-anchor-id="laboratory-validation"><span class="header-section-number">2.3</span> Laboratory Validation</h3>
 <p>Laboratory assays were performed by Dairy One Forage Laboratory (Ithaca, NY). For those assays, 1 mm ground samples were analyzed by combustion using a CN628 or CN928 Carbon/Nitrogen Determinator. Samples from 2017 were aggregated as described above, but the remaining samples were not aggregated.</p>
 </section>
-<section id="r-software-and-packages-used" class="level3" data-number="2.4">
-<h3 data-number="2.4" class="anchored" data-anchor-id="r-software-and-packages-used"><span class="header-section-number">2.4</span> R software and packages used</h3>
+<section id="software" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="software"><span class="header-section-number">2.4</span> Software</h3>
+<p>All analyses were conducted using R version 4.4.1 (R Core Team, 2024) with workflow management via targets v. 1.8.0 (Landau, 2021) and package control via renv v. 1.1.4 (Ushey, 2024). Data processing utilized data.table v. 1.16.0 (Barrett et al., 2024) and tidyverse v. 2.0.0 (Wickham et al., 2019), while machine learning was implemented through caret v. 6.0.90 (Kuhn, 2021) with pls v. 2.8.0, randomForest v. 4.7-1.1, and kernlab v. 0.9-33 for PLSR, random forest, and SVM algorithms, respectively.</p>
 </section>
 <section id="model-development" class="level3" data-number="2.5">
 <h3 data-number="2.5" class="anchored" data-anchor-id="model-development"><span class="header-section-number">2.5</span> Model Development</h3>
@@ -5383,7 +5384,7 @@ Table 2: Model assessment rubric
 <section id="results-and-discussion" class="level2" data-number="3">
 <h2 data-number="3" class="anchored" data-anchor-id="results-and-discussion"><span class="header-section-number">3</span> RESULTS AND DISCUSSION</h2>
 <section id="laboratory-assay-cp-values" class="level3" data-number="3.1">
-<h3 data-number="3.1" class="anchored" data-anchor-id="laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory assay CP values</h3>
+<h3 data-number="3.1" class="anchored" data-anchor-id="laboratory-assay-cp-values"><span class="header-section-number">3.1</span> Laboratory Assay CP Values</h3>
 <p>Laboratory assay CP concentration values are summarized in <a href="#tbl-protein-summary" class="quarto-xref">Table 3</a>. These are similar to the range of values observed in the literature, indicating an reasonable basis for a chemometric model. The values were left-skewed (skewness of -0.29) and two thirds of the samples contained more than 250 g kg <sup>-1</sup> CP.</p>
 <div class="cell">
 <div id="tbl-protein-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
@@ -5425,7 +5426,7 @@ Table 3: Summary of laboratory-assayed CP values
 </div>
 </section>
 <section id="preprocessing-methods-comparison" class="level3" data-number="3.2">
-<h3 data-number="3.2" class="anchored" data-anchor-id="preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing methods comparison</h3>
+<h3 data-number="3.2" class="anchored" data-anchor-id="preprocessing-methods-comparison"><span class="header-section-number">3.2</span> Preprocessing Methods Comparison</h3>
 <p>Among the eight methods compared via ANOVA, the SNV-SG and SG preprocessing methods performed the best and were in the best highest-performing post-hoc comparison group. The SNV-SG method had the lowest RMSE and the highest R<sup>2</sup>, RPD and RPIQ averaging over all iterations (<a href="#tbl-preproc" class="quarto-xref">Table 4</a>). The superiority of SNV-SG by these metrics made it the best choice for the final model.</p>
 <div class="cell">
 <div id="tbl-preproc" class="cell quarto-float quarto-figure quarto-figure-center anchored">
@@ -5520,7 +5521,7 @@ Table 4: Evaluation of Preprocessing Methods by Metric ± Standard Error
 <p>From the literature, these results are readily explained. Standard normal variate and SNV-detrend both correct light scatter, which is often a function of differences in particle size and sample packing density, although SNV-detrend is often used for densely-packed, powdered samples <span class="citation" data-cites="barnes_standard_1989">(<a href="#ref-barnes_standard_1989" role="doc-biblioref">Barnes et al., 1989</a>)</span>. SG is a smoothing filter that regresses on the signal over a series of windows, removing noise while preserving the signal’s shape and features <span class="citation" data-cites="li_quantitative_2020 luo_properties_2005">(<a href="#ref-li_quantitative_2020" role="doc-biblioref">Li et al., 2020</a>; <a href="#ref-luo_properties_2005" role="doc-biblioref">Luo et al., 2005</a>)</span>. Derivatives, here including SG, gap-segment, and first derivatives pretreatments may remove additive and multiplicative effects, but not necessarily light scatter; as well, derivatives may increase spectral noise <span class="citation" data-cites="rinnan_review_2009">(<a href="#ref-rinnan_review_2009" role="doc-biblioref">Rinnan et al., 2009</a>)</span>. Here, hemp grain was neither powdered nor densely packed but samples were subject to light scatter and noise due to differences in particle size in the hemp grain.</p>
 </section>
 <section id="algorithm-comparison" class="level3" data-number="3.3">
-<h3 data-number="3.3" class="anchored" data-anchor-id="algorithm-comparison"><span class="header-section-number">3.3</span> Algorithm comparison</h3>
+<h3 data-number="3.3" class="anchored" data-anchor-id="algorithm-comparison"><span class="header-section-number">3.3</span> Algorithm Comparison</h3>
 <p>The algorithm comparison revealed clear performance differences among the three approaches, with PLSR achieving significantly superior performance across all evaluation metrics (<a href="#tbl-algorithm-comparison" class="quarto-xref">Table 5</a>). This suggests that the spectral features captured by PLSR are well-suited for hemp grain protein prediction, at least for screening, while the additional complexity of non-linear algorithms did not provide predictive advantage. This contrasts with researchers who obtained their best predictions of grains or seeds using machine learning methods other than PLSR (SVM and convolutional neural networks,respectively) , although in the present case the training sets were less than half the size of those used by the other researchers <span class="citation" data-cites="huang_feasibility_2013 chadalavada_nir_2022">(<a href="#ref-chadalavada_nir_2022" role="doc-biblioref">Chadalavada et al., 2022</a>; <a href="#ref-huang_feasibility_2013" role="doc-biblioref">Huang et al., 2013</a>)</span>.</p>
 <div class="cell">
 <div id="tbl-algorithm-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
@@ -5615,7 +5616,7 @@ Table 5: Algorithm performance using RPD-primary unified evaluation criteria. P
 <p>The superior performance of PLSR in this relatively small data set validates its selection as the primary modeling algorithm. Statistical analysis confirmed significant differences between algorithms across all four performance metrics (p &lt; 0.05), indicating robust performance differences despite the relatively modest sample size.</p>
 </section>
 <section id="plsr-full-spectrum-model-development" class="level3" data-number="3.4">
-<h3 data-number="3.4" class="anchored" data-anchor-id="plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR full spectrum model development</h3>
+<h3 data-number="3.4" class="anchored" data-anchor-id="plsr-full-spectrum-model-development"><span class="header-section-number">3.4</span> PLSR Full Spectrum Model Development</h3>
 <p>The model improved most rapidly as the number of components increased from one to seven, with the inclusion of each additional component being associated with a decrease in RMSE of 6%-11%. From eight to 12 components, model performance continued to improve, although gains were more modest. With 13 or more components, performance gains were minimal and the relative ranks of the models tended to be stable (<a href="#fig-model-calibration" class="quarto-xref">Figure 1</a>). The visible plateau in the plot at 12 components showed the point where the inclusion of additional components failed to improve model performance on the cross validation holdout set and indicated that the model was optimized and not overfit.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -5631,7 +5632,7 @@ Figure 1: Decreasing RMSE with increasing number of components for 1000 trainin
 </div>
 </div>
 </div>
-<p>The performance of the final models on the testing sets is summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure 2</a>. The means of the final models were: RMSE = 9.94, R<sup>2</sup> = 0.84, RPD = 2.5, and RPIQ = 3.94. Nearly of the models had, at minimum, the ability to distinguish between high and low values with % having some capacity for quantitative prediction. Despite generally reasonable model performance, a subset of poor models can be seen in the boxplots.</p>
+<p>The performance of the final models on the testing sets is summarized in <a href="#fig-performance-boxplot" class="quarto-xref">Figure 2</a>. The means of the final models were: RMSE = 9.94, R<sup>2</sup> = 0.84, RPD = 2.5, and RPIQ = 3.94. More than 99% of the models had, at minimum, the ability to distinguish between high and low values, with 93.2% having some capacity for quantitative prediction (RPD &gt; 2.0). Despite generally reasonable model performance, a subset of poor models can be seen in the boxplots.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-performance-boxplot" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -5763,7 +5764,7 @@ Figure 4: Comparing models developed using full and protein-specific spectra
 <section id="conflict-of-interest" class="level2" data-number="6">
 <h2 data-number="6" class="anchored" data-anchor-id="conflict-of-interest"><span class="header-section-number">6</span> CONFLICT OF INTEREST</h2>
 <p>The authors declare no conflict of interest.</p>
-<p><strong>Generated:</strong> 2025-07-10 14:18:47<br>
+<p><strong>Generated:</strong> 2025-07-10 15:55:14<br>
 <strong>Framework:</strong> Targets-based reproducible workflow</p>
 
 

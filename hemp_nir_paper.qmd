@@ -117,6 +117,8 @@ hemp_data <- tryCatch(tar_read(hemp_data), error = function(e) NULL)
 preprocessing_analysis <- tryCatch(tar_read(preprocessing_analysis), error = function(e) NULL)
 preprocessing_comparison<- tryCatch(tar_read(preprocessing_comparison), error = function(e) NULL)
 error_analysis<- tryCatch(tar_read(error_analysis), error = function(e) NULL)
+protein_analysis<- tryCatch(tar_read(protein_analysis), error = function(e) NULL)
+spectral_analysis <- tryCatch(tar_read(spectral_analysis), error = function(e) NULL)
 
 table_model_comparison <- tar_read(vip_table)
 # Also load the table and figure objects that are referenced later
@@ -183,7 +185,7 @@ All experimental trials were planted in randomized complete block design with ea
 
 A benchtop NIR spectrometer (FOSS/ NIR FOSS/ NIR Systems model 5000) was used to obtain the spectra (FOSS North America, Eden Prairie, MN, USA). Spectra were collected every 2 nm from 1100-2498 nm and the logarithm of reciprocal reflectance was recorded. A 1/4 rectangular sample cup (5.7 cm × 4.6 cm) was used to scan the samples.
 
-WINISI software version 1.02A (Infrasoft International, Port Matilda, PA, USA) was used to calculate the mean spectra in 2017 and to select samples for laboratory assay in all years. Samples were selected according to their spectral distance from their nearest neighbor within the data set with a cutoff of a distance of 0.6 H, where H is approximately equal to the squared Mahalanobis distance divided by the number of principal components used in the calculation [@garrido-varo_note_2019]. The spectral cutoff threshold of 0.6 H is a common metric used to optimize the number of samples for chemical analysis [@nogales-bueno_reduction_2021]. Prior to selection, spectra were preprocessed using Standard Normal Variate (SNV)-detrend with settings 1,4,4,1 for the derivative, gap, smooth, and smooth-two settings respectively. These settings are standard WINISI software parameters and were applied because hemp grain samples were subject to light scatter and noise due to particle size variation, with the first derivative applied to show component absorption [@barnes_standard_1989; @towett_applicability_2013].
+WINISI software version 1.02A (Infrasoft International, Port Matilda, PA, USA) was used to calculate the mean spectra in 2017 and to select samples for laboratory assay in all years. Samples were selected according to their spectral distance from their nearest neighbor within the data set with a cutoff of a distance of 0.6 H, where H is approximately equal to the squared Mahalanobis distance divided by the number of principal components used in the calculation [@garrido-varo_note_2019]. The spectral cutoff threshold of 0.6 H is a metric used to optimize the number of samples for chemical analysis [@nogales-bueno_reduction_2021 @shenk_population_1991]. Prior to selection, spectra were preprocessed using Standard Normal Variate (SNV)-detrend with settings 1,4,4,1 for the derivative, gap, smooth, and smooth-two settings respectively. These settings are standard WINISI software parameters and were applied because hemp grain samples were subject to light scatter and noise due to particle size variation, with the first derivative applied to show component absorption [@barnes_standard_1989; @towett_applicability_2013].
 
 ### Laboratory Validation
 
@@ -219,7 +221,7 @@ kable(eval_criteria,
       caption = "Model Evaluation Criteria for NIRS Prediction Models")
 ```
 
-Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For each ANOVA, each data set was considered as a subject and different variances were allowed for each preprocessing method. Once the most promising preprocessing method was identified, it was used in all subsequent analyses.
+Analyses of variance were performed for each of these metrics in order to compare preprocessing methods. For ANOVAs involving preprocessing methods, each data set was considered as a subject and different variances were allowed for each preprocessing method .Post hoc comparisons were performed with Tukey method to compare estimates set to $\alpha$ = 0.05. Once the most promising preprocessing method was identified, it was used in all subsequent analyses.
 
 To select an algorithm to fit a final model for these data, researchers compared three machine learning algorithms: PLSR, SVM (with radial basis function kernel), and random forest (RF). This comparison was conducted to validate the choice of PLSR through empirical evaluation against alternative algorithms and to assess whether more complex modeling approaches might improve predictive accuracy. One hundred random splits into training sets and testing sets were performed and models were constructed using each of the three algorithms. Statistical significance of performance differences between algorithms was assessed using analysis of variance.
 
@@ -242,7 +244,7 @@ table_sample_summary
 
 ### Preprocessing methods comparison
 
-Among the eight methods compared via ANOVA, the SNV-SG and SG preprocessing methods performed the best and were in the best highest-performing post-hoc comparison group (Tukey method to compare estimates $\alpha$ = 0.05). The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations (@tbl-preproc). The superiority of SNV-SG by these metrics made it the best choice for the final model.
+Among the eight methods compared via ANOVA, the SNV-SG and SG preprocessing methods performed the best and were in the best highest-performing post-hoc comparison group (). The SNV-SG method had the lowest RMSE and the highest R^2^, RPD and RPIQ averaging over all iterations (@tbl-preproc). The superiority of SNV-SG by these metrics made it the best choice for the final model.
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -353,7 +355,21 @@ Trials in Geneva and Ithaca were generally planted and harvested near the same d
 
 ### Protein-Focused Model Validation
 
-The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands and was compared to full-spectrum model performance in @tbl-performance-summary. The full spectrum model substantially outperformed the full-spectrum model across all performance metrics. The protein-focused model utilized five components, aligning with the advice to use 20 samples for calibration per principal component in PLSR [@williams_calibration_2013]. By that rubric, a model using five principal components would require at least 100 samples to calibrate it. Here 111 samples were used in calibration, exceeding that threshold. Eighty-six percent of the protein-focused models were minimally acceptable for qualitative screening (RPD \> 1.5) but only 14% of the models were capable of approximate-quantitative screening or better.
+```{r, message=FALSE, warning=FALSE, results = 'hide'}
+
+pr <- protein_analysis$metrics |> mutate(analysis = "protein")
+sp <- spectral_analysis$metrics |> mutate(analysis = "full")
+
+model_comparison_marginal_means <- bind_rows(pr, sp) |> 
+  mutate(across(c(iteration), as.factor)) |> 
+  pivot_longer(c(rmse:rpiq)) |> 
+  nest(-name) |> 
+  mutate(model = map(data, ~lm(value~analysis + iteration, data = .x)),
+         marginal_means = map(model, ~emmeans(.x, "analysis") |> multcomp::cld() |> 
+                                as.data.frame()))
+```
+
+The biological basis of the NIRS predictions was validated by developing a protein-focused model using wavelengths within known protein absorption bands and was compared to full-spectrum model performance in @tbl-performance-summary. The full spectrum model significantly outperformed the full-spectrum model across all performance metrics. The protein-focused model utilized five components, aligning with the advice to use 20 samples for calibration per principal component in PLSR [@williams_calibration_2013]. By that rubric, a model using five principal components would require at least 100 samples to calibrate it. Here 111 samples were used in calibration, exceeding that threshold. Eighty-six percent of the protein-focused models were minimally acceptable for qualitative screening (RPD \> 1.5) but only 14% of the models were capable of approximate-quantitative screening or better.
 
 @tbl-performance-distribution
 
@@ -387,11 +403,9 @@ table_performance_summary
 fig_model_comparison
 ```
 
-Variable Importance in Projection (VIP) scores revealed that the protein-focused model concentrated predictive power in the expected molecular absorption regions (@fig-model-comparison). The 1500-1550 nm region (N-H stretch from peptide bonds) showed the highest importance, followed by the 1200-1250 nm region (N-H + C-N combination bands). VIP scores greater than one appeared in all 1000 model iterations at the 1246, 1248, 1546, and 1548 nm wavelengths.This pattern aligns with established protein spectroscopy literature [@lukacs_comparison_2024]
+Variable Importance in Projection (VIP) scores revealed that the protein-focused model concentrated predictive power in the expected molecular absorption regions (@fig-model-comparison). The 1500-1550 nm region (N-H stretch from peptide bonds) showed the highest importance, followed by the 1200-1250 nm region (N-H + C-N combination bands). VIP scores greater than one appeared in all 1000 model iterations at the 1246, 1248, 1546, and 1548 nm wavelengths. This pattern aligns with established protein spectroscopy literature [@lukacs_comparison_2024; @lorenz-fonfria_infrared_2020]. The VIP scores from either model could be used in subsequent modeling, although [@wang_portable_2022].
 
-The performance of the protein-focused model provides biological validation of NIRS predictions. This approach improved model interpretability by explicitly connecting predictions to known CP chemistry, suggesting that future hemp CP calibrations could focus on these specific wavelength regions. This would model robustness and transferability across NIR instruments or environments. #CITE. This approach is evidence that successful predictions are based on genuine CP-spectral relationships rather than correlations with other grain components such as oil, starch, or moisture.
-
-The VIP scores from either model could be used in subsequent modeling [@wang_portable_2022].
+The performance of the protein-focused model provides biological validation of NIRS predictions. This approach improved model interpretability by explicitly connecting predictions to known CP chemistry, suggesting that future hemp CP calibrations could focus on these specific wavelength regions. This would improve model robustness and transferability across NIR instruments or environments, potentially enabling the transfer of calibrations to handheld or other instruments #CITE. This approach is evidence that successful predictions are based on genuine CP-spectral relationships rather than correlations with other grain components such as oil, starch, or moisture.
 
 ## Conclusions
 
